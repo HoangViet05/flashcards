@@ -1,15 +1,8 @@
 @echo off
-echo Starting FlashCards App...
-echo.
+echo Starting Flashcard App...
 
-start "FlashCards - Backend" cmd /k "cd /d %~dp0backend && pip install -r requirements.txt -q && uvicorn app.main:app --reload --port 8000"
+start "Backend" cmd /k "conda activate flashcard && cd backend && uvicorn app.main:app --reload --port 8000"
+start "Frontend" cmd /k "conda activate flashcard && cd frontend && npm run dev"
 
-timeout /t 3 /nobreak > nul
-
-start "FlashCards - Frontend" cmd /k "cd /d %~dp0frontend && npm install --silent && npm run dev"
-
-echo Backend:  http://localhost:8000
+echo Backend: http://localhost:8000
 echo Frontend: http://localhost:5173
-echo.
-echo Both services are starting in separate windows.
-pause

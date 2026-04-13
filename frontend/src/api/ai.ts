@@ -15,7 +15,51 @@ export const generateAIContent = async (word: string, excluded_words: string[] =
   return data
 }
 
-export const generateAIBatchContent = async (topic: string, count: number = 5, excluded_words: string[] = []): Promise<AIBatchGenerateResponse> => {
-  const { data } = await client.post<AIBatchGenerateResponse>('/ai/generate-batch', { topic, count, excluded_words })
-  return data
+export const generateAIBatchStream = async (
+  topic: string,
+  count: number = 5,
+  excluded_words: string[] = [],
+  onCardGenerated: (card: AIGenerateResponse) => void
+): Promise<void> => {
+  const response = await fetch('/api/ai/generate-batch-stream', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ topic, count, excluded_words })
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to start AI generation stream')
+  }
+
+  const reader = response.body?.getReader()
+  const decoder = new TextDecoder('utf-8')
+  let buffer = ''
+
+  if (reader) {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      
+      const parts = buffer.split('\n\n')
+      buffer = parts.pop() || '' 
+
+      for (const part of parts) {
+        if (part.startsWith('data: ')) {
+          const dataStr = part.replace('data: ', '').trim()
+          if (dataStr === '[DONE]') return
+          
+          try {
+            const card = JSON.parse(dataStr)
+            onCardGenerated(card)
+          } catch (e) {
+            console.error('Lỗi khi parse SSE data:', e, dataStr)
+          }
+        }
+      }
+    }
+  }
 }

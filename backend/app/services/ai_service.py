@@ -106,6 +106,49 @@ class AIservice:
 
         return cards
 
+    def generate_batch_stream(self, topic: str, count: int = 5, existing_excluded_words: list[str] = None):
+        """
+        [Generator] Trả về từng thẻ qua luồng SSE (Server-Sent Events) ngay khi thẻ được tạo ra,
+        giúp luồng dữ liệu stream liên tục về phía user thay vì bắt user chờ sinh xong toàn bộ mảng (batch).
+        """
+        logger.info(f"Bắt đầu stream tạo {count} thẻ cho chủ đề: {topic}")
+        
+        excluded_words = [self._extract_clean_word(w) for w in existing_excluded_words] if existing_excluded_words else []
+        attempts = 0
+        max_attempts = count * 3  
+        success_count = 0
+
+        while success_count < count and attempts < max_attempts:
+            attempts += 1
+            logger.info(f"Đang sinh thẻ thứ {success_count+1}/{count} (Lần thử {attempts}/{max_attempts})...")
+            
+            # Khác với Streaming token, ở đây ta gọi generate_card_content như bình thường 
+            # để lấy được JSON của 1 thẻ (card) đã hoàn chỉnh.
+            card = self.generate_card_content(topic, excluded_words)
+            
+            if card and "front_text" in card:
+                front_text = card.get("front_text", "")
+                clean_word = self._extract_clean_word(front_text)
+
+                if clean_word and clean_word not in excluded_words:
+                    excluded_words.append(clean_word)
+                    success_count += 1
+                    logger.info(f"Tạo thành công từ mới: {clean_word}")
+                    
+                    # 🚀 ĐÂY LÀ ĐIỂM CỐT LÕI CỦA TINH CHẤT STREAMING (GENERATOR):
+                    # Thay vì cards.append(card) vào list rồi return, ta sẽ dùng lệnh "yield"
+                    # "yield" sẽ ném thẳng card này về Router để trả ngay lập tức cho Frontend,
+                    # Hàm sẽ tạm dừng tại đây. Quá trình router gửi mạng kết thúc sẽ quay lại vòng lặp while này chạy thẻ kế tiếp.
+                    yield card
+                else:
+                    logger.warning(f"Từ bị trùng lặp '{clean_word}', bỏ qua...")
+            else:
+                logger.warning("Lỗi thẻ từ LLM, thử lại...")
+
+        if success_count < count:
+            logger.error(f"Chỉ tạo được {success_count}/{count} thẻ sau {max_attempts} lần thử.")
+
+
 ai_service = AIservice()
 
 if __name__ == "__main__":

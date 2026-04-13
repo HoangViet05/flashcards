@@ -76,6 +76,17 @@ body::before {
 .animate-slide-out-prev { animation: slideOutRight 0.25s ease-in forwards; }
 .animate-slide-in-prev { animation: slideInLeft 0.3s ease-out both; }
 
+@keyframes flyIntoDeck {
+  0% { transform: translate(60px, -60px) scale(1.5) rotate(15deg); opacity: 0; box-shadow: 0 0 40px rgba(255,255,255,1); filter: brightness(1.5); }
+  20% { opacity: 1; box-shadow: 0 0 20px rgba(124,58,237,0.8); }
+  60% { transform: translate(0px, 0px) scale(1) rotate(-5deg); opacity: 1; box-shadow: 0 0 10px rgba(124,58,237,0.5); filter: brightness(1.2); }
+  100% { transform: translate(-10px, 10px) scale(0) rotate(-20deg); opacity: 0; filter: brightness(1); }
+}
+
+.animate-fly-into-deck {
+  animation: flyIntoDeck 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 .glass {
   background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(12px);

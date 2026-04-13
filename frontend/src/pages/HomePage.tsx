@@ -3,10 +3,80 @@ import { Link } from 'react-router-dom'
 import { getDecks, createDeck, deleteDeck } from '../api/decks'
 import { getDueCards } from '../api/review'
 import { getCards, createCard } from '../api/cards'
-import { generateAIBatchContent } from '../api/ai'
+import { generateAIBatchStream } from '../api/ai'
 import { useNotification } from '../components/NotificationProvider'
 import DeckCard from '../components/DeckCard'
 import type { Deck, Review } from '../types'
+
+interface GlobalFlyingCardData {
+  id: string;
+  word: string;
+  targetDeckId: string;
+}
+
+function FlyingGlassCard({ data, onComplete }: { data: GlobalFlyingCardData, onComplete: () => void }) {
+  const [style, setStyle] = useState<React.CSSProperties>({
+    position: 'fixed',
+    top: '40%',
+    left: '50%',
+    transform: 'translate(-50%, -50%) scale(0.5) translateY(50px)',
+    opacity: 0,
+    zIndex: 9999,
+    transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+    pointerEvents: 'none'
+  });
+
+  useEffect(() => {
+    // Add randomness so they stack beautifully when multiple generate quickly
+    const rx = (Math.random() - 0.5) * 80;
+    const ry = (Math.random() - 0.5) * 60;
+    const rRot = (Math.random() - 0.5) * 20;
+
+    const t1 = setTimeout(() => {
+      setStyle(prev => ({
+        ...prev,
+        opacity: 1,
+        transform: `translate(calc(-50% + ${rx}px), calc(-50% + ${ry}px)) scale(1) rotate(${rRot}deg)`,
+      }));
+    }, 50);
+
+    const t2 = setTimeout(() => {
+      const target = document.querySelector(`a[href="/decks/${data.targetDeckId}"]`);
+      if (target) {
+        const rect = target.getBoundingClientRect();
+        const targetX = rect.left + 50; 
+        const targetY = rect.top + 60;
+        
+        setStyle(prev => ({
+          ...prev,
+          top: targetY + 'px',
+          left: targetX + 'px',
+          transform: 'translate(-50%, -50%) scale(0.1) rotate(45deg)',
+          opacity: 0,
+          transition: 'all 0.6s cubic-bezier(0.5, 0, 0.2, 1)'
+        }));
+      } else {
+        setStyle(prev => ({...prev, opacity: 0, transform: 'translate(-50%, -50%) scale(0)'}));
+      }
+    }, 1200); // Wait in center for 1.2s to show off the card
+
+    const t3 = setTimeout(() => {
+      onComplete();
+    }, 1900);
+
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); }
+  }, [data.targetDeckId, onComplete]);
+
+  return (
+    <div style={style} className="glass px-8 py-10 rounded-3xl border border-white/30 shadow-[0_30px_60px_rgba(124,58,237,0.4)] bg-[#0f172a]/80 backdrop-blur-2xl flex flex-col items-center justify-center gap-4">
+       <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/40 to-fuchsia-500/30 flex items-center justify-center text-4xl border border-violet-500/60 shadow-[0_0_20px_rgba(124,58,237,0.4)]">
+         ✨
+       </div>
+       <div className="text-white font-extrabold text-2xl tracking-tight text-center max-w-[200px] truncate">{data.word}</div>
+       <div className="text-violet-300 font-bold text-xs py-1.5 px-4 bg-violet-500/20 rounded-full border border-violet-500/40 shadow-[0_0_15px_rgba(124,58,237,0.3)] animate-pulse">+1 thẻ mới</div>
+    </div>
+  );
+}
 
 export default function HomePage() {
   const [decks, setDecks] = useState<Deck[]>([])
@@ -20,6 +90,7 @@ export default function HomePage() {
   const [aiTopic, setAiTopic] = useState('')
   const [aiCount, setAiCount] = useState(5)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [globalFlyingCards, setGlobalFlyingCards] = useState<GlobalFlyingCardData[]>([])
 
   const { toast, confirm } = useNotification()
 
@@ -73,16 +144,17 @@ export default function HomePage() {
         excludedWords = existingCards.map(c => c.front_text)
       }
 
-      // Giờ mới gọi AI và truyền excludedWords
-      const result = await generateAIBatchContent(topic, aiCount, excludedWords)
-      
       if (!existingDeck) {
         const newDeck = await createDeck({ name: topic })
         targetDeckId = newDeck.id
+        // Load immediately so the new deck appears on screen before cards are added
+        await load() 
       }
 
       let successCount = 0;
-      for (const card of result.cards) {
+      
+      // Giờ mới gọi AI stream và truyền excludedWords
+      await generateAIBatchStream(topic, aiCount, excludedWords, async (card) => {
         try {
             await createCard(targetDeckId, {
                 front_text: card.front_text || topic,
@@ -90,18 +162,27 @@ export default function HomePage() {
                 example_sentence: card.example_sentence || undefined
             });
             successCount++;
+            
+            // Bắn thẻ bay ngay giữa màn hình
+            const word = card.front_text || topic;
+            setGlobalFlyingCards(prev => [...prev, { id: Date.now() + '-' + Math.random(), word, targetDeckId }]);
+
+            load() // Real-time update count on GUI
         } catch (e) {
-            // Bỏ qua lỗi duplicate card trong cùng 1 batch
             console.warn("Lỗi khi thêm một thẻ:", e)
         }
-      }
+      })
 
-      toast(`Đã tạo thành công ${successCount} thẻ AI cho chủ đề "${topic}"`, 'success')
+      if (successCount > 0) {
+        toast(`Đã tạo thành công ${successCount} thẻ AI cho chủ đề "${topic}"`, 'success')
+      } else {
+        toast(`Không thể tạo thẻ nào, có thể chủ đề này đã có đầy đủ thẻ.`, 'info')
+      }
       setAiTopic('')
       load()
     } catch (err: any) {
-      const msg = err.response?.data?.detail || "Không thể tạo từ AI. Vui lòng kiểm tra lại."
-      toast(msg, 'error')
+      console.error(err)
+      toast("Không thể tạo từ AI. Vui lòng kiểm tra lại kết nối.", 'error')
     } finally {
       setIsGenerating(false)
     }
@@ -126,6 +207,15 @@ export default function HomePage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+      
+      {/* Global Flying Cards Layer */}
+      {globalFlyingCards.map(fc => (
+        <FlyingGlassCard 
+            key={fc.id} 
+            data={fc} 
+            onComplete={() => setGlobalFlyingCards(prev => prev.filter(c => c.id !== fc.id))} 
+        />
+      ))}
       {/* Hero banner when there are due cards */}
       {dueReviews.length > 0 && (
         <div className="mb-10 relative rounded-[2rem] p-[1px] animate-fade-in-up" style={{ boxShadow: '0 20px 40px -15px rgba(124,58,237,0.25)' }}>

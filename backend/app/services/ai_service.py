@@ -142,6 +142,8 @@ class AIservice:
                     yield card
                 else:
                     logger.warning(f"Từ bị trùng lặp '{clean_word}', bỏ qua...")
+                    # Ném thẻ bị trùng về cho Frontend để FE có thông tin phát hiệu ứng "Từ chối" (rejected)
+                    yield card
             else:
                 logger.warning("Lỗi thẻ từ LLM, thử lại...")
 

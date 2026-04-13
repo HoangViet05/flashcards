@@ -12,6 +12,7 @@ interface GlobalFlyingCardData {
   id: string;
   word: string;
   targetDeckId: string;
+  status?: 'success' | 'rejected';
 }
 
 function FlyingGlassCard({ data, onComplete }: { data: GlobalFlyingCardData, onComplete: () => void }) {
@@ -25,6 +26,8 @@ function FlyingGlassCard({ data, onComplete }: { data: GlobalFlyingCardData, onC
     transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
     pointerEvents: 'none'
   });
+
+  const isRejected = data.status === 'rejected';
 
   useEffect(() => {
     // Add randomness so they stack beautifully when multiple generate quickly
@@ -41,22 +44,32 @@ function FlyingGlassCard({ data, onComplete }: { data: GlobalFlyingCardData, onC
     }, 50);
 
     const t2 = setTimeout(() => {
-      const target = document.querySelector(`a[href="/decks/${data.targetDeckId}"]`);
-      if (target) {
-        const rect = target.getBoundingClientRect();
-        const targetX = rect.left + 50; 
-        const targetY = rect.top + 60;
-        
+      if (isRejected) {
         setStyle(prev => ({
           ...prev,
-          top: targetY + 'px',
-          left: targetX + 'px',
-          transform: 'translate(-50%, -50%) scale(0.1) rotate(45deg)',
+          top: '100%',
+          transform: 'translate(-50%, 100%) scale(0.6) rotate(-30deg)',
           opacity: 0,
           transition: 'all 0.6s cubic-bezier(0.5, 0, 0.2, 1)'
         }));
       } else {
-        setStyle(prev => ({...prev, opacity: 0, transform: 'translate(-50%, -50%) scale(0)'}));
+        const target = document.querySelector(`a[href="/decks/${data.targetDeckId}"]`);
+        if (target) {
+          const rect = target.getBoundingClientRect();
+          const targetX = rect.left + 50;
+          const targetY = rect.top + 60;
+
+          setStyle(prev => ({
+            ...prev,
+            top: targetY + 'px',
+            left: targetX + 'px',
+            transform: 'translate(-50%, -50%) scale(0.1) rotate(45deg)',
+            opacity: 0,
+            transition: 'all 0.6s cubic-bezier(0.5, 0, 0.2, 1)'
+          }));
+        } else {
+          setStyle(prev => ({ ...prev, opacity: 0, transform: 'translate(-50%, -50%) scale(0)' }));
+        }
       }
     }, 1200); // Wait in center for 1.2s to show off the card
 
@@ -65,15 +78,17 @@ function FlyingGlassCard({ data, onComplete }: { data: GlobalFlyingCardData, onC
     }, 1900);
 
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); }
-  }, [data.targetDeckId, onComplete]);
+  }, [data.targetDeckId, isRejected, onComplete]);
 
   return (
-    <div style={style} className="glass px-8 py-10 rounded-3xl border border-white/30 shadow-[0_30px_60px_rgba(124,58,237,0.4)] bg-[#0f172a]/80 backdrop-blur-2xl flex flex-col items-center justify-center gap-4">
-       <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/40 to-fuchsia-500/30 flex items-center justify-center text-4xl border border-violet-500/60 shadow-[0_0_20px_rgba(124,58,237,0.4)]">
-         ✨
-       </div>
-       <div className="text-white font-extrabold text-2xl tracking-tight text-center max-w-[200px] truncate">{data.word}</div>
-       <div className="text-violet-300 font-bold text-xs py-1.5 px-4 bg-violet-500/20 rounded-full border border-violet-500/40 shadow-[0_0_15px_rgba(124,58,237,0.3)] animate-pulse">+1 thẻ mới</div>
+    <div style={style} className={`glass px-8 py-10 rounded-3xl border shadow-[0_30px_60px_rgba(0,0,0,0.4)] bg-[#0f172a]/80 backdrop-blur-2xl flex flex-col items-center justify-center gap-4 ${isRejected ? 'border-red-500/30' : 'border-white/30'}`}>
+      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl border shadow-inner ${isRejected ? 'bg-gradient-to-br from-red-500/40 to-orange-500/30 border-red-500/60' : 'bg-gradient-to-br from-violet-500/40 to-fuchsia-500/30 border-violet-500/60 shadow-[0_0_20px_rgba(124,58,237,0.4)]'}`}>
+        {isRejected ? '🚫' : '✨'}
+      </div>
+      <div className={`font-extrabold text-2xl tracking-tight text-center max-w-[200px] truncate ${isRejected ? 'text-red-200 line-through' : 'text-white'}`}>{data.word}</div>
+      <div className={`font-bold text-xs py-1.5 px-4 rounded-full border ${isRejected ? 'text-red-300 bg-red-500/20 border-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'text-violet-300 bg-violet-500/20 border-violet-500/40 shadow-[0_0_15px_rgba(124,58,237,0.3)] animate-pulse'}`}>
+        {isRejected ? 'Bỏ qua từ trùng' : '+1 thẻ mới'}
+      </div>
     </div>
   );
 }
@@ -86,7 +101,7 @@ export default function HomePage() {
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
   const [showForm, setShowForm] = useState(false)
-  
+
   const [aiTopic, setAiTopic] = useState('')
   const [aiCount, setAiCount] = useState(5)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -98,19 +113,19 @@ export default function HomePage() {
     const [d, r] = await Promise.all([getDecks(), getDueCards()])
     setDecks(d)
     setDueReviews(r)
-    
+
     // Load card counts and due counts per deck
     const counts: Record<string, number> = {}
     const dueByDeck: Record<string, number> = {}
-    
+
     await Promise.all(d.map(async deck => {
       const cards = await getCards(deck.id)
       counts[deck.id] = cards.length
-      
+
       const cardIds = new Set(cards.map(c => c.id))
       dueByDeck[deck.id] = r.filter(rev => cardIds.has(rev.card_id)).length
     }))
-    
+
     setCardCounts(counts)
     setDueCounts(dueByDeck)
   }
@@ -136,7 +151,7 @@ export default function HomePage() {
       let targetDeckId = ''
       let excludedWords: string[] = []
       const existingDeck = decks.find(d => d.name.toLowerCase() === topic.toLowerCase())
-      
+
       if (existingDeck) {
         targetDeckId = existingDeck.id
         // Lấy danh sách thẻ hiện có để exclude khỏi AI (chống gen trùng)
@@ -148,33 +163,40 @@ export default function HomePage() {
         const newDeck = await createDeck({ name: topic })
         targetDeckId = newDeck.id
         // Load immediately so the new deck appears on screen before cards are added
-        await load() 
+        await load()
       }
 
       let successCount = 0;
-      
+
       // Giờ mới gọi AI stream và truyền excludedWords
       await generateAIBatchStream(topic, aiCount, excludedWords, async (card) => {
         try {
+          const word = card.front_text || topic;
+          const isDuplicate = excludedWords.some(w => w.toLowerCase() === word.toLowerCase());
+
+          if (isDuplicate) {
+            setGlobalFlyingCards(prev => [...prev, { id: Date.now() + '-' + Math.random(), word, targetDeckId, status: 'rejected' }]);
+          } else {
             await createCard(targetDeckId, {
-                front_text: card.front_text || topic,
-                back_text: card.back_text || '',
-                example_sentence: card.example_sentence || undefined
+              front_text: word,
+              back_text: card.back_text || '',
+              example_sentence: card.example_sentence || undefined
             });
             successCount++;
-            
+            excludedWords.push(word);
+
             // Bắn thẻ bay ngay giữa màn hình
-            const word = card.front_text || topic;
-            setGlobalFlyingCards(prev => [...prev, { id: Date.now() + '-' + Math.random(), word, targetDeckId }]);
+            setGlobalFlyingCards(prev => [...prev, { id: Date.now() + '-' + Math.random(), word, targetDeckId, status: 'success' }]);
 
             load() // Real-time update count on GUI
+          }
         } catch (e) {
-            console.warn("Lỗi khi thêm một thẻ:", e)
+          console.warn("Lỗi khi thêm một thẻ:", e)
         }
       })
 
       if (successCount > 0) {
-        toast(`Đã tạo thành công ${successCount} thẻ AI cho chủ đề "${topic}"`, 'success')
+        toast(`Đã tạo thành công ${successCount + 1} thẻ AI cho chủ đề "${topic}"`, 'success')
       } else {
         toast(`Không thể tạo thẻ nào, có thể chủ đề này đã có đầy đủ thẻ.`, 'info')
       }
@@ -207,13 +229,13 @@ export default function HomePage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-      
+
       {/* Global Flying Cards Layer */}
       {globalFlyingCards.map(fc => (
-        <FlyingGlassCard 
-            key={fc.id} 
-            data={fc} 
-            onComplete={() => setGlobalFlyingCards(prev => prev.filter(c => c.id !== fc.id))} 
+        <FlyingGlassCard
+          key={fc.id}
+          data={fc}
+          onComplete={() => setGlobalFlyingCards(prev => prev.filter(c => c.id !== fc.id))}
         />
       ))}
       {/* Hero banner when there are due cards */}
@@ -223,7 +245,7 @@ export default function HomePage() {
           <div className="relative glass rounded-[2rem] p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden bg-black/40 backdrop-blur-xl border border-white/10">
             {/* Decorative glare */}
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-2xl pointer-events-none opacity-60" />
-            
+
             <div className="flex items-center gap-5 relative z-10 w-full sm:w-auto">
               <div className="w-16 h-16 rounded-[1.25rem] bg-gradient-to-br from-violet-500/20 to-purple-600/30 border border-violet-500/40 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(139,92,246,0.3)] shrink-0 animate-pulse-glow">
                 🔥
@@ -235,7 +257,7 @@ export default function HomePage() {
                 <p className="text-gray-400 text-sm sm:text-base mt-1 font-medium">Giữ vững chuỗi streak, ôn tập ngay nào.</p>
               </div>
             </div>
-            
+
             <Link
               to="/review"
               className="w-full sm:w-auto flex items-center justify-center gap-2 btn-primary px-8 py-3.5 rounded-xl font-bold shadow-[0_0_20px_rgba(124,58,237,0.4)] hover:shadow-[0_0_30px_rgba(124,58,237,0.6)] hover:scale-105 transition-all text-base relative z-10"
@@ -286,14 +308,14 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/50 via-blue-500/30 to-violet-500/40 opacity-70 blur-md pointer-events-none" />
         <div className="relative glass rounded-[2rem] p-6 sm:p-7 overflow-hidden bg-[#0f172a]/60 backdrop-blur-xl border border-white/10">
           <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
-          
+
           <div className="flex flex-col gap-4 relative z-10">
             <div className="flex items-center gap-3">
               <span className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-xl shadow-[0_0_15px_rgba(6,182,212,0.3)]">✨</span>
               <h2 className="text-xl font-bold text-white tracking-tight">Trợ lý AI tạo thẻ nhanh</h2>
             </div>
             <p className="text-gray-400 text-sm">Nhập chủ đề bạn muốn học (VD: Đàm phán, ReactJS) và chọn số lượng. AI sẽ tạo hàng loạt thẻ mới và thêm vào bộ thẻ tương ứng ⚡.</p>
-            
+
             <form onSubmit={handleGenerateAICard} className="flex flex-col sm:flex-row gap-3 mt-1">
               <input
                 value={aiTopic}

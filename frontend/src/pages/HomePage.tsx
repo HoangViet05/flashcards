@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { getDecks, createDeck, deleteDeck } from '../api/decks'
 import { getDueCards } from '../api/review'
 import { getCards, createCard } from '../api/cards'
-import { generateAIContent } from '../api/ai'
+import { generateAIBatchContent } from '../api/ai'
 import { useNotification } from '../components/NotificationProvider'
 import DeckCard from '../components/DeckCard'
 import type { Deck, Review } from '../types'
@@ -18,6 +18,7 @@ export default function HomePage() {
   const [showForm, setShowForm] = useState(false)
   
   const [aiTopic, setAiTopic] = useState('')
+  const [aiCount, setAiCount] = useState(5)
   const [isGenerating, setIsGenerating] = useState(false)
 
   const { toast, confirm } = useNotification()
@@ -61,7 +62,7 @@ export default function HomePage() {
 
     setIsGenerating(true)
     try {
-      const result = await generateAIContent(topic)
+      const result = await generateAIBatchContent(topic, aiCount)
       
       let targetDeckId = ''
       const existingDeck = decks.find(d => d.name.toLowerCase() === topic.toLowerCase())
@@ -73,13 +74,22 @@ export default function HomePage() {
         targetDeckId = newDeck.id
       }
 
-      await createCard(targetDeckId, {
-        front_text: result.front_text || topic,
-        back_text: result.back_text || '',
-        example_sentence: result.example_sentence || undefined
-      })
+      let successCount = 0;
+      for (const card of result.cards) {
+        try {
+            await createCard(targetDeckId, {
+                front_text: card.front_text || topic,
+                back_text: card.back_text || '',
+                example_sentence: card.example_sentence || undefined
+            });
+            successCount++;
+        } catch (e) {
+            // Bỏ qua lỗi duplicate card trong cùng 1 batch
+            console.warn("Lỗi khi thêm một thẻ:", e)
+        }
+      }
 
-      toast(`Đã tạo thành công thẻ AI cho chủ đề "${topic}"`, 'success')
+      toast(`Đã tạo thành công ${successCount} thẻ AI cho chủ đề "${topic}"`, 'success')
       setAiTopic('')
       load()
     } catch (err: any) {
@@ -185,7 +195,7 @@ export default function HomePage() {
               <span className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-xl shadow-[0_0_15px_rgba(6,182,212,0.3)]">✨</span>
               <h2 className="text-xl font-bold text-white tracking-tight">Trợ lý AI tạo thẻ nhanh</h2>
             </div>
-            <p className="text-gray-400 text-sm">Nhập chủ đề bạn muốn học (VD: Đàm phán, ReactJS). AI sẽ tạo một thẻ mới và thêm vào bộ thẻ tương ứng (tạo bộ mới nếu chưa có).</p>
+            <p className="text-gray-400 text-sm">Nhập chủ đề bạn muốn học (VD: Đàm phán, ReactJS) và chọn số lượng. AI sẽ tạo hàng loạt thẻ mới và thêm vào bộ thẻ tương ứng ⚡.</p>
             
             <form onSubmit={handleGenerateAICard} className="flex flex-col sm:flex-row gap-3 mt-1">
               <input
@@ -195,6 +205,19 @@ export default function HomePage() {
                 className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl px-5 py-3.5 text-cyan-100 font-medium placeholder-gray-500 focus:bg-white/[0.05] focus:border-cyan-500/50 transition-all outline-none"
                 disabled={isGenerating}
               />
+              <div className="flex items-center bg-white/[0.03] border border-white/10 rounded-xl px-3 py-3.5 transition-all focus-within:bg-white/[0.05] focus-within:border-cyan-500/50 sm:w-28 relative">
+                <span className="text-gray-500 text-sm font-medium mr-2 whitespace-nowrap hidden sm:inline">Số thẻ:</span>
+                <span className="text-gray-500 text-sm font-medium mr-2 whitespace-nowrap sm:hidden">#</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="15"
+                  value={aiCount}
+                  onChange={e => setAiCount(parseInt(e.target.value) || 5)}
+                  className="w-full bg-transparent text-cyan-100 font-bold outline-none text-right appearance-none"
+                  disabled={isGenerating}
+                />
+              </div>
               <button
                 type="submit"
                 disabled={isGenerating || !aiTopic.trim()}

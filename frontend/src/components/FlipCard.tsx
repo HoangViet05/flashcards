@@ -4,6 +4,9 @@ import type { Card } from '../types'
 interface Props {
   card: Card
   onRate: (quality: number) => void
+  onNext?: () => void
+  onPrev?: () => void
+  isPractice?: boolean
 }
 
 const RATINGS = [
@@ -13,7 +16,7 @@ const RATINGS = [
   { label: 'Dễ', quality: 5, bg: 'bg-emerald-500/15 hover:bg-emerald-500/30 border-emerald-500/30 hover:border-emerald-400/60 text-emerald-300', icon: '😄' },
 ]
 
-export default function FlipCard({ card, onRate }: Props) {
+export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: Props) {
   const [flipped, setFlipped] = useState(false)
 
   return (
@@ -88,23 +91,43 @@ export default function FlipCard({ card, onRate }: Props) {
       {/* Rating buttons */}
       {flipped && (
         <div className="w-full animate-fade-in-up mt-2" style={{ animationDelay: '100ms' }}>
-          <p className="text-center text-gray-500 text-xs font-bold mb-4 uppercase tracking-[0.2em]">Đánh giá độ khó</p>
-          <div className="grid grid-cols-4 gap-3 sm:gap-4">
-            {RATINGS.map((r, i) => (
+          {isPractice ? (
+            <div className="flex justify-center gap-3 mt-2 w-full max-w-md mx-auto">
               <button
-                key={r.quality}
-                onClick={() => onRate(r.quality)}
-                className={`group relative flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] hover:shadow-lg overflow-hidden bg-black/20 backdrop-blur-md ${r.bg}`}
-                style={{ animationDelay: `${(i * 50) + 100}ms` }}
+                onClick={onPrev}
+                disabled={!onPrev}
+                className="btn-secondary flex-1 px-4 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(6,182,212,0.15)] hover:scale-[1.02] transition-all text-sm sm:text-base border border-cyan-500/30 text-cyan-200/80 disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                {/* Hover glare effect */}
-                <span className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full blur-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
-                
-                <span className="text-2xl sm:text-3xl filter drop-shadow-md group-hover:scale-110 transition-transform">{r.icon}</span>
-                <span className="text-xs sm:text-sm font-bold tracking-wide">{r.label}</span>
+                <span>⬅️</span> Quay lại
               </button>
-            ))}
-          </div>
+              <button
+                onClick={onNext}
+                className="btn-primary flex-1 px-4 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(124,58,237,0.3)] hover:scale-[1.02] transition-all text-sm sm:text-base border border-violet-500/40"
+              >
+                Tiếp theo <span>➡️</span>
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="text-center text-gray-500 text-xs font-bold mb-4 uppercase tracking-[0.2em]">Đánh giá độ khó</p>
+              <div className="grid grid-cols-4 gap-3 sm:gap-4">
+                {RATINGS.map((r, i) => (
+                  <button
+                    key={r.quality}
+                    onClick={() => onRate(r.quality)}
+                    className={`group relative flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] hover:shadow-lg overflow-hidden bg-black/20 backdrop-blur-md ${r.bg}`}
+                    style={{ animationDelay: `${(i * 50) + 100}ms` }}
+                  >
+                    {/* Hover glare effect */}
+                    <span className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full blur-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
+                    
+                    <span className="text-2xl sm:text-3xl filter drop-shadow-md group-hover:scale-110 transition-transform">{r.icon}</span>
+                    <span className="text-xs sm:text-sm font-bold tracking-wide">{r.label}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

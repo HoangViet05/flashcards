@@ -12,16 +12,18 @@ export default function ReviewPage() {
   const [done, setDone] = useState(0)
   const [loading, setLoading] = useState(true)
 
+  const [animatingDir, setAnimatingDir] = useState<'next' | 'prev' | null>(null)
+  const [actionDir, setActionDir] = useState<'next' | 'prev'>('next')
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const deckIdFilter = params.get('deckId')
-    const modeFilter = params.get('mode') // 'learn' hoặc 'review'
+    const modeFilter = params.get('mode') // 'learn', 'review', or 'practice'
 
     const load = async () => {
       const [dueReviews, decks] = await Promise.all([getDueCards(), getDecks()])
       const allCards: Card[] = []
       
-      // Nếu có filter deckId, ta chỉ cần lấy cards của deck đó cho nhanh
       const decksToLoad = deckIdFilter ? decks.filter(d => d.id === deckIdFilter) : decks
       
       for (const deck of decksToLoad) {
@@ -34,11 +36,12 @@ export default function ReviewPage() {
         .map(r => ({ review: r, card: cardMap[r.card_id] }))
         .filter(item => item.card != null)
 
-      // Áp dụng bộ lọc mode
       if (modeFilter === 'learn') {
         items = items.filter(item => item.review.repetitions === 0)
       } else if (modeFilter === 'review') {
         items = items.filter(item => item.review.repetitions > 0)
+      } else if (modeFilter === 'practice') {
+        items = allCards.map(c => ({ review: null as any, card: c }))
       }
       
       setQueue(items)
@@ -47,12 +50,35 @@ export default function ReviewPage() {
     load()
   }, [])
 
+  const handleNext = () => {
+    setAnimatingDir('next')
+    setActionDir('next')
+    setTimeout(() => {
+      setDone(d => d + 1)
+      setCurrent(c => c + 1)
+      setAnimatingDir(null)
+    }, 250)
+  }
+
+  const handlePrev = () => {
+    setAnimatingDir('prev')
+    setActionDir('prev')
+    setTimeout(() => {
+      setDone(d => Math.max(0, d - 1))
+      setCurrent(c => Math.max(0, c - 1))
+      setAnimatingDir(null)
+    }, 250)
+  }
+
   const handleRate = async (quality: number) => {
     const item = queue[current]
-    await submitReview(item.card.id, quality)
-    setDone(d => d + 1)
-    setCurrent(c => c + 1)
+    if (item.review) {
+      submitReview(item.card.id, quality).catch(err => console.error(err))
+    }
+    handleNext()
   }
+
+  const isPractice = new URLSearchParams(window.location.search).get('mode') === 'practice'
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -72,7 +98,7 @@ export default function ReviewPage() {
         🎉
       </div>
       <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200 mb-3 drop-shadow-sm">Tuyệt vời!</h2>
-      <p className="text-gray-400 mb-10 text-lg leading-relaxed max-w-sm">Bạn đã hoàn thành tất cả thẻ cần ôn. Nghỉ ngơi và trở lại học ngày mai nhé!</p>
+      <p className="text-gray-400 mb-10 text-lg leading-relaxed max-w-sm">Bạn đã hoàn thành tất cả thẻ trong phiên này. Nghỉ ngơi và trở lại học ngày mai nhé!</p>
       <Link to="/" className="btn-primary px-8 py-3.5 rounded-xl font-bold inline-flex items-center gap-2 shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:scale-105 transition-transform">
         Quay lại trang chủ
       </Link>
@@ -89,7 +115,7 @@ export default function ReviewPage() {
       </div>
       <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-300 to-cyan-300 mb-3 drop-shadow-sm">Hoàn thành phiên ôn!</h2>
       <p className="text-gray-400 mb-10 text-lg leading-relaxed max-w-sm">
-        Bạn đã ghi nhớ được <span className="text-violet-400 font-bold bg-violet-500/10 px-2 py-0.5 rounded-md border border-violet-500/20">{done} thẻ</span> trong phiên.
+        Bạn đã {isPractice ? 'lướt qua' : 'ghi nhớ được'} <span className="text-violet-400 font-bold bg-violet-500/10 px-2 py-0.5 rounded-md border border-violet-500/20">{done} thẻ</span> trong phiên.
       </p>
       <Link to="/" className="btn-primary px-8 py-3.5 rounded-xl font-bold inline-flex items-center gap-2 shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:scale-105 transition-transform">
         Quay lại trang chủ
@@ -99,6 +125,11 @@ export default function ReviewPage() {
 
   const item = queue[current]
   const progress = Math.round((current / queue.length) * 100)
+
+  const animClass = animatingDir === 'next' ? 'animate-slide-out-next' 
+                  : animatingDir === 'prev' ? 'animate-slide-out-prev' 
+                  : actionDir === 'next'    ? 'animate-slide-in-next'
+                  :                           'animate-slide-in-prev';
 
   return (
     <div className="max-w-xl mx-auto px-6 py-12 relative">
@@ -126,8 +157,14 @@ export default function ReviewPage() {
         </div>
       </div>
       
-      <div className="relative z-10 w-full animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-        <FlipCard key={current} card={item.card} onRate={handleRate} />
+      <div key={current} className={`relative z-10 w-full ${animClass}`}>
+        <FlipCard 
+          card={item.card} 
+          onRate={handleRate} 
+          onNext={handleNext}
+          onPrev={current > 0 ? handlePrev : undefined}
+          isPractice={isPractice} 
+        />
       </div>
     </div>
   )

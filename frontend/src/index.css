@@ -9,12 +9,30 @@
 }
 
 body {
-  background-color: #080810;
+  background-color: #05050A; /* Dark premium background */
   color: #e5e7eb;
   min-height: 100vh;
+  overflow-x: hidden;
   background-image:
-    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(124, 58, 237, 0.15) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(6, 182, 212, 0.1) 0%, transparent 60%);
+    radial-gradient(circle 800px at 10% 0%, rgba(124, 58, 237, 0.22) 0%, transparent 60%),
+    radial-gradient(circle 1000px at 90% 20%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
+    radial-gradient(circle 900px at 50% 100%, rgba(236, 72, 153, 0.12) 0%, transparent 60%);
+  background-attachment: fixed;
+}
+
+/* Background Grid Overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  z-index: -1;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at 50% 30%, black 20%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 20%, transparent 80%);
 }
 
 @keyframes fadeInUp {
@@ -32,9 +50,31 @@ body {
   50%       { box-shadow: 0 0 40px rgba(124, 58, 237, 0.6); }
 }
 
+@keyframes slideOutLeft {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to   { opacity: 0; transform: translateX(-50px) scale(0.95); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(50px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes slideOutRight {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to   { opacity: 0; transform: translateX(50px) scale(0.95); }
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-50px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
 .animate-fade-in-up { animation: fadeInUp 0.4s ease both; }
 .animate-fade-in    { animation: fadeIn 0.3s ease both; }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+.animate-slide-out-next { animation: slideOutLeft 0.25s ease-in forwards; }
+.animate-slide-in-next { animation: slideInRight 0.3s ease-out both; }
+.animate-slide-out-prev { animation: slideOutRight 0.25s ease-in forwards; }
+.animate-slide-in-prev { animation: slideInLeft 0.3s ease-out both; }
 
 .glass {
   background: rgba(255, 255, 255, 0.04);

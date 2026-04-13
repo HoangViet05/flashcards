@@ -122,14 +122,18 @@ export default function DeckDetailPage() {
   )
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 mb-8 animate-fade-in-up">
-        <Link to="/" className="text-gray-600 hover:text-gray-300 transition-colors text-sm flex items-center gap-1">
-          <span>🗂️</span> Bộ thẻ
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+      {/* Breadcrumb Capsule */}
+      <div className="inline-flex items-center gap-2 sm:gap-3 mb-8 p-1.5 pr-5 bg-white/[0.02] border border-white/5 rounded-full backdrop-blur-md shadow-inner animate-fade-in-up hover:bg-white/[0.04] transition-colors">
+        <Link to="/" className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all text-sm font-bold group">
+          <span className="group-hover:scale-110 transition-transform">🗂️</span> 
+          <span className="hidden sm:inline">Tất cả bộ thẻ</span>
+          <span className="sm:hidden">Quay lại</span>
         </Link>
-        <span className="text-gray-700 text-sm">/</span>
-        <span className="text-white text-sm font-medium">{deck.name}</span>
+        <svg className="w-4 h-4 text-gray-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+        </svg>
+        <span className="text-cyan-300 text-sm font-extrabold tracking-wide truncate max-w-[150px] sm:max-w-xs">{deck.name}</span>
       </div>
 
       {/* Deck header */}
@@ -198,6 +202,14 @@ export default function DeckDetailPage() {
                       className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(6,182,212,0.1)] transition-all hover:scale-[1.02]"
                     >
                       <span>🧠</span> Ôn tập {dueCards.length} thẻ
+                    </Link>
+                  )}
+                  {cards.length > 0 && (
+                    <Link 
+                      to={`/review?deckId=${deck.id}&mode=practice`} 
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.08] text-white border border-white/10 px-5 py-2.5 rounded-xl text-sm font-bold shadow-inner transition-all hover:scale-[1.02]"
+                    >
+                      <span>🔄</span> Lướt thẻ
                     </Link>
                   )}
                 </>

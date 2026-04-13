@@ -125,7 +125,7 @@ export default function HomePage() {
   const totalCards = Object.values(cardCounts).reduce((a, b) => a + b, 0)
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
       {/* Hero banner when there are due cards */}
       {dueReviews.length > 0 && (
         <div className="mb-10 relative rounded-[2rem] p-[1px] animate-fade-in-up" style={{ boxShadow: '0 20px 40px -15px rgba(124,58,237,0.25)' }}>

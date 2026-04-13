@@ -24,7 +24,7 @@ class AIservice:
         if excluded_words and len(excluded_words) > 0:
             # Làm sạch mảng excluded_words trước khi đưa cho LLM để đảm bảo không bị dính ký tự rác/phiên âm
             cleaned_exclusions = [self._extract_clean_word(w) for w in excluded_words]
-            exclusion_prompt = f"\nYÊU CẦU ĐẶC BIỆT: Bạn BẮT BUỘC KHÔNG ĐƯỢC tạo ra các từ vựng đã có trong danh sách này: {', '.join(cleaned_exclusions)}. Hãy nghĩ ra một từ vựng tiếng Anh MỚI hoàn toàn so với các từ trên."
+            exclusion_prompt = f"\nYÊU CẦU ĐẶC BIỆT: Bạn BẮT BUỘC KHÔNG ĐƯỢC tạo ra các từ vựng đã có trong danh sách này: {', '.join(cleaned_exclusions)}. Hãy nghĩ ra một từ vựng tiếng Anh MỚI hoàn toàn so với các từ trên nhưng vẫn nằm trong chủ đề {topic}."
 
         # Gửi yêu cầu đến model để tạo từ vựng cho một chủ đề
         prompt = f"""

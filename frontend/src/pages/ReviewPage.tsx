@@ -132,7 +132,7 @@ export default function ReviewPage() {
                   :                           'animate-slide-in-prev';
 
   return (
-    <div className="max-w-xl mx-auto px-6 py-12 relative overflow-hidden">
+    <div className="max-w-xl mx-auto px-6 py-12 relative">
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 -z-10" />
       <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none translate-y-1/2 -z-10" />
       

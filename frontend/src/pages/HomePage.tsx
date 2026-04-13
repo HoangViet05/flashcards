@@ -62,14 +62,21 @@ export default function HomePage() {
 
     setIsGenerating(true)
     try {
-      const result = await generateAIBatchContent(topic, aiCount)
-      
       let targetDeckId = ''
+      let excludedWords: string[] = []
       const existingDeck = decks.find(d => d.name.toLowerCase() === topic.toLowerCase())
       
       if (existingDeck) {
         targetDeckId = existingDeck.id
-      } else {
+        // Lấy danh sách thẻ hiện có để exclude khỏi AI (chống gen trùng)
+        const existingCards = await getCards(targetDeckId)
+        excludedWords = existingCards.map(c => c.front_text)
+      }
+
+      // Giờ mới gọi AI và truyền excludedWords
+      const result = await generateAIBatchContent(topic, aiCount, excludedWords)
+      
+      if (!existingDeck) {
         const newDeck = await createDeck({ name: topic })
         targetDeckId = newDeck.id
       }
@@ -205,18 +212,36 @@ export default function HomePage() {
                 className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl px-5 py-3.5 text-cyan-100 font-medium placeholder-gray-500 focus:bg-white/[0.05] focus:border-cyan-500/50 transition-all outline-none"
                 disabled={isGenerating}
               />
-              <div className="flex items-center bg-white/[0.03] border border-white/10 rounded-xl px-3 py-3.5 transition-all focus-within:bg-white/[0.05] focus-within:border-cyan-500/50 sm:w-28 relative">
-                <span className="text-gray-500 text-sm font-medium mr-2 whitespace-nowrap hidden sm:inline">Số thẻ:</span>
-                <span className="text-gray-500 text-sm font-medium mr-2 whitespace-nowrap sm:hidden">#</span>
-                <input
-                  type="number"
-                  min="1"
-                  max="15"
-                  value={aiCount}
-                  onChange={e => setAiCount(parseInt(e.target.value) || 5)}
-                  className="w-full bg-transparent text-cyan-100 font-bold outline-none text-right appearance-none"
-                  disabled={isGenerating}
-                />
+              <div className="flex items-center bg-white/[0.03] border border-white/10 rounded-xl p-1.5 transition-all hover:bg-white/[0.04] focus-within:bg-white/[0.05] focus-within:border-cyan-500/50 shrink-0">
+                <span className="text-gray-500 text-sm font-medium ml-3 mr-2 whitespace-nowrap hidden sm:inline">Số thẻ:</span>
+                <span className="text-gray-500 text-sm font-medium ml-2 mr-2 whitespace-nowrap sm:hidden">#</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setAiCount(prev => Math.max(1, prev - 1))}
+                    disabled={isGenerating || aiCount <= 1}
+                    className="w-9 h-9 rounded-[0.6rem] bg-white/[0.05] hover:bg-white/10 active:scale-95 flex items-center justify-center text-cyan-400 font-bold disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all shadow-inner"
+                  >
+                    –
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={aiCount}
+                    onChange={e => setAiCount(parseInt(e.target.value) || 5)}
+                    className="w-10 bg-transparent text-cyan-100 font-bold text-lg text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    disabled={isGenerating}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setAiCount(prev => Math.min(50, prev + 1))}
+                    disabled={isGenerating || aiCount >= 50}
+                    className="w-9 h-9 rounded-[0.6rem] bg-white/[0.05] hover:bg-white/10 active:scale-95 flex items-center justify-center text-cyan-400 font-bold disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all shadow-inner"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
               <button
                 type="submit"

@@ -6,7 +6,7 @@ router = APIRouter(prefix="/api/ai", tags=["ai"])
 
 @router.post("/generate", response_model=AIGenerateResponse)
 async def generate_vocab(body: AIGenerateRequest):
-    result = ai_service.generate_card_content(body.word)
+    result = ai_service.generate_card_content(body.word, body.excluded_words)
     
     if not result:
         raise HTTPException(
@@ -18,7 +18,7 @@ async def generate_vocab(body: AIGenerateRequest):
 
 @router.post("/generate-batch", response_model=AIBatchGenerateResponse)
 async def generate_vocab_batch(body: AIBatchGenerateRequest):
-    result = ai_service.generate_batch_content(body.topic, body.count)
+    result = ai_service.generate_batch_content(body.topic, body.count, body.excluded_words)
     
     if result is None:
         raise HTTPException(

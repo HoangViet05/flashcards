@@ -10,12 +10,12 @@ export interface AIBatchGenerateResponse {
   cards: AIGenerateResponse[]
 }
 
-export const generateAIContent = async (word: string): Promise<AIGenerateResponse> => {
-  const { data } = await client.post<AIGenerateResponse>('/ai/generate', { word })
+export const generateAIContent = async (word: string, excluded_words: string[] = []): Promise<AIGenerateResponse> => {
+  const { data } = await client.post<AIGenerateResponse>('/ai/generate', { word, excluded_words })
   return data
 }
 
-export const generateAIBatchContent = async (topic: string, count: number = 5): Promise<AIBatchGenerateResponse> => {
-  const { data } = await client.post<AIBatchGenerateResponse>('/ai/generate-batch', { topic, count })
+export const generateAIBatchContent = async (topic: string, count: number = 5, excluded_words: string[] = []): Promise<AIBatchGenerateResponse> => {
+  const { data } = await client.post<AIBatchGenerateResponse>('/ai/generate-batch', { topic, count, excluded_words })
   return data
 }

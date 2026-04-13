@@ -11,11 +11,20 @@ class AIservice:
     def __init__(self, model_name: str = "Qwen3.5-9B-Claude-4.6-Opus-Reasoning-Distilled-v2-Q4_K_M"):
         self.model_name = model_name
 
+    def _extract_clean_word(self, text: str) -> str:
+        """Helper để làm sạch chuỗi, loại bỏ phiên âm, chỉ lấy chữ tiếng Anh gốc để check trùng lặp."""
+        if not text:
+            return ""
+        word_match = re.match(r"^[a-zA-Z\s-]+", text)
+        return word_match.group(0).strip().lower() if word_match else text.lower().strip()
+
     def generate_card_content(self, topic: str, excluded_words: list[str] = None):
         # Thiết lập nhắc nhở để tránh trùng lặp
         exclusion_prompt = ""
         if excluded_words and len(excluded_words) > 0:
-            exclusion_prompt = f"\nYÊU CẦU ĐẶC BIỆT: Bạn BẮT BUỘC KHÔNG ĐƯỢC tạo ra các từ vựng đã có trong danh sách này: {', '.join(excluded_words)}. Hãy nghĩ ra một từ vựng tiếng Anh MỚI hoàn toàn so với các từ trên."
+            # Làm sạch mảng excluded_words trước khi đưa cho LLM để đảm bảo không bị dính ký tự rác/phiên âm
+            cleaned_exclusions = [self._extract_clean_word(w) for w in excluded_words]
+            exclusion_prompt = f"\nYÊU CẦU ĐẶC BIỆT: Bạn BẮT BUỘC KHÔNG ĐƯỢC tạo ra các từ vựng đã có trong danh sách này: {', '.join(cleaned_exclusions)}. Hãy nghĩ ra một từ vựng tiếng Anh MỚI hoàn toàn so với các từ trên."
 
         # Gửi yêu cầu đến model để tạo từ vựng cho một chủ đề
         prompt = f"""
@@ -52,7 +61,7 @@ class AIservice:
             logger.error(f"Lỗi khi gọi LLM cho card content: {e}")
             return None
 
-    def generate_batch_content(self, topic: str, count: int = 5):
+    def generate_batch_content(self, topic: str, count: int = 5, existing_excluded_words: list[str] = None):
         """
         Thay vì yêu cầu LLM trả về danh sách, chúng ta sẽ gọi generate_card_content nhiều lần.
         Sử dụng vòng lặp while để đảm bảo sinh đủ số thẻ (count) dù có thẻ bị lỗi định dạng.
@@ -60,7 +69,11 @@ class AIservice:
         """
         logger.info(f"Bắt đầu tạo {count} thẻ cho chủ đề: {topic}")
         cards = []
-        excluded_words = []
+        
+        # CỰC KỲ QUAN TRỌNG: Tiền xử lý chuẩn hoá tập từ vựng từ DB truyền sang.
+        # Các thẻ cũ có thể ở định dạng "Word /phiên âm/", ta phải gọi helper lấy đúng "word" thôi.
+        excluded_words = [self._extract_clean_word(w) for w in existing_excluded_words] if existing_excluded_words else []
+        
         attempts = 0
         max_attempts = count * 3  # Cho phép số lần thử tối đa gấp 3 lần số thẻ (VD 5 thẻ -> được thử 15 lần) tránh vòng lặp lặp vô tận
 
@@ -73,12 +86,11 @@ class AIservice:
             if card and "front_text" in card:
                 front_text = card.get("front_text", "")
                 
-                # Tách từ tiếng Anh thực tế khỏi phiên âm để check trùng lặp dễ dàng.
-                # Ví dụ: "Ambitious /æmˈ..." -> lấy chữ "Ambitious"
-                word_match = re.match(r"^[a-zA-Z\s-]+", front_text)
-                clean_word = word_match.group(0).strip().lower() if word_match else front_text.lower().strip()
+                # Làm sạch từ AI trả về để check trùng. Ví dụ "AI /eɪ aɪ/" -> "ai"
+                clean_word = self._extract_clean_word(front_text)
 
-                if clean_word and clean_word not in [w.lower() for w in excluded_words]:
+                # So sánh trực tiếp vì mảng excluded_words đã được làm sạch đồng bộ từ trước
+                if clean_word and clean_word not in excluded_words:
                     cards.append(card)
                     excluded_words.append(clean_word)
                     logger.info(f"Tạo thành công từ mới: {clean_word}")

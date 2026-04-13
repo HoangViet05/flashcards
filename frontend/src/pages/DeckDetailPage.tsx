@@ -37,7 +37,8 @@ export default function DeckDetailPage() {
     
     setIsGenerating(true)
     try {
-      const result = await generateAIContent(front.trim())
+      const excludedWords = cards.map(c => c.front_text)
+      const result = await generateAIContent(front.trim(), excludedWords)
       setFront(result.front_text || front)
       setBack(result.back_text || '')
       setExample(result.example_sentence || '')

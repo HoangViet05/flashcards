@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getDecks, createDeck, deleteDeck } from '../api/decks'
 import { getDueCards } from '../api/review'
@@ -6,7 +6,10 @@ import { getCards, createCard } from '../api/cards'
 import { generateAIBatchStream } from '../api/ai'
 import { useNotification } from '../components/NotificationProvider'
 import DeckCard from '../components/DeckCard'
+import RobotAnimation from '../components/RobotAnimation'
 import type { Deck, Review } from '../types'
+
+type RobotAction = 'thinking' | 'add' | 'throw'
 
 interface GlobalFlyingCardData {
   id: string;
@@ -18,7 +21,7 @@ interface GlobalFlyingCardData {
 function FlyingGlassCard({ data, onComplete }: { data: GlobalFlyingCardData, onComplete: () => void }) {
   const [style, setStyle] = useState<React.CSSProperties>({
     position: 'fixed',
-    top: '40%',
+    top: '28%',
     left: '50%',
     transform: 'translate(-50%, -50%) scale(0.5) translateY(50px)',
     opacity: 0,
@@ -106,6 +109,8 @@ export default function HomePage() {
   const [aiCount, setAiCount] = useState(5)
   const [isGenerating, setIsGenerating] = useState(false)
   const [globalFlyingCards, setGlobalFlyingCards] = useState<GlobalFlyingCardData[]>([])
+  const [robotAction, setRobotAction] = useState<RobotAction>('thinking')
+  const actionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { toast, confirm } = useNotification()
 
@@ -147,6 +152,7 @@ export default function HomePage() {
     if (!topic) return
 
     setIsGenerating(true)
+    setRobotAction('thinking')
     try {
       let targetDeckId = ''
       let excludedWords: string[] = []
@@ -176,6 +182,9 @@ export default function HomePage() {
 
           if (isDuplicate) {
             setGlobalFlyingCards(prev => [...prev, { id: Date.now() + '-' + Math.random(), word, targetDeckId, status: 'rejected' }]);
+            if (actionTimeoutRef.current) clearTimeout(actionTimeoutRef.current)
+            setRobotAction('throw')
+            actionTimeoutRef.current = setTimeout(() => setRobotAction('thinking'), 1000)
           } else {
             await createCard(targetDeckId, {
               front_text: word,
@@ -187,6 +196,9 @@ export default function HomePage() {
 
             // Bắn thẻ bay ngay giữa màn hình
             setGlobalFlyingCards(prev => [...prev, { id: Date.now() + '-' + Math.random(), word, targetDeckId, status: 'success' }]);
+            if (actionTimeoutRef.current) clearTimeout(actionTimeoutRef.current)
+            setRobotAction('add')
+            actionTimeoutRef.current = setTimeout(() => setRobotAction('thinking'), 1000)
 
             load() // Real-time update count on GUI
           }
@@ -238,6 +250,9 @@ export default function HomePage() {
           onComplete={() => setGlobalFlyingCards(prev => prev.filter(c => c.id !== fc.id))}
         />
       ))}
+
+      {/* AI Generation Animation */}
+      <RobotAnimation isVisible={isGenerating} action={robotAction} />
       {/* Hero banner when there are due cards */}
       {dueReviews.length > 0 && (
         <div className="mb-10 relative rounded-[2rem] p-[1px] animate-fade-in-up" style={{ boxShadow: '0 20px 40px -15px rgba(124,58,237,0.25)' }}>

@@ -4,6 +4,7 @@ export interface AIGenerateResponse {
   front_text: string
   back_text: string
   example_sentence?: string
+  is_duplicate?: boolean
 }
 
 export interface AIBatchGenerateResponse {

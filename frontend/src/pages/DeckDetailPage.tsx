@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getDeck } from '../api/decks'
 import { getCards, createCard, updateCard, deleteCard } from '../api/cards'
 import { generateAIContent, generateAIBatchStream } from '../api/ai'
 import { useNotification } from '../components/NotificationProvider'
+import RobotAnimation from '../components/RobotAnimation'
 import type { Deck, Card } from '../types'
+
+type RobotAction = 'thinking' | 'add' | 'throw'
 
 interface GlobalFlyingCardData {
   id: string;
@@ -16,7 +19,7 @@ interface GlobalFlyingCardData {
 function FlyingGlassCard({ data, onComplete }: { data: GlobalFlyingCardData, onComplete: () => void }) {
   const [style, setStyle] = useState<React.CSSProperties>({
     position: 'fixed',
-    top: '40%',
+    top: '28%',
     left: '50%',
     transform: 'translate(-50%, -50%) scale(0.5) translateY(50px)',
     opacity: 0,
@@ -108,6 +111,9 @@ export default function DeckDetailPage() {
   const [aiCount, setAiCount] = useState(5)
   const [isBatchGenerating, setIsBatchGenerating] = useState(false)
   const [globalFlyingCards, setGlobalFlyingCards] = useState<GlobalFlyingCardData[]>([])
+  const [robotAction, setRobotAction] = useState<RobotAction>('thinking')
+  const [cardsCreatedInSession, setCardsCreatedInSession] = useState(0)
+  const actionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { toast, confirm } = useNotification()
 
   const load = async () => {
@@ -144,6 +150,8 @@ export default function DeckDetailPage() {
     if (!deck) return
 
     setIsBatchGenerating(true)
+    setCardsCreatedInSession(0)
+    setRobotAction('thinking')
     try {
       let successCount = 0;
       const excludedWords = cards.map(c => c.front_text)
@@ -151,10 +159,15 @@ export default function DeckDetailPage() {
       await generateAIBatchStream(deck.name, aiCount, excludedWords, async (card) => {
         try {
           const word = card.front_text || deck.name;
-          const isDuplicate = excludedWords.some(w => w.toLowerCase() === word.toLowerCase());
+          // Ưu tiên sử dụng cờ is_duplicate từ backend vì backend đã làm sạch từ vựng chuyên sâu (loại bỏ phiên âm).
+          // Fallback về frontend nếu backend trả thiếu.
+          const isDuplicate = card.is_duplicate ?? excludedWords.some(w => w.toLowerCase() === word.toLowerCase());
 
           if (isDuplicate) {
             setGlobalFlyingCards(prev => [...prev, { id: Date.now() + '-' + Math.random(), word, targetId: 'deck-card-count-badge', status: 'rejected' }]);
+            if (actionTimeoutRef.current) clearTimeout(actionTimeoutRef.current)
+            setRobotAction('throw')
+            actionTimeoutRef.current = setTimeout(() => setRobotAction('thinking'), 1000)
           } else {
             await createCard(deck.id, {
               front_text: word,
@@ -162,10 +175,15 @@ export default function DeckDetailPage() {
               example_sentence: card.example_sentence || undefined
             });
             successCount++;
+            setCardsCreatedInSession(prev => prev + 1)
             excludedWords.push(word);
 
             // Bắn thẻ bay ngay giữa màn hình
             setGlobalFlyingCards(prev => [...prev, { id: Date.now() + '-' + Math.random(), word, targetId: 'deck-card-count-badge', status: 'success' }]);
+
+            if (actionTimeoutRef.current) clearTimeout(actionTimeoutRef.current)
+            setRobotAction('add')
+            actionTimeoutRef.current = setTimeout(() => setRobotAction('thinking'), 1000)
 
             load() // Real-time update count on GUI
           }
@@ -268,6 +286,9 @@ export default function DeckDetailPage() {
           onComplete={() => setGlobalFlyingCards(prev => prev.filter(c => c.id !== fc.id))}
         />
       ))}
+
+      {/* Robot Animation Layer */}
+      <RobotAnimation isVisible={isBatchGenerating} action={robotAction} />
       {/* Breadcrumb Capsule */}
       <div className="inline-flex items-center gap-2 sm:gap-3 mb-8 p-1.5 pr-5 bg-white/[0.02] border border-white/5 rounded-full backdrop-blur-md shadow-inner animate-fade-in-up hover:bg-white/[0.04] transition-colors">
         <Link to="/" className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all text-sm font-bold group">

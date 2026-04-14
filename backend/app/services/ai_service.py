@@ -51,7 +51,7 @@ class AIservice:
                 format='json',
                 options = {
                     'num_predict': 1024,
-                    'temperature': 0.6, # Tăng temperature một chút để từ vựng đa dạng hơn, tránh bị lặp nội dung
+                    'temperature': 0.8, # Tăng temperature một chút để từ vựng đa dạng hơn, tránh bị lặp nội dung
                 }
             )
             content = response['message']['content']
@@ -134,6 +134,7 @@ class AIservice:
                     excluded_words.append(clean_word)
                     success_count += 1
                     logger.info(f"Tạo thành công từ mới: {clean_word}")
+                    card["is_duplicate"] = False
                     
                     # 🚀 ĐÂY LÀ ĐIỂM CỐT LÕI CỦA TINH CHẤT STREAMING (GENERATOR):
                     # Thay vì cards.append(card) vào list rồi return, ta sẽ dùng lệnh "yield"
@@ -142,6 +143,7 @@ class AIservice:
                     yield card
                 else:
                     logger.warning(f"Từ bị trùng lặp '{clean_word}', bỏ qua...")
+                    card["is_duplicate"] = True
                     # Ném thẻ bị trùng về cho Frontend để FE có thông tin phát hiệu ứng "Từ chối" (rejected)
                     yield card
             else:

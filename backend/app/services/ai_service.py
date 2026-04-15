@@ -1,15 +1,28 @@
 import ollama
-import json
 import re
 import logging
+from pydantic import BaseModel
+from openai import OpenAI
+import json
 
 # Cấu hình logging cơ bản
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
+# Định nghĩa cấu trúc chuẩn xác bắt buộc LLM phải tuân theo
+class FlashcardSchema(BaseModel):
+    front_text: str
+    back_text: str
+    example_sentence: str
+
 class AIservice:
     def __init__(self, model_name: str = "Qwen3.5-9B-Claude-4.6-Opus-Reasoning-Distilled-v2-Q4_K_M"):
         self.model_name = model_name
+        # Khởi tạo client gọi tới endpoint OpenAI-compatible của Ollama
+        self.client = OpenAI(
+            base_url="http://localhost:11434/v1",
+            api_key="ollama" # api_key là bắt buộc điền theo thư viện, nhưng Ollama không bắt check
+        )
 
     def _extract_clean_word(self, text: str) -> str:
         """Helper để làm sạch chuỗi, loại bỏ phiên âm, chỉ lấy chữ tiếng Anh gốc để check trùng lặp."""
@@ -45,18 +58,20 @@ class AIservice:
         """
 
         try:
-            response = ollama.chat(
+            # Dùng .parse() kết hợp response_format để ép chuẩn (Structured Output)
+            response = self.client.beta.chat.completions.parse(
                 model=self.model_name,
                 messages=[{'role': 'user', 'content': prompt}],
-                format='json',
-                options = {
-                    'num_predict': 1024,
-                    'temperature': 0.8, # Tăng temperature một chút để từ vựng đa dạng hơn, tránh bị lặp nội dung
-                }
+                temperature=0.8,
+                response_format=FlashcardSchema
             )
-            content = response['message']['content']
-            logger.debug(f"Raw AI response: {content}")
-            return json.loads(content)
+            
+            # Kết quả trả về đã tự động được parse sang Pydantic object cực an toàn
+            parsed_card = response.choices[0].message.parsed
+            
+            # Đổi về Dict/JSON để module khác xài
+            return parsed_card.model_dump()
+            
         except Exception as e:
             logger.error(f"Lỗi khi gọi LLM cho card content: {e}")
             return None

@@ -1,15 +1,28 @@
 import ollama
-import json
 import re
 import logging
+from pydantic import BaseModel
+from openai import OpenAI
+import json
 
 # Cấu hình logging cơ bản
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
+# Định nghĩa cấu trúc chuẩn xác bắt buộc LLM phải tuân theo
+class FlashcardSchema(BaseModel):
+    front_text: str
+    back_text: str
+    example_sentence: str
+
 class AIservice:
     def __init__(self, model_name: str = "Qwen3.5-9B-Claude-4.6-Opus-Reasoning-Distilled-v2-Q4_K_M"):
         self.model_name = model_name
+        # Khởi tạo client gọi tới endpoint OpenAI-compatible của Ollama
+        self.client = OpenAI(
+            base_url="http://localhost:11434/v1",
+            api_key="ollama" # api_key là bắt buộc điền theo thư viện, nhưng Ollama không bắt check
+        )
 
     def _extract_clean_word(self, text: str) -> str:
         """Helper để làm sạch chuỗi, loại bỏ phiên âm, chỉ lấy chữ tiếng Anh gốc để check trùng lặp."""
@@ -45,18 +58,20 @@ class AIservice:
         """
 
         try:
-            response = ollama.chat(
+            # Dùng .parse() kết hợp response_format để ép chuẩn (Structured Output)
+            response = self.client.beta.chat.completions.parse(
                 model=self.model_name,
                 messages=[{'role': 'user', 'content': prompt}],
-                format='json',
-                options = {
-                    'num_predict': 1024,
-                    'temperature': 0.6, # Tăng temperature một chút để từ vựng đa dạng hơn, tránh bị lặp nội dung
-                }
+                temperature=0.8,
+                response_format=FlashcardSchema
             )
-            content = response['message']['content']
-            logger.debug(f"Raw AI response: {content}")
-            return json.loads(content)
+            
+            # Kết quả trả về đã tự động được parse sang Pydantic object cực an toàn
+            parsed_card = response.choices[0].message.parsed
+            
+            # Đổi về Dict/JSON để module khác xài
+            return parsed_card.model_dump()
+            
         except Exception as e:
             logger.error(f"Lỗi khi gọi LLM cho card content: {e}")
             return None
@@ -105,6 +120,53 @@ class AIservice:
             logger.info(f"Tuyệt vời! Đã tạo thành công đủ {count} thẻ không trùng lặp.")
 
         return cards
+
+    def generate_batch_stream(self, topic: str, count: int = 5, existing_excluded_words: list[str] = None):
+        """
+        [Generator] Trả về từng thẻ qua luồng SSE (Server-Sent Events) ngay khi thẻ được tạo ra,
+        giúp luồng dữ liệu stream liên tục về phía user thay vì bắt user chờ sinh xong toàn bộ mảng (batch).
+        """
+        logger.info(f"Bắt đầu stream tạo {count} thẻ cho chủ đề: {topic}")
+        
+        excluded_words = [self._extract_clean_word(w) for w in existing_excluded_words] if existing_excluded_words else []
+        attempts = 0
+        max_attempts = count * 3  
+        success_count = 0
+
+        while success_count < count and attempts < max_attempts:
+            attempts += 1
+            logger.info(f"Đang sinh thẻ thứ {success_count+1}/{count} (Lần thử {attempts}/{max_attempts})...")
+            
+            # Khác với Streaming token, ở đây ta gọi generate_card_content như bình thường 
+            # để lấy được JSON của 1 thẻ (card) đã hoàn chỉnh.
+            card = self.generate_card_content(topic, excluded_words)
+            
+            if card and "front_text" in card:
+                front_text = card.get("front_text", "")
+                clean_word = self._extract_clean_word(front_text)
+
+                if clean_word and clean_word not in excluded_words:
+                    excluded_words.append(clean_word)
+                    success_count += 1
+                    logger.info(f"Tạo thành công từ mới: {clean_word}")
+                    card["is_duplicate"] = False
+                    
+                    # 🚀 ĐÂY LÀ ĐIỂM CỐT LÕI CỦA TINH CHẤT STREAMING (GENERATOR):
+                    # Thay vì cards.append(card) vào list rồi return, ta sẽ dùng lệnh "yield"
+                    # "yield" sẽ ném thẳng card này về Router để trả ngay lập tức cho Frontend,
+                    # Hàm sẽ tạm dừng tại đây. Quá trình router gửi mạng kết thúc sẽ quay lại vòng lặp while này chạy thẻ kế tiếp.
+                    yield card
+                else:
+                    logger.warning(f"Từ bị trùng lặp '{clean_word}', bỏ qua...")
+                    card["is_duplicate"] = True
+                    # Ném thẻ bị trùng về cho Frontend để FE có thông tin phát hiệu ứng "Từ chối" (rejected)
+                    yield card
+            else:
+                logger.warning("Lỗi thẻ từ LLM, thử lại...")
+
+        if success_count < count:
+            logger.error(f"Chỉ tạo được {success_count}/{count} thẻ sau {max_attempts} lần thử.")
+
 
 ai_service = AIservice()
 

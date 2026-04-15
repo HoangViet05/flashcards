@@ -313,10 +313,10 @@ The **SuperMemo-2** algorithm is the backbone of the review scheduling system:
 - [x] Separate "Learn new" vs. "Review due" workflows
 
 ### Phase 2 — Enhanced AI 🔨 **In Progress**
-- [ ] **Structured Output / Function Calling** — Migrate to OpenAI-compatible `response_format: json_schema` for more reliable outputs
-- [ ] **SSE Streaming** — Real-time token-by-token generation display (FastAPI SSE + `EventSource`)
+- [x] **Structured Output / Function Calling** — Migrate to OpenAI-compatible `response_format: json_schema` for more reliable outputs
+- [x] **SSE Streaming** — Real-time token-by-token generation display (FastAPI SSE + `EventSource`)
 - [x] **Batch Generation** — Generate multiple cards for a topic in one request
-- [ ] **Smart Prompting** — Context-aware prompts that avoid duplicating existing cards
+- [x] **Smart Prompting** — Context-aware prompts that avoid duplicating existing cards
 
 ### Phase 3 — RAG & Semantic Search 🔮 **Planned**
 - [ ] **Vector Embeddings** — Embed all cards using `text-embedding-3-small`

@@ -1,10 +1,97 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getDeck } from '../api/decks'
 import { getCards, createCard, updateCard, deleteCard } from '../api/cards'
-import { generateAIContent } from '../api/ai'
+import { generateAIContent, generateAIBatchStream } from '../api/ai'
 import { useNotification } from '../components/NotificationProvider'
+import RobotAnimation from '../components/RobotAnimation'
 import type { Deck, Card } from '../types'
+
+type RobotAction = 'thinking' | 'add' | 'throw'
+
+interface GlobalFlyingCardData {
+  id: string;
+  word: string;
+  targetId: string;
+  status?: 'success' | 'rejected';
+}
+
+function FlyingGlassCard({ data, onComplete }: { data: GlobalFlyingCardData, onComplete: () => void }) {
+  const [style, setStyle] = useState<React.CSSProperties>({
+    position: 'fixed',
+    top: '28%',
+    left: '50%',
+    transform: 'translate(-50%, -50%) scale(0.5) translateY(50px)',
+    opacity: 0,
+    zIndex: 9999,
+    transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+    pointerEvents: 'none'
+  });
+
+  const isRejected = data.status === 'rejected';
+
+  useEffect(() => {
+    const rx = (Math.random() - 0.5) * 80;
+    const ry = (Math.random() - 0.5) * 60;
+    const rRot = (Math.random() - 0.5) * 20;
+
+    const t1 = setTimeout(() => {
+      setStyle(prev => ({
+        ...prev,
+        opacity: 1,
+        transform: `translate(calc(-50% + ${rx}px), calc(-50% + ${ry}px)) scale(1) rotate(${rRot}deg)`,
+      }));
+    }, 50);
+
+    const t2 = setTimeout(() => {
+      if (isRejected) {
+        setStyle(prev => ({
+          ...prev,
+          top: '100%',
+          transform: 'translate(-50%, 100%) scale(0.6) rotate(-30deg)',
+          opacity: 0,
+          transition: 'all 0.6s cubic-bezier(0.5, 0, 0.2, 1)'
+        }));
+      } else {
+        const target = document.getElementById(data.targetId);
+        if (target) {
+          const rect = target.getBoundingClientRect();
+          const targetX = rect.left + 20;
+          const targetY = rect.top + 10;
+
+          setStyle(prev => ({
+            ...prev,
+            top: targetY + 'px',
+            left: targetX + 'px',
+            transform: 'translate(-50%, -50%) scale(0.1) rotate(45deg)',
+            opacity: 0,
+            transition: 'all 0.6s cubic-bezier(0.5, 0, 0.2, 1)'
+          }));
+        } else {
+          setStyle(prev => ({ ...prev, opacity: 0, transform: 'translate(-50%, -50%) scale(0)' }));
+        }
+      }
+    }, 1200);
+
+    const t3 = setTimeout(() => {
+      onComplete();
+    }, 1900);
+
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); }
+  }, [data.targetId, isRejected, onComplete]);
+
+  return (
+    <div style={style} className={`glass px-8 py-10 rounded-3xl border shadow-[0_30px_60px_rgba(0,0,0,0.4)] bg-[#0f172a]/80 backdrop-blur-2xl flex flex-col items-center justify-center gap-4 ${isRejected ? 'border-red-500/30' : 'border-white/30'}`}>
+      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl border shadow-inner ${isRejected ? 'bg-gradient-to-br from-red-500/40 to-orange-500/30 border-red-500/60' : 'bg-gradient-to-br from-violet-500/40 to-fuchsia-500/30 border-violet-500/60 shadow-[0_0_20px_rgba(124,58,237,0.4)]'}`}>
+        {isRejected ? '🚫' : '✨'}
+      </div>
+      <div className={`font-extrabold text-2xl tracking-tight text-center max-w-[200px] truncate ${isRejected ? 'text-red-200 line-through' : 'text-white'}`}>{data.word}</div>
+      <div className={`font-bold text-xs py-1.5 px-4 rounded-full border ${isRejected ? 'text-red-300 bg-red-500/20 border-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'text-violet-300 bg-violet-500/20 border-violet-500/40 shadow-[0_0_15px_rgba(124,58,237,0.3)] animate-pulse'}`}>
+        {isRejected ? 'Bỏ qua từ trùng' : '+1 thẻ mới'}
+      </div>
+    </div>
+  );
+}
 
 export default function DeckDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -15,11 +102,18 @@ export default function DeckDetailPage() {
   const [back, setBack] = useState('')
   const [example, setExample] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
-  
+
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editFront, setEditFront] = useState('')
   const [editBack, setEditBack] = useState('')
   const [editExample, setEditExample] = useState('')
+
+  const [aiCount, setAiCount] = useState(5)
+  const [isBatchGenerating, setIsBatchGenerating] = useState(false)
+  const [globalFlyingCards, setGlobalFlyingCards] = useState<GlobalFlyingCardData[]>([])
+  const [robotAction, setRobotAction] = useState<RobotAction>('thinking')
+  const [cardsCreatedInSession, setCardsCreatedInSession] = useState(0)
+  const actionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { toast, confirm } = useNotification()
 
   const load = async () => {
@@ -34,7 +128,7 @@ export default function DeckDetailPage() {
       toast('Vui lòng nhập từ khóa vào mặt trước trước khi dùng AI', 'warning')
       return
     }
-    
+
     setIsGenerating(true)
     try {
       const excludedWords = cards.map(c => c.front_text)
@@ -48,6 +142,66 @@ export default function DeckDetailPage() {
       toast(msg, 'error')
     } finally {
       setIsGenerating(false)
+    }
+  }
+
+  const handleGenerateAIBatch = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!deck) return
+
+    setIsBatchGenerating(true)
+    setCardsCreatedInSession(0)
+    setRobotAction('thinking')
+    try {
+      let successCount = 0;
+      const excludedWords = cards.map(c => c.front_text)
+
+      await generateAIBatchStream(deck.name, aiCount, excludedWords, async (card) => {
+        try {
+          const word = card.front_text || deck.name;
+          // Ưu tiên sử dụng cờ is_duplicate từ backend vì backend đã làm sạch từ vựng chuyên sâu (loại bỏ phiên âm).
+          // Fallback về frontend nếu backend trả thiếu.
+          const isDuplicate = card.is_duplicate ?? excludedWords.some(w => w.toLowerCase() === word.toLowerCase());
+
+          if (isDuplicate) {
+            setGlobalFlyingCards(prev => [...prev, { id: Date.now() + '-' + Math.random(), word, targetId: 'deck-card-count-badge', status: 'rejected' }]);
+            if (actionTimeoutRef.current) clearTimeout(actionTimeoutRef.current)
+            setRobotAction('throw')
+            actionTimeoutRef.current = setTimeout(() => setRobotAction('thinking'), 1000)
+          } else {
+            await createCard(deck.id, {
+              front_text: word,
+              back_text: card.back_text || '',
+              example_sentence: card.example_sentence || undefined
+            });
+            successCount++;
+            setCardsCreatedInSession(prev => prev + 1)
+            excludedWords.push(word);
+
+            // Bắn thẻ bay ngay giữa màn hình
+            setGlobalFlyingCards(prev => [...prev, { id: Date.now() + '-' + Math.random(), word, targetId: 'deck-card-count-badge', status: 'success' }]);
+
+            if (actionTimeoutRef.current) clearTimeout(actionTimeoutRef.current)
+            setRobotAction('add')
+            actionTimeoutRef.current = setTimeout(() => setRobotAction('thinking'), 1000)
+
+            load() // Real-time update count on GUI
+          }
+        } catch (e) {
+          console.warn("Lỗi khi thêm một thẻ:", e)
+        }
+      })
+
+      if (successCount > 0) {
+        toast(`Đã tạo thành công ${successCount} thẻ AI cho chủ đề "${deck.name}"`, 'success')
+      } else {
+        toast(`Không thể tạo thẻ nào, có thể chủ đề này đã có đầy đủ thẻ.`, 'info')
+      }
+    } catch (err: any) {
+      console.error(err)
+      toast("Không thể tạo từ AI. Vui lòng kiểm tra lại kết nối.", 'error')
+    } finally {
+      setIsBatchGenerating(false)
     }
   }
 
@@ -123,10 +277,22 @@ export default function DeckDetailPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+
+      {/* Global Flying Cards Layer */}
+      {globalFlyingCards.map(fc => (
+        <FlyingGlassCard
+          key={fc.id}
+          data={fc}
+          onComplete={() => setGlobalFlyingCards(prev => prev.filter(c => c.id !== fc.id))}
+        />
+      ))}
+
+      {/* Robot Animation Layer */}
+      <RobotAnimation isVisible={isBatchGenerating} action={robotAction} />
       {/* Breadcrumb Capsule */}
       <div className="inline-flex items-center gap-2 sm:gap-3 mb-8 p-1.5 pr-5 bg-white/[0.02] border border-white/5 rounded-full backdrop-blur-md shadow-inner animate-fade-in-up hover:bg-white/[0.04] transition-colors">
         <Link to="/" className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all text-sm font-bold group">
-          <span className="group-hover:scale-110 transition-transform">🗂️</span> 
+          <span className="group-hover:scale-110 transition-transform">🗂️</span>
           <span className="hidden sm:inline">Tất cả bộ thẻ</span>
           <span className="sm:hidden">Quay lại</span>
         </Link>
@@ -142,7 +308,7 @@ export default function DeckDetailPage() {
         <div className="relative glass rounded-[2rem] p-6 sm:p-8 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-5 bg-black/40 backdrop-blur-xl border border-white/10 overflow-hidden">
           {/* Decorative glare */}
           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-b from-white/10 to-transparent rotate-45 transform translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-50 mix-blend-overlay" />
-          
+
           <div className="flex items-center gap-5 relative z-10 w-full sm:w-auto">
             <div className="w-16 h-16 rounded-[1.25rem] bg-gradient-to-br from-violet-500/20 to-purple-600/30 border border-violet-500/40 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(139,92,246,0.3)] shrink-0">
               📚
@@ -151,10 +317,10 @@ export default function DeckDetailPage() {
               <h1 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 truncate tracking-tight">{deck.name}</h1>
               {deck.description && <p className="text-gray-400 text-sm mt-1.5 line-clamp-2 leading-relaxed">{deck.description}</p>}
               <div className="flex items-center gap-2 mt-2.5">
-                <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-gray-300 backdrop-blur-md shadow-inner">
+                <span id="deck-card-count-badge" className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-gray-300 backdrop-blur-md shadow-inner">
                   {cards.length} thẻ
                 </span>
-                
+
                 {cards.filter(c => !c.review || c.review.repetitions === 0).length > 0 && (
                   <>
                     <div className="w-1.5 h-1.5 rounded-full bg-violet-500/30" />
@@ -179,34 +345,34 @@ export default function DeckDetailPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="flex flex-wrap gap-3 shrink-0 relative z-10 w-full sm:w-auto mt-2 sm:mt-0">
             {(() => {
               const today = new Date().toISOString().split('T')[0];
               const newCards = cards.filter(c => !c.review || c.review.repetitions === 0);
               const dueCards = cards.filter(c => c.review && c.review.repetitions > 0 && c.review.due_date <= today);
-              
+
               return (
                 <>
                   {newCards.length > 0 && (
-                    <Link 
-                      to={`/review?deckId=${deck.id}&mode=learn`} 
+                    <Link
+                      to={`/review?deckId=${deck.id}&mode=learn`}
                       className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(124,58,237,0.3)] transition-all hover:scale-[1.02]"
                     >
                       <span>✨</span> Học {newCards.length} thẻ mới
                     </Link>
                   )}
                   {dueCards.length > 0 && (
-                    <Link 
-                      to={`/review?deckId=${deck.id}&mode=review`} 
+                    <Link
+                      to={`/review?deckId=${deck.id}&mode=review`}
                       className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(6,182,212,0.1)] transition-all hover:scale-[1.02]"
                     >
                       <span>🧠</span> Ôn tập {dueCards.length} thẻ
                     </Link>
                   )}
                   {cards.length > 0 && (
-                    <Link 
-                      to={`/review?deckId=${deck.id}&mode=practice`} 
+                    <Link
+                      to={`/review?deckId=${deck.id}&mode=practice`}
                       className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.08] text-white border border-white/10 px-5 py-2.5 rounded-xl text-sm font-bold shadow-inner transition-all hover:scale-[1.02]"
                     >
                       <span>🔄</span> Lướt thẻ
@@ -225,6 +391,60 @@ export default function DeckDetailPage() {
         </div>
       </div>
 
+      {/* AI Batch Generator for this specific deck */}
+      <div className="mb-10 relative rounded-[2rem] p-[1px] animate-fade-in-up" style={{ animationDelay: '90ms' }}>
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/30 via-blue-500/20 to-violet-500/30 opacity-70 blur-md pointer-events-none" />
+        <div className="relative glass rounded-[2rem] p-5 sm:p-6 overflow-hidden bg-[#0f172a]/60 backdrop-blur-xl border border-white/10 flex flex-col md:flex-row items-center gap-5 justify-between">
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <span className="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-2xl shadow-[0_0_15px_rgba(6,182,212,0.3)] shrink-0">✨</span>
+            <div>
+              <h2 className="text-lg font-bold text-white tracking-tight">Tạo lô thẻ AI cho chủ đề này</h2>
+              <p className="text-gray-400 text-sm mt-0.5">Mở rộng bộ thẻ "{deck.name}" một cách thần tốc.</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleGenerateAIBatch} className="flex items-center gap-3 w-full md:w-auto">
+            <div className="flex items-center bg-white/[0.03] border border-white/10 rounded-xl p-1.5 transition-all hover:bg-white/[0.04] focus-within:bg-white/[0.05] focus-within:border-cyan-500/50 flex-1 md:flex-none">
+              <span className="text-gray-500 text-sm font-medium ml-3 mr-2 whitespace-nowrap hidden sm:inline">Số thẻ bổ sung:</span>
+              <span className="text-gray-500 text-sm font-medium ml-2 mr-1 whitespace-nowrap sm:hidden">SL:</span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setAiCount(prev => Math.max(1, prev - 1))}
+                  disabled={isBatchGenerating || aiCount <= 1}
+                  className="w-9 h-9 rounded-[0.6rem] bg-white/[0.05] hover:bg-white/10 active:scale-95 flex items-center justify-center text-cyan-400 font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-inner"
+                >–</button>
+                <input
+                  type="number"
+                  min="1" max="50"
+                  value={aiCount}
+                  onChange={e => setAiCount(parseInt(e.target.value) || 5)}
+                  className="w-10 bg-transparent text-cyan-100 font-bold text-lg text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  disabled={isBatchGenerating}
+                />
+                <button
+                  type="button"
+                  onClick={() => setAiCount(prev => Math.min(50, prev + 1))}
+                  disabled={isBatchGenerating || aiCount >= 50}
+                  className="w-9 h-9 rounded-[0.6rem] bg-white/[0.05] hover:bg-white/10 active:scale-95 flex items-center justify-center text-cyan-400 font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-inner"
+                >+</button>
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={isBatchGenerating}
+              className="btn-primary bg-cyan-600 hover:bg-cyan-500 px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
+            >
+              {isBatchGenerating ? (
+                <><div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />Đang tạo...</>
+              ) : (
+                <>Sinh thẻ 🪄</>
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+
       {/* Add card form modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -240,8 +460,8 @@ export default function DeckDetailPage() {
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-center ml-1">
                     <label className="text-sm font-semibold text-cyan-200/80 uppercase tracking-wider">Mặt trước</label>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={handleGenerateAI}
                       disabled={isGenerating}
                       className="text-xs flex items-center gap-1.5 bg-violet-600/30 hover:bg-violet-600/50 text-violet-200 px-3 py-1.5 rounded-lg transition-colors font-medium border border-violet-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -301,11 +521,10 @@ export default function DeckDetailPage() {
               style={{ animationDelay: `${(i % 10) * 40}ms` }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-violet-500/0 to-cyan-500/0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-[1.25rem]" />
-              <div className={`relative h-full flex-1 glass rounded-[1.25rem] p-5 sm:p-6 flex flex-col gap-4 border transition-all duration-300 overflow-hidden ${
-                isEditing
+              <div className={`relative h-full flex-1 glass rounded-[1.25rem] p-5 sm:p-6 flex flex-col gap-4 border transition-all duration-300 overflow-hidden ${isEditing
                   ? 'border-violet-500/60 bg-white/[0.04] shadow-[0_8px_30px_rgba(124,58,237,0.2)]'
                   : 'border-white/10 group-hover:border-violet-500/50 group-hover:bg-white/[0.08] hover:shadow-[0_8px_30px_rgba(124,58,237,0.15)] hover:-translate-y-1'
-              }`}>
+                }`}>
                 <div className="absolute -inset-2 bg-gradient-to-br from-violet-500/10 to-cyan-500/10 blur-xl opacity-0 group-hover:opacity-100 transition duration-500 -z-10" />
 
                 {/* Header row: số thứ tự + từ vựng (view) hoặc badge + nút (edit) */}

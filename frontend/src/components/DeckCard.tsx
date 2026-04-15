@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
 import type { Deck } from '../types'
 
 interface Props {
@@ -38,6 +39,23 @@ const DECK_BADGE = [
 
 export default function DeckCard({ deck, dueCount = 0, cardCount = 0, onDelete, index = 0 }: Props) {
   const i = index % DECK_GRADIENTS.length
+  
+  const [flyingCards, setFlyingCards] = useState<{id: number}[]>([])
+  const prevCardCount = useRef(cardCount)
+
+  useEffect(() => {
+    // Chỉ tạo thẻ bay vào khi số lượng thẻ tăng lên (được thêm mới)
+    if (cardCount > prevCardCount.current && prevCardCount.current !== 0) {
+        const id = Date.now() + Math.random()
+        setFlyingCards(prev => [...prev, { id }])
+        // Xóa khỏi DOM sau khi animation hoàn tất
+        setTimeout(() => {
+            setFlyingCards(prev => prev.filter(c => c.id !== id))
+        }, 800)
+    }
+    prevCardCount.current = cardCount
+  }, [cardCount])
+
   return (
       <div
         className={`group relative rounded-[2rem] p-[1px] cursor-pointer animate-fade-in-up transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(124,58,237,0.3)]`}
@@ -67,8 +85,13 @@ export default function DeckCard({ deck, dueCount = 0, cardCount = 0, onDelete, 
           <Link to={`/decks/${deck.id}`} className="flex-1 flex flex-col gap-4 relative z-10">
             {/* Icon + name */}
             <div className="flex items-start gap-4 pr-6">
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 border ${DECK_BADGE[i]} shadow-inner group-hover:scale-110 transition-transform duration-300`}>
+              <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 border ${DECK_BADGE[i]} shadow-inner group-hover:scale-110 transition-transform duration-300`}>
                 📚
+                {flyingCards.map(fc => (
+                  <div key={fc.id} className="absolute inset-0 m-auto w-7 h-9 bg-gradient-to-br from-white to-gray-200 rounded shadow-xl text-violet-600 font-extrabold flex items-center justify-center border border-white z-50 animate-fly-into-deck pointer-events-none">
+                    <span className="text-[10px] tracking-tighter leading-none pr-[1px] pt-[1px]">+1</span>
+                  </div>
+                ))}
               </div>
               <div className="flex-1 min-w-0 pt-1">
                 <h3 className="font-bold text-white text-lg leading-tight line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-300 transition-all">{deck.name}</h3>

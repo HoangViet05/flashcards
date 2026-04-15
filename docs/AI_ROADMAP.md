@@ -19,19 +19,40 @@ Lộ trình tích hợp AI vào dự án, từ cơ bản đến production-grade
 
 ---
 
-## Tầng 2 — RAG & Vector Search
+## Tầng 2 — RAG & PDF-Grounded Card Generation
 
-### Embeddings + Vector DB
-- **Tech:** `text-embedding-3-small` + Qdrant hoặc pgvector
-- **Kỹ năng:** embedding pipeline, similarity search, chunking strategy
+### PDF Upload & Extraction
+- **Tech:** PyMuPDF / pdfplumber / docling (strategy pattern, swap dễ dàng)
+- **Kỹ năng:** PDF parsing, strategy design pattern, text extraction từ bài báo khoa học
+- **Tính năng:** Upload PDF → trích xuất text theo trang → lưu metadata vào SQLite
+
+### Chunking & Vector Embeddings
+- **Tech:** ChromaDB (embedded vector DB) + Ollama `nomic-embed-text` hoặc OpenAI `text-embedding-3-small` (configurable)
+- **Kỹ năng:** chunking strategy (~500 tokens, 50 overlap), embedding pipeline, vector similarity search
 - **Tính năng:**
-  - Tìm kiếm ngữ nghĩa ("tìm từ liên quan đến cảm xúc")
-  - Gợi ý từ tương tự dựa trên nghĩa
+  - Chunk document → embed → lưu ChromaDB (mỗi document 1 collection)
+  - Configurable embedding provider qua `.env` (local miễn phí hoặc OpenAI)
+  - Reindex endpoint để re-embed khi đổi model
 
-### RAG Pipeline
-- **Tech:** LangChain retriever + context injection
-- **Kỹ năng:** retrieval-augmented generation, context window management
-- **Tính năng:** AI giải thích từ dựa trên những gì user đã học, không giải thích chung chung
+### RAG Pipeline — Gen Cards từ Paper
+- **Tech:** ChromaDB retriever + context injection vào Ollama/OpenAI LLM + FastAPI SSE streaming
+- **Kỹ năng:** retrieval-augmented generation, prompt engineering với citations, context window management
+- **Tính năng:**
+  - User chọn document + chủ đề → retrieve top-K chunks liên quan → LLM gen flashcard
+  - Example sentence trích dẫn trực tiếp từ paper kèm `[Trang X]`
+  - SSE stream từng card về frontend (tái sử dụng pattern Phase 2)
+
+### Document Library UI
+- **Tech:** React 19 + Vite, trang `/documents` và `/documents/:id`
+- **Tính năng:**
+  - Upload PDF với extractor selector (pymupdf / pdfplumber / docling)
+  - Quản lý tài liệu: list, xem chi tiết, xóa, theo dõi status (processing/ready/error)
+  - Gen card từ document: chọn deck đích + chủ đề + số lượng
+  - Semantic search trong document
+
+### Bonus: Semantic Search trên Cards
+- **Tech:** ChromaDB collection `cards_global`, embed card content khi tạo
+- **Tính năng:** Tìm card theo nghĩa xuyên suốt tất cả deck ("tìm từ về cảm xúc")
 
 ---
 
@@ -100,7 +121,7 @@ Lộ trình tích hợp AI vào dự án, từ cơ bản đến production-grade
 
 | Giai đoạn | Nội dung | Kết quả |
 |---|---|---|
-| Tháng 1 | Tầng 1 + 2 | AI tạo thẻ tự động + tìm kiếm ngữ nghĩa |
+| Tháng 1 | Tầng 1 + 2 | AI tạo thẻ tự động + RAG từ PDF khoa học |
 | Tháng 2 | Tầng 3 | Agent học tập, chat thông minh |
 | Tháng 3 | Tầng 4 | Luyện phát âm + học từ ảnh |
 | Tháng 4+ | Tầng 5–6 | ML riêng + production-grade observability |

@@ -318,11 +318,14 @@ The **SuperMemo-2** algorithm is the backbone of the review scheduling system:
 - [x] **Batch Generation** — Generate multiple cards for a topic in one request
 - [x] **Smart Prompting** — Context-aware prompts that avoid duplicating existing cards
 
-### Phase 3 — RAG & Semantic Search 🔮 **Planned**
-- [ ] **Vector Embeddings** — Embed all cards using `text-embedding-3-small`
-- [ ] **Semantic Search** — Find cards by meaning, not just text match ("find words about emotions")
-- [ ] **Similar Card Suggestions** — "You learned *ambitious*, you might also want *determined*"
-- [ ] **RAG Pipeline** — AI explanations grounded in your own learned vocabulary
+### Phase 3 — RAG & PDF-Grounded Card Generation 🔮 **Planned**
+- [ ] **PDF Upload & Extraction** — Upload scientific papers; swappable extractors (PyMuPDF, pdfplumber, docling) via strategy pattern
+- [ ] **Chunking & Vector Embeddings** — Split documents into chunks, embed via configurable provider (Ollama local / OpenAI API) into ChromaDB
+- [ ] **RAG Card Generation** — Retrieve relevant chunks → LLM generates vocabulary cards with example sentences cited directly from the paper `[Page X]`
+- [ ] **Document Library UI** — Independent "Documents" page to manage uploaded PDFs (upload, list, delete, status tracking)
+- [ ] **Semantic Search in Documents** — Search within a paper by meaning to find relevant passages
+- [ ] **Reindex Endpoint** — Re-embed all documents when switching embedding models
+- [ ] **Semantic Card Search** *(bonus)* — Find existing cards by meaning across all decks
 
 ### Phase 4 — Agentic Learning 🔮 **Planned**
 - [ ] **LangGraph AI Tutor** — Agent that decides whether to create new cards, review old ones, or explain concepts

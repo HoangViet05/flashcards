@@ -37,3 +37,12 @@ export interface Stats {
   due_today: number
   due_upcoming: Record<string, number>
 }
+
+export interface Document {
+  id: string
+  filename: string
+  status: 'processing' | 'ready' | 'error'
+  page_count: number | null
+  created_at: string
+  updated_at: string
+}

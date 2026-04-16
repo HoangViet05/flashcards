@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Bộ thẻ', icon: '🗂️' },
+  { to: '/documents', label: 'Tài liệu', icon: '📄' },
   { to: '/review', label: 'Ôn tập', icon: '🧠' },
   { to: '/stats', label: 'Thống kê', icon: '📊' },
 ]

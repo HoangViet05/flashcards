@@ -312,20 +312,20 @@ The **SuperMemo-2** algorithm is the backbone of the review scheduling system:
 - [x] Local LLM integration (Ollama) for auto card generation
 - [x] Separate "Learn new" vs. "Review due" workflows
 
-### Phase 2 — Enhanced AI 🔨 **In Progress**
+### Phase 2 — Enhanced AI ✅ **Complete**
 - [x] **Structured Output / Function Calling** — Migrate to OpenAI-compatible `response_format: json_schema` for more reliable outputs
 - [x] **SSE Streaming** — Real-time token-by-token generation display (FastAPI SSE + `EventSource`)
 - [x] **Batch Generation** — Generate multiple cards for a topic in one request
 - [x] **Smart Prompting** — Context-aware prompts that avoid duplicating existing cards
 
-### Phase 3 — RAG & PDF-Grounded Card Generation 🔮 **Planned**
-- [ ] **PDF Upload & Extraction** — Upload scientific papers; swappable extractors (PyMuPDF, pdfplumber, docling) via strategy pattern
-- [ ] **Chunking & Vector Embeddings** — Split documents into chunks, embed via configurable provider (Ollama local / OpenAI API) into ChromaDB
-- [ ] **RAG Card Generation** — Retrieve relevant chunks → LLM generates vocabulary cards with example sentences cited directly from the paper `[Page X]`
-- [ ] **Document Library UI** — Independent "Documents" page to manage uploaded PDFs (upload, list, delete, status tracking)
+### Phase 3 — RAG & PDF-Grounded Card Generation 🔨 **In Progress**
+- [x] **PDF Upload & Extraction** — Upload PDFs via drag-and-drop; PyMuPDF extracts text & page count; stored in `data/uploads/`
+- [x] **Document Library UI** — Independent `/documents` page to manage uploaded PDFs (upload, list, delete, status tracking)
+- [ ] **Chunking & Vector Embeddings** — Split documents into ~500-token chunks (50 overlap), embed via configurable provider (Ollama `nomic-embed-text` / OpenAI) into ChromaDB
+- [ ] **RAG Card Generation** — Retrieve top-K relevant chunks → LLM generates flashcards with example sentences cited directly from the paper `[Page X]`
 - [ ] **Semantic Search in Documents** — Search within a paper by meaning to find relevant passages
 - [ ] **Reindex Endpoint** — Re-embed all documents when switching embedding models
-- [ ] **Semantic Card Search** *(bonus)* — Find existing cards by meaning across all decks
+- [ ] **Semantic Card Search** *(bonus)* — Find existing cards by meaning across all decks (ChromaDB `cards_global` collection)
 
 ### Phase 4 — Agentic Learning 🔮 **Planned**
 - [ ] **LangGraph AI Tutor** — Agent that decides whether to create new cards, review old ones, or explain concepts

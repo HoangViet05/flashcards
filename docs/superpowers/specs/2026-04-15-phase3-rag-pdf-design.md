@@ -23,6 +23,7 @@
 - PDF preview/render in browser
 - Multi-user / authentication
 - Real-time collaborative editing of documents
+- Max upload file size: 50MB (configurable via `.env`)
 
 ---
 

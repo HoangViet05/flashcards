@@ -387,3 +387,62 @@ textarea:focus {
     opacity: 1;
   }
 }
+
+/* ── Hologram Robot keyframes ── */
+
+/* Floating up/down gently */
+@keyframes holoFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+/* Expanding ring at base */
+@keyframes holoRing {
+  0%   { transform: scale(0.6); opacity: 0.7; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Subtle opacity flicker — hologram effect */
+@keyframes holoFlicker {
+  0%, 100% { opacity: 1; }
+  92%       { opacity: 1; }
+  93%       { opacity: 0.7; }
+  94%       { opacity: 1; }
+  96%       { opacity: 0.85; }
+  97%       { opacity: 1; }
+}
+
+/* Scanlines scroll downward */
+@keyframes scanlinesMove {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 4px; }
+}
+
+/* ── GlyphViz keyframes ── */
+
+/* Horizontal scan sweep across the glyph grid */
+@keyframes glyphScan {
+  0%        { top: 26px;  opacity: 0.9; }
+  10%       { opacity: 1; }
+  90%       { opacity: 1; }
+  100%      { top: calc(100% - 22px); opacity: 0; }
+}
+
+/* New decoded line slides in from the right */
+@keyframes glyphLineIn {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0);   }
+}
+
+/* Entropy / waveform bars bounce height */
+@keyframes waveBar {
+  from { height: 4px;  }
+  to   { height: 18px; }
+}
+
+/* "ADDED" / "DUP" stamp pops in */
+@keyframes matrixStamp {
+  0%   { opacity: 0; transform: scale(1.6); }
+  60%  { opacity: 1; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}

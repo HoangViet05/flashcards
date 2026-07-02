@@ -13,8 +13,11 @@ class Card(Base):
     front_text: Mapped[str] = mapped_column(String(500), nullable=False)
     back_text: Mapped[str] = mapped_column(Text, nullable=False)
     example_sentence: Mapped[str | None] = mapped_column(Text, nullable=True)
+    pronunciation: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    definition: Mapped[str | None] = mapped_column(Text, nullable=True)
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     audio_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    example_audio_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

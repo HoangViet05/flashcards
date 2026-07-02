@@ -9,6 +9,9 @@ import DeckCard from '../components/DeckCard'
 import RobotAnimation from '../components/RobotAnimation'
 import type { Deck, Review } from '../types'
 
+// Tính năng AI tạm hoãn — bật lại khi phát hành các tính năng AI
+const AI_ENABLED = false
+
 type RobotAction = 'thinking' | 'add' | 'throw'
 
 interface GlobalFlyingCardData {
@@ -101,6 +104,7 @@ export default function HomePage() {
   const [dueReviews, setDueReviews] = useState<Review[]>([])
   const [cardCounts, setCardCounts] = useState<Record<string, number>>({})
   const [dueCounts, setDueCounts] = useState<Record<string, number>>({})
+  const [newCounts, setNewCounts] = useState<Record<string, number>>({})
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
   const [showForm, setShowForm] = useState(false)
@@ -119,20 +123,23 @@ export default function HomePage() {
     setDecks(d)
     setDueReviews(r)
 
-    // Load card counts and due counts per deck
+    // Load card counts and due/new counts per deck
     const counts: Record<string, number> = {}
     const dueByDeck: Record<string, number> = {}
+    const newByDeck: Record<string, number> = {}
 
     await Promise.all(d.map(async deck => {
       const cards = await getCards(deck.id)
       counts[deck.id] = cards.length
 
       const cardIds = new Set(cards.map(c => c.id))
-      dueByDeck[deck.id] = r.filter(rev => cardIds.has(rev.card_id)).length
+      dueByDeck[deck.id] = r.filter(rev => cardIds.has(rev.card_id) && rev.repetitions > 0).length
+      newByDeck[deck.id] = r.filter(rev => cardIds.has(rev.card_id) && rev.repetitions === 0).length
     }))
 
     setCardCounts(counts)
     setDueCounts(dueByDeck)
+    setNewCounts(newByDeck)
   }
 
   useEffect(() => { load() }, [])
@@ -148,6 +155,7 @@ export default function HomePage() {
 
   const handleGenerateAICard = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!AI_ENABLED) return
     const topic = aiTopic.trim()
     if (!topic) return
 
@@ -238,6 +246,8 @@ export default function HomePage() {
   }
 
   const totalCards = Object.values(cardCounts).reduce((a, b) => a + b, 0)
+  const newReviews = dueReviews.filter(r => r.repetitions === 0)
+  const dueOnly = dueReviews.filter(r => r.repetitions > 0)
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
@@ -267,14 +277,22 @@ export default function HomePage() {
               </div>
               <div>
                 <p className="text-white font-extrabold text-xl sm:text-2xl tracking-tight">
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400">{dueReviews.length}</span> thẻ đang chờ bạn!
+                  {dueOnly.length > 0 ? (
+                    <><span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400">{dueOnly.length}</span> thẻ đang chờ ôn!</>
+                  ) : (
+                    <><span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400">{newReviews.length}</span> từ mới đang chờ bạn!</>
+                  )}
                 </p>
-                <p className="text-gray-400 text-sm sm:text-base mt-1 font-medium">Giữ vững chuỗi streak, ôn tập ngay nào.</p>
+                <p className="text-gray-400 text-sm sm:text-base mt-1 font-medium">
+                  {dueOnly.length > 0 && newReviews.length > 0
+                    ? `Cùng ${newReviews.length} từ mới sẵn sàng để học.`
+                    : 'Giữ vững chuỗi streak, học ngay nào.'}
+                </p>
               </div>
             </div>
 
             <Link
-              to="/review"
+              to={dueOnly.length > 0 ? '/review?mode=review' : '/review?mode=learn'}
               className="w-full sm:w-auto flex items-center justify-center gap-2 btn-primary px-8 py-3.5 rounded-xl font-bold shadow-[0_0_20px_rgba(124,58,237,0.4)] hover:shadow-[0_0_30px_rgba(124,58,237,0.6)] hover:scale-105 transition-all text-base relative z-10"
             >
               Bắt đầu ôn 🚀
@@ -285,11 +303,12 @@ export default function HomePage() {
 
       {/* Stats row */}
       {decks.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 animate-fade-in-up" style={{ animationDelay: '60ms' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 animate-fade-in-up" style={{ animationDelay: '60ms' }}>
           {[
             { label: 'Bộ thẻ', value: decks.length, icon: '🗂️', color: 'from-blue-500/20 to-cyan-500/10', border: 'border-blue-500/30', text: 'text-blue-300' },
             { label: 'Tổng thẻ', value: totalCards, icon: '🃏', color: 'from-violet-500/20 to-purple-500/10', border: 'border-violet-500/30', text: 'text-violet-300' },
-            { label: 'Cần ôn hôm nay', value: dueReviews.length, icon: '⏰', color: 'from-orange-500/20 to-red-500/10', border: 'border-orange-500/30', text: 'text-orange-300' },
+            { label: 'Từ mới', value: newReviews.length, icon: '✨', color: 'from-amber-500/20 to-yellow-500/10', border: 'border-amber-500/30', text: 'text-amber-300' },
+            { label: 'Cần ôn hôm nay', value: dueOnly.length, icon: '⏰', color: 'from-orange-500/20 to-red-500/10', border: 'border-orange-500/30', text: 'text-orange-300' },
           ].map((s, i) => (
             <div key={s.label} className={`glass rounded-[1.5rem] p-5 flex items-center gap-4 bg-gradient-to-br ${s.color} border ${s.border} hover:scale-[1.02] transition-transform duration-300`}>
               <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl shadow-inner border border-white/10 shrink-0">
@@ -328,16 +347,23 @@ export default function HomePage() {
             <div className="flex items-center gap-3">
               <span className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-xl shadow-[0_0_15px_rgba(6,182,212,0.3)]">✨</span>
               <h2 className="text-xl font-bold text-white tracking-tight">Trợ lý AI tạo thẻ nhanh</h2>
+              {!AI_ENABLED && (
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2.5 py-1 rounded-full">Sắp ra mắt ✨</span>
+              )}
             </div>
-            <p className="text-gray-400 text-sm">Nhập chủ đề bạn muốn học (VD: Đàm phán, ReactJS) và chọn số lượng. AI sẽ tạo hàng loạt thẻ mới và thêm vào bộ thẻ tương ứng ⚡.</p>
+            <p className="text-gray-400 text-sm">
+              {AI_ENABLED
+                ? 'Nhập chủ đề bạn muốn học (VD: Đàm phán, ReactJS) và chọn số lượng. AI sẽ tạo hàng loạt thẻ mới và thêm vào bộ thẻ tương ứng ⚡.'
+                : 'Tính năng đang được hoàn thiện — sẽ sớm ra mắt. Hiện tại bạn có thể học với bộ 4000 Essential English Words có sẵn.'}
+            </p>
 
-            <form onSubmit={handleGenerateAICard} className="flex flex-col sm:flex-row gap-3 mt-1">
+            <form onSubmit={handleGenerateAICard} className={`flex flex-col sm:flex-row gap-3 mt-1 ${AI_ENABLED ? '' : 'opacity-60'}`}>
               <input
                 value={aiTopic}
                 onChange={e => setAiTopic(e.target.value)}
                 placeholder="Nhập bất kỳ chủ đề hoặc từ vựng..."
                 className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl px-5 py-3.5 text-cyan-100 font-medium placeholder-gray-500 focus:bg-white/[0.05] focus:border-cyan-500/50 transition-all outline-none"
-                disabled={isGenerating}
+                disabled={!AI_ENABLED || isGenerating}
               />
               <div className="flex items-center bg-white/[0.03] border border-white/10 rounded-xl p-1.5 transition-all hover:bg-white/[0.04] focus-within:bg-white/[0.05] focus-within:border-cyan-500/50 shrink-0">
                 <span className="text-gray-500 text-sm font-medium ml-3 mr-2 whitespace-nowrap hidden sm:inline">Số thẻ:</span>
@@ -346,7 +372,7 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={() => setAiCount(prev => Math.max(1, prev - 1))}
-                    disabled={isGenerating || aiCount <= 1}
+                    disabled={!AI_ENABLED || isGenerating || aiCount <= 1}
                     className="w-9 h-9 rounded-[0.6rem] bg-white/[0.05] hover:bg-white/10 active:scale-95 flex items-center justify-center text-cyan-400 font-bold disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all shadow-inner"
                   >
                     –
@@ -358,12 +384,12 @@ export default function HomePage() {
                     value={aiCount}
                     onChange={e => setAiCount(parseInt(e.target.value) || 5)}
                     className="w-10 bg-transparent text-cyan-100 font-bold text-lg text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    disabled={isGenerating}
+                    disabled={!AI_ENABLED || isGenerating}
                   />
                   <button
                     type="button"
                     onClick={() => setAiCount(prev => Math.min(50, prev + 1))}
-                    disabled={isGenerating || aiCount >= 50}
+                    disabled={!AI_ENABLED || isGenerating || aiCount >= 50}
                     className="w-9 h-9 rounded-[0.6rem] bg-white/[0.05] hover:bg-white/10 active:scale-95 flex items-center justify-center text-cyan-400 font-bold disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all shadow-inner"
                   >
                     +
@@ -372,7 +398,7 @@ export default function HomePage() {
               </div>
               <button
                 type="submit"
-                disabled={isGenerating || !aiTopic.trim()}
+                disabled={!AI_ENABLED || isGenerating || !aiTopic.trim()}
                 className="btn-primary bg-cyan-600 hover:bg-cyan-500 px-8 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 sm:w-auto text-sm"
               >
                 {isGenerating ? (
@@ -450,6 +476,7 @@ export default function HomePage() {
               key={deck.id}
               deck={deck}
               dueCount={dueCounts[deck.id] ?? 0}
+              newCount={newCounts[deck.id] ?? 0}
               cardCount={cardCounts[deck.id] ?? 0}
               onDelete={handleDelete}
               index={i}

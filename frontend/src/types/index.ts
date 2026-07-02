@@ -12,8 +12,11 @@ export interface Card {
   front_text: string
   back_text: string
   example_sentence: string | null
+  pronunciation: string | null
+  definition: string | null
   image_url: string | null
   audio_url: string | null
+  example_audio_url: string | null
   created_at: string
   updated_at: string
   review: Review | null
@@ -35,5 +38,15 @@ export interface Stats {
   total_cards: number
   total_reviewed_today: number
   due_today: number
+  new_cards: number
   due_upcoming: Record<string, number>
+}
+
+export interface Document {
+  id: string
+  filename: string
+  status: 'processing' | 'ready' | 'error'
+  page_count: number | null
+  created_at: string
+  updated_at: string
 }

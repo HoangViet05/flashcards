@@ -9,3 +9,5 @@ flashcards.db
 node_modules/
 dist/
 .DS_Store
+backend/data/
+extracted_anki/

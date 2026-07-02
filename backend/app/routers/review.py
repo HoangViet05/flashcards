@@ -47,7 +47,8 @@ def get_stats(db: Session = Depends(get_db)):
     total_reviewed_today = db.query(Review).filter(
         Review.reviewed_at >= datetime.combine(today, datetime.min.time())
     ).count()
-    due_today = db.query(Review).filter(Review.due_date <= today).count()
+    due_today = db.query(Review).filter(Review.due_date <= today, Review.repetitions > 0).count()
+    new_cards = db.query(Review).filter(Review.due_date <= today, Review.repetitions == 0).count()
 
     due_upcoming = {}
     for i in range(1, 8):
@@ -75,5 +76,6 @@ def get_stats(db: Session = Depends(get_db)):
         total_cards=total_cards,
         total_reviewed_today=total_reviewed_today,
         due_today=due_today,
+        new_cards=new_cards,
         due_upcoming=due_upcoming,
     )

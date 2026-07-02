@@ -16,6 +16,22 @@ const RATINGS = [
   { label: 'Dễ', quality: 5, bg: 'bg-emerald-500/15 hover:bg-emerald-500/30 border-emerald-500/30 hover:border-emerald-400/60 text-emerald-300', icon: '😄' },
 ]
 
+function AudioButton({ src, small }: { src: string; small?: boolean }) {
+  const play = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    new Audio(src).play().catch(() => {})
+  }
+  return (
+    <button
+      onClick={play}
+      className={`${small ? 'w-8 h-8 text-sm' : 'w-11 h-11 text-lg'} rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center transition-all hover:scale-110 active:scale-95 shrink-0`}
+      title="Phát âm thanh"
+    >
+      🔊
+    </button>
+  )
+}
+
 export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: Props) {
   const [flipped, setFlipped] = useState(false)
 
@@ -30,16 +46,18 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
         <div
           className="relative w-full transition-all duration-600"
           style={{
+            display: 'grid',
             transformStyle: 'preserve-3d',
             transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-            minHeight: '260px',
+            minHeight: '440px',
             transition: 'transform 0.55s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
           {/* Front */}
           <div
-            className="absolute inset-0 rounded-[2rem] flex flex-col items-center justify-center p-8 gap-5"
+            className="rounded-[2rem] flex flex-col items-center justify-center p-8 gap-5"
             style={{
+              gridArea: '1 / 1',
               backfaceVisibility: 'hidden',
               background: 'linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(8,8,16,0.9) 100%)',
               border: '1px solid rgba(124,58,237,0.3)',
@@ -53,6 +71,10 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
               🔤
             </div>
             <p className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 text-center tracking-tight drop-shadow-sm">{card.front_text}</p>
+            {card.pronunciation && (
+              <p className="text-cyan-200/70 text-xl font-medium tracking-wide">{card.pronunciation}</p>
+            )}
+            {card.audio_url && <AudioButton src={card.audio_url} />}
             <div className="flex items-center gap-3 mt-6">
               <span className="w-12 h-px bg-gradient-to-r from-transparent to-violet-500/50" />
               <span className="text-violet-400/80 text-xs font-bold uppercase tracking-widest bg-violet-500/10 px-3 py-1 rounded-full border border-violet-500/20">nhấn để lật</span>
@@ -62,8 +84,9 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
 
           {/* Back */}
           <div
-            className="absolute inset-0 rounded-[2rem] flex flex-col items-center justify-center p-8 gap-5"
+            className="rounded-[2rem] flex flex-col items-center justify-center p-8 gap-5"
             style={{
+              gridArea: '1 / 1',
               backfaceVisibility: 'hidden',
               transform: 'rotateY(180deg)',
               background: 'linear-gradient(135deg, rgba(6,182,212,0.15) 0%, rgba(8,8,16,0.95) 100%)',
@@ -74,11 +97,15 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
           >
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-[50px] pointer-events-none translate-y-1/2 -translate-x-1/2" />
             <p className="text-2xl sm:text-3xl font-bold text-white text-center leading-tight drop-shadow-md relative z-10">{card.back_text}</p>
+            {card.definition && (
+              <p className="text-gray-300 text-base text-center leading-relaxed max-w-md relative z-10">{card.definition}</p>
+            )}
             {card.example_sentence && (
-              <div className="mt-2 px-5 py-3 rounded-xl bg-white/5 border border-white/8 max-w-sm">
-                <p className="text-gray-400 text-sm italic text-center leading-relaxed">
+              <div className="mt-2 px-5 py-3 rounded-xl bg-white/5 border border-white/8 max-w-sm flex items-center gap-3">
+                <p className="text-gray-400 text-sm italic text-center leading-relaxed flex-1">
                   "{card.example_sentence}"
                 </p>
+                {card.example_audio_url && <AudioButton src={card.example_audio_url} small />}
               </div>
             )}
             {card.image_url && (

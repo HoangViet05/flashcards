@@ -24,4 +24,5 @@ class StatsOut(BaseModel):
     total_cards: int
     total_reviewed_today: int
     due_today: int
+    new_cards: int
     due_upcoming: dict[str, int]

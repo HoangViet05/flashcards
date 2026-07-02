@@ -5,6 +5,7 @@ import type { Deck } from '../types'
 interface Props {
   deck: Deck
   dueCount?: number
+  newCount?: number
   cardCount?: number
   onDelete: (id: string) => void
   index?: number
@@ -37,7 +38,7 @@ const DECK_BADGE = [
   'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
 ]
 
-export default function DeckCard({ deck, dueCount = 0, cardCount = 0, onDelete, index = 0 }: Props) {
+export default function DeckCard({ deck, dueCount = 0, newCount = 0, cardCount = 0, onDelete, index = 0 }: Props) {
   const i = index % DECK_GRADIENTS.length
   
   const [flyingCards, setFlyingCards] = useState<{id: number}[]>([])
@@ -114,6 +115,10 @@ export default function DeckCard({ deck, dueCount = 0, cardCount = 0, onDelete, 
               ) : dueCount > 0 ? (
                 <span className={`text-xs px-3 py-1 rounded-full border font-bold shadow-lg ${DECK_BADGE[i]}`}>
                   <span className="mr-1">🔥</span> {dueCount} cần ôn
+                </span>
+              ) : newCount > 0 ? (
+                <span className="text-xs text-amber-300 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30 font-bold shadow-lg">
+                  <span className="mr-1">✨</span> {newCount} từ mới
                 </span>
               ) : (
                 <span className="text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 font-medium flex items-center gap-1.5">

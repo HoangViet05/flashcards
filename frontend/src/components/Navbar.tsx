@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Bộ thẻ', icon: '🗂️' },
-  { to: '/documents', label: 'Tài liệu', icon: '📄' },
+  { to: '/documents', label: 'Tài liệu', icon: '📄', soon: true },
   { to: '/review', label: 'Ôn tập', icon: '🧠' },
   { to: '/stats', label: 'Thống kê', icon: '📊' },
 ]
@@ -20,7 +20,7 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-1 p-1.5 bg-white/[0.02] rounded-xl sm:rounded-2xl border border-white/5 shadow-inner">
-          {NAV_ITEMS.map(({ to, label, icon }) => {
+          {NAV_ITEMS.map(({ to, label, icon, soon }) => {
             const active = pathname === to
             return (
               <Link
@@ -34,6 +34,9 @@ export default function Navbar() {
               >
                 <span className="text-sm sm:text-base">{icon}</span>
                 <span className="tracking-wide">{label}</span>
+                {soon && (
+                  <span className="text-[8px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full px-1.5 py-0.5">soon</span>
+                )}
               </Link>
             )
           })}

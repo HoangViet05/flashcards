@@ -9,6 +9,9 @@ import DeckCard from '../components/DeckCard'
 import RobotAnimation from '../components/RobotAnimation'
 import type { Deck, Review } from '../types'
 
+// Tính năng AI tạm hoãn — bật lại khi phát hành các tính năng AI
+const AI_ENABLED = false
+
 type RobotAction = 'thinking' | 'add' | 'throw'
 
 interface GlobalFlyingCardData {
@@ -152,6 +155,7 @@ export default function HomePage() {
 
   const handleGenerateAICard = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!AI_ENABLED) return
     const topic = aiTopic.trim()
     if (!topic) return
 
@@ -343,16 +347,23 @@ export default function HomePage() {
             <div className="flex items-center gap-3">
               <span className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-xl shadow-[0_0_15px_rgba(6,182,212,0.3)]">✨</span>
               <h2 className="text-xl font-bold text-white tracking-tight">Trợ lý AI tạo thẻ nhanh</h2>
+              {!AI_ENABLED && (
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2.5 py-1 rounded-full">Sắp ra mắt ✨</span>
+              )}
             </div>
-            <p className="text-gray-400 text-sm">Nhập chủ đề bạn muốn học (VD: Đàm phán, ReactJS) và chọn số lượng. AI sẽ tạo hàng loạt thẻ mới và thêm vào bộ thẻ tương ứng ⚡.</p>
+            <p className="text-gray-400 text-sm">
+              {AI_ENABLED
+                ? 'Nhập chủ đề bạn muốn học (VD: Đàm phán, ReactJS) và chọn số lượng. AI sẽ tạo hàng loạt thẻ mới và thêm vào bộ thẻ tương ứng ⚡.'
+                : 'Tính năng đang được hoàn thiện — sẽ sớm ra mắt. Hiện tại bạn có thể học với bộ 4000 Essential English Words có sẵn.'}
+            </p>
 
-            <form onSubmit={handleGenerateAICard} className="flex flex-col sm:flex-row gap-3 mt-1">
+            <form onSubmit={handleGenerateAICard} className={`flex flex-col sm:flex-row gap-3 mt-1 ${AI_ENABLED ? '' : 'opacity-60'}`}>
               <input
                 value={aiTopic}
                 onChange={e => setAiTopic(e.target.value)}
                 placeholder="Nhập bất kỳ chủ đề hoặc từ vựng..."
                 className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl px-5 py-3.5 text-cyan-100 font-medium placeholder-gray-500 focus:bg-white/[0.05] focus:border-cyan-500/50 transition-all outline-none"
-                disabled={isGenerating}
+                disabled={!AI_ENABLED || isGenerating}
               />
               <div className="flex items-center bg-white/[0.03] border border-white/10 rounded-xl p-1.5 transition-all hover:bg-white/[0.04] focus-within:bg-white/[0.05] focus-within:border-cyan-500/50 shrink-0">
                 <span className="text-gray-500 text-sm font-medium ml-3 mr-2 whitespace-nowrap hidden sm:inline">Số thẻ:</span>
@@ -361,7 +372,7 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={() => setAiCount(prev => Math.max(1, prev - 1))}
-                    disabled={isGenerating || aiCount <= 1}
+                    disabled={!AI_ENABLED || isGenerating || aiCount <= 1}
                     className="w-9 h-9 rounded-[0.6rem] bg-white/[0.05] hover:bg-white/10 active:scale-95 flex items-center justify-center text-cyan-400 font-bold disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all shadow-inner"
                   >
                     –
@@ -373,12 +384,12 @@ export default function HomePage() {
                     value={aiCount}
                     onChange={e => setAiCount(parseInt(e.target.value) || 5)}
                     className="w-10 bg-transparent text-cyan-100 font-bold text-lg text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    disabled={isGenerating}
+                    disabled={!AI_ENABLED || isGenerating}
                   />
                   <button
                     type="button"
                     onClick={() => setAiCount(prev => Math.min(50, prev + 1))}
-                    disabled={isGenerating || aiCount >= 50}
+                    disabled={!AI_ENABLED || isGenerating || aiCount >= 50}
                     className="w-9 h-9 rounded-[0.6rem] bg-white/[0.05] hover:bg-white/10 active:scale-95 flex items-center justify-center text-cyan-400 font-bold disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all shadow-inner"
                   >
                     +
@@ -387,7 +398,7 @@ export default function HomePage() {
               </div>
               <button
                 type="submit"
-                disabled={isGenerating || !aiTopic.trim()}
+                disabled={!AI_ENABLED || isGenerating || !aiTopic.trim()}
                 className="btn-primary bg-cyan-600 hover:bg-cyan-500 px-8 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 sm:w-auto text-sm"
               >
                 {isGenerating ? (

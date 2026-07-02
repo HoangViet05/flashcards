@@ -24,6 +24,7 @@ export default function StatsPage() {
     { label: 'Tổng thẻ', value: stats.total_cards, icon: '🃏', color: 'from-violet-500/20 to-purple-500/10', border: 'border-violet-500/30', text: 'text-violet-400' },
     { label: 'Ôn hôm nay', value: stats.total_reviewed_today, icon: '✅', color: 'from-emerald-500/20 to-teal-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
     { label: 'Cần ôn ngay', value: stats.due_today, icon: '⏰', color: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/30', text: 'text-cyan-400' },
+    { label: 'Từ mới chờ học', value: stats.new_cards, icon: '✨', color: 'from-amber-500/20 to-yellow-500/10', border: 'border-amber-500/30', text: 'text-amber-400' },
   ]
 
   return (
@@ -61,7 +62,7 @@ export default function StatsPage() {
       )}
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4 sm:gap-6 mb-10">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 mb-10">
         {STAT_CARDS.map((s, i) => (
           <div
             key={s.label}

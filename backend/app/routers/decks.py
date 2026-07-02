@@ -9,7 +9,7 @@ router = APIRouter(prefix="/api/decks", tags=["decks"])
 
 @router.get("", response_model=list[DeckOut])
 def list_decks(db: Session = Depends(get_db)):
-    return db.query(Deck).order_by(Deck.created_at.desc()).all()
+    return db.query(Deck).order_by(Deck.name.asc()).all()
 
 
 @router.post("", response_model=DeckOut)

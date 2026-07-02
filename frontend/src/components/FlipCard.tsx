@@ -46,6 +46,7 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
         <div
           className="relative w-full transition-all duration-600"
           style={{
+            display: 'grid',
             transformStyle: 'preserve-3d',
             transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
             minHeight: '440px',
@@ -54,8 +55,9 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
         >
           {/* Front */}
           <div
-            className="absolute inset-0 rounded-[2rem] flex flex-col items-center justify-center p-8 gap-5"
+            className="rounded-[2rem] flex flex-col items-center justify-center p-8 gap-5"
             style={{
+              gridArea: '1 / 1',
               backfaceVisibility: 'hidden',
               background: 'linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(8,8,16,0.9) 100%)',
               border: '1px solid rgba(124,58,237,0.3)',
@@ -82,8 +84,9 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
 
           {/* Back */}
           <div
-            className="absolute inset-0 rounded-[2rem] flex flex-col items-center justify-center p-8 gap-5"
+            className="rounded-[2rem] flex flex-col items-center justify-center p-8 gap-5"
             style={{
+              gridArea: '1 / 1',
               backfaceVisibility: 'hidden',
               transform: 'rotateY(180deg)',
               background: 'linear-gradient(135deg, rgba(6,182,212,0.15) 0%, rgba(8,8,16,0.95) 100%)',

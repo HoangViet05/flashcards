@@ -3,9 +3,9 @@
   <!-- Logo / Hero -->
   <img src="https://em-content.zobj.net/source/apple/391/brain_1f9e0.png" width="80" alt="Flashie Logo" />
 
-  # Flashie — AI-Powered Spaced Repetition
+  # Flashie — Spaced Repetition Vocabulary Learning
 
-  **A full-stack vocabulary learning platform combining the SM-2 algorithm with local LLM intelligence.**
+  **A full-stack English vocabulary app powered by the SM-2 algorithm, shipping with the complete _4000 Essential English Words – Book 1_ deck: 600 words across 30 units with images, native audio and IPA transcriptions. Works 100% offline — AI-powered features are on the roadmap.**
 
   [![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -30,9 +30,10 @@ Most flashcard apps are either **too simple** (just flip cards) or **too bloated
 
 | Problem | Flashie's Solution |
 |---|---|
-| Manually creating cards is tedious | 🤖 One-click AI generation via local LLMs |
+| Manually creating cards is tedious | 📦 600 curated words imported out of the box (one-click AI generation coming soon) |
 | Generic review intervals | 🧠 SM-2 algorithm adapts to *your* memory |
-| Privacy concerns with cloud AI | 🔒 100% local — Ollama runs on your machine |
+| Text-only cards are hard to remember | 🔊 Every word ships with an image, IPA transcription and native audio |
+| Privacy concerns with cloud services | 🔒 100% local & offline — your data never leaves your machine |
 | Boring flashcard UIs | ✨ Glassmorphism design with 3D flip animations |
 
 ---
@@ -53,12 +54,12 @@ Most flashcard apps are either **too simple** (just flip cards) or **too bloated
       </ul>
     </td>
     <td width="50%">
-      <h4>🤖 AI Card Generation (Ollama)</h4>
+      <h4>📦 4000 Essential English Words Built-in</h4>
       <ul>
-        <li>Enter any topic or word → AI returns a complete flashcard</li>
-        <li>Structured JSON output with front text, definition, pronunciation & example sentence</li>
-        <li>Auto-creates decks by topic if they don't exist</li>
-        <li>Works with any Ollama-compatible model (Llama 3, Mistral, Qwen, etc.)</li>
+        <li>Complete Book 1 deck: 600 words across 30 unit decks (20 words each)</li>
+        <li>Each card: word, IPA transcription, Vietnamese meaning, English definition & example sentence</li>
+        <li>Native audio for word & example + illustrative image per word</li>
+        <li>One-time import script from the original Anki collection</li>
       </ul>
     </td>
   </tr>
@@ -67,9 +68,9 @@ Most flashcard apps are either **too simple** (just flip cards) or **too bloated
       <h4>🃏 Interactive 3D Flip Cards</h4>
       <ul>
         <li>CSS 3D transform with <code>perspective</code> and <code>preserve-3d</code></li>
+        <li>Front: vocabulary + IPA transcription + 🔊 audio playback</li>
+        <li>Back: Vietnamese meaning, English definition, example sentence (with audio) & image</li>
         <li>Smooth cubic-bezier transition (0.55s)</li>
-        <li>Front: vocabulary + pronunciation</li>
-        <li>Back: definition + contextual example sentence</li>
       </ul>
     </td>
     <td>
@@ -124,6 +125,10 @@ Most flashcard apps are either **too simple** (just flip cards) or **too bloated
   </tr>
 </table>
 
+### 🔮 Coming Soon
+
+AI-powered features — one-click card generation via local LLMs (Ollama), PDF-grounded card creation (RAG), and a daily tutor agent — are designed and partially built, but **intentionally paused** so the core learning experience ships solid first. They show up in the UI with a "Sắp ra mắt ✨" badge and the code stays in the repo. See the full [Roadmap](#-roadmap).
+
 ---
 
 ## 🏗 Architecture
@@ -151,20 +156,24 @@ flashcards/
 │       └── types/            # Shared TypeScript interfaces
 │
 ├── backend/                  # FastAPI + SQLAlchemy
-│   └── app/
-│       ├── main.py           # App entry, CORS, router registration
-│       ├── database.py       # SQLAlchemy engine & session
-│       ├── models/           # ORM models (Deck, Card, Review)
-│       ├── schemas/          # Pydantic request/response schemas
-│       ├── routers/          # API endpoint handlers
-│       │   ├── decks.py      #   └─ /api/decks/*
-│       │   ├── cards.py      #   └─ /api/decks/{id}/cards/*
-│       │   ├── review.py     #   └─ /api/review/*
-│       │   └── ai.py         #   └─ /api/ai/generate
-│       └── services/         # Business logic
-│           ├── sm2.py        #   └─ SM-2 algorithm implementation
-│           └── ai_service.py #   └─ Ollama LLM integration
+│   ├── app/
+│   │   ├── main.py           # App entry, CORS, routers, /media static files
+│   │   ├── database.py       # SQLAlchemy engine, session & lightweight migration
+│   │   ├── models/           # ORM models (Deck, Card, Review)
+│   │   ├── schemas/          # Pydantic request/response schemas
+│   │   ├── routers/          # API endpoint handlers
+│   │   │   ├── decks.py      #   └─ /api/decks/*
+│   │   │   ├── cards.py      #   └─ /api/decks/{id}/cards/*
+│   │   │   ├── review.py     #   └─ /api/review/*
+│   │   │   └── ai.py         #   └─ /api/ai/generate (paused)
+│   │   └── services/         # Business logic
+│   │       ├── sm2.py        #   └─ SM-2 algorithm implementation
+│   │       ├── anki_parser.py#   └─ 4000 Essential Words note parser
+│   │       └── ai_service.py #   └─ Ollama LLM integration (paused)
+│   ├── import_anki.py        # One-time dataset import script
+│   └── data/media/           # Card images & audio (gitignored, ~120MB)
 │
+├── extracted_anki/           # Raw Anki collection + media (gitignored)
 ├── docs/                     # Documentation
 │   └── AI_ROADMAP.md         # Detailed AI integration roadmap
 ├── start.bat                 # One-click launcher (Windows)
@@ -175,10 +184,10 @@ flashcards/
 
 ```mermaid
 graph LR
+    F[Anki collection] -->|import_anki.py| C
     A[React UI] -->|Axios| B[FastAPI]
-    B -->|SQLAlchemy| C[(SQLite / PostgreSQL)]
-    B -->|ollama.chat| D[Ollama LLM]
-    D -->|Structured JSON| B
+    A -->|/media images & audio| B
+    B -->|SQLAlchemy| C[(SQLite)]
     B -->|SM-2 compute| E[sm2.py]
     E -->|next interval| C
 ```
@@ -193,7 +202,7 @@ graph LR
 |---|---|---|
 | Python | 3.12+ | ✅ |
 | Node.js | 20+ | ✅ |
-| [Ollama](https://ollama.com/) | latest | ⬜ Optional (for AI features) |
+| [Ollama](https://ollama.com/) | latest | ⬜ Not needed (only for future AI features) |
 
 ### 1️⃣ Clone
 
@@ -214,7 +223,10 @@ conda create -n flashcard python=3.12 && conda activate flashcard  # Conda
 # Install dependencies
 pip install -r requirements.txt
 
-# Seed sample data (first time only)
+# Import the 4000 Essential English Words deck (first time only)
+python import_anki.py
+
+# Optional: extra sample decks
 python seed.py
 
 # Start server
@@ -233,17 +245,11 @@ npm run dev
 
 > 📍 App at `http://localhost:5173`
 
-### 4️⃣ AI Features (Optional)
+### 4️⃣ Start Learning
 
-```bash
-# Install Ollama from https://ollama.com
-# Pull any model you prefer:
-ollama pull llama3
-# or
-ollama pull mistral
-```
+Open `http://localhost:5173`, pick a unit deck (each has 20 new words), hit **"Học từ mới"**, flip cards, listen to the audio and rate yourself. Come back tomorrow — SM-2 schedules the reviews for you. 🔥
 
-The app auto-connects to the Ollama server at `localhost:11434`.
+> 💡 AI features (card generation, PDF import) are currently paused and marked "Sắp ra mắt ✨" in the UI. When they return, they'll only need a local Ollama install.
 
 ---
 
@@ -317,8 +323,8 @@ The **SuperMemo-2** algorithm is the backbone of the review scheduling system:
 - [x] **SSE Streaming** — Real-time token-by-token generation display (FastAPI SSE + `EventSource`)
 - [x] **Batch Generation** — Generate multiple cards for a topic in one request
 - [x] **Smart Prompting** — Context-aware prompts that avoid duplicating existing cards
-- [ ] **Rich Card Media (Schema + UI)** — Extend `Card` model with `image_path` & `audio_path`; flip card displays image and has audio playback button; static asset serving via FastAPI
-- [ ] **Anki Dataset Ingestion (with Assets)** — Import 2,400+ Anki cards including bundled images & MP3 audio from `extracted_anki/` → seed deck + golden eval set
+- [x] **Rich Card Media (Schema + UI)** — `Card` model extended with pronunciation, English definition, image & audio URLs; flip card shows image and plays word/example audio; static asset serving via FastAPI at `/media`
+- [x] **Anki Dataset Ingestion (with Assets)** — 600 cards / 30 unit decks with 1,800 media files imported from `extracted_anki/` via `import_anki.py` (golden eval set still pending)
 - [ ] **Evaluation Pipeline** — LLM-as-judge scoring + golden dataset (curated from Anki) + pytest regression tests on every generation prompt change
 - [ ] **LLM Observability** — Langfuse self-hosted: trace every LLM call with latency, token cost, prompt version
 - 📊 **Metrics:** LLM-judge score ≥ 4.0/5 on golden set, p95 latency < 3s, regression test gate in CI

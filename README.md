@@ -299,7 +299,7 @@ The **SuperMemo-2** algorithm is the backbone of the review scheduling system:
 
 ## 🗺 Roadmap
 
-> This project is under **active development**. Below is the planned evolution from a vocabulary app to a full AI-powered learning platform.
+> This project is under **active development**. Below is the planned evolution from a vocabulary app to a full AI-powered, agent-driven English learning platform. Three core themes drive this roadmap: **RAG**, **MCP**, and **a Daily Tutor Agent**.
 
 ### Phase 1 — Foundation ✅ **Complete**
 - [x] Full CRUD for Decks & Cards
@@ -312,35 +312,70 @@ The **SuperMemo-2** algorithm is the backbone of the review scheduling system:
 - [x] Local LLM integration (Ollama) for auto card generation
 - [x] Separate "Learn new" vs. "Review due" workflows
 
-### Phase 2 — Enhanced AI ✅ **Complete**
+### Phase 2 — Enhanced AI + Evaluation Foundation 🔨 **In Progress**
 - [x] **Structured Output / Function Calling** — Migrate to OpenAI-compatible `response_format: json_schema` for more reliable outputs
 - [x] **SSE Streaming** — Real-time token-by-token generation display (FastAPI SSE + `EventSource`)
 - [x] **Batch Generation** — Generate multiple cards for a topic in one request
 - [x] **Smart Prompting** — Context-aware prompts that avoid duplicating existing cards
+- [ ] **Rich Card Media (Schema + UI)** — Extend `Card` model with `image_path` & `audio_path`; flip card displays image and has audio playback button; static asset serving via FastAPI
+- [ ] **Anki Dataset Ingestion (with Assets)** — Import 2,400+ Anki cards including bundled images & MP3 audio from `extracted_anki/` → seed deck + golden eval set
+- [ ] **Evaluation Pipeline** — LLM-as-judge scoring + golden dataset (curated from Anki) + pytest regression tests on every generation prompt change
+- [ ] **LLM Observability** — Langfuse self-hosted: trace every LLM call with latency, token cost, prompt version
+- 📊 **Metrics:** LLM-judge score ≥ 4.0/5 on golden set, p95 latency < 3s, regression test gate in CI
 
-### Phase 3 — RAG & PDF-Grounded Card Generation 🔨 **In Progress**
+### Phase 3 — RAG over English Learning Content 🔨 **In Progress**
 - [x] **PDF Upload & Extraction** — Upload PDFs via drag-and-drop; PyMuPDF extracts text & page count; stored in `data/uploads/`
 - [x] **Document Library UI** — Independent `/documents` page to manage uploaded PDFs (upload, list, delete, status tracking)
+- [ ] **Multi-format Ingestion** — Beyond PDF: novels (`.epub`), articles (URL), subtitles (`.srt`), song lyrics, course transcripts
 - [ ] **Chunking & Vector Embeddings** — Split documents into ~500-token chunks (50 overlap), embed via configurable provider (Ollama `nomic-embed-text` / OpenAI) into ChromaDB
-- [ ] **RAG Card Generation** — Retrieve top-K relevant chunks → LLM generates flashcards with example sentences cited directly from the paper `[Page X]`
-- [ ] **Semantic Search in Documents** — Search within a paper by meaning to find relevant passages
+- [ ] **RAG Card Generation** — Retrieve top-K relevant chunks → LLM generates flashcards with example sentences cited directly from the source `[Source: Title, Page X]`
+- [ ] **Cross-encoder Re-ranking** — Re-rank top-K with a small cross-encoder for retrieval precision (depth over a basic RAG)
+- [ ] **Semantic Search in Documents** — Search within a document by meaning
+- [ ] **Semantic Card Search** — Find existing cards by meaning across all decks (`cards_global` collection)
 - [ ] **Reindex Endpoint** — Re-embed all documents when switching embedding models
-- [ ] **Semantic Card Search** *(bonus)* — Find existing cards by meaning across all decks (ChromaDB `cards_global` collection)
+- 📊 **Metrics:** Retrieval MRR@5, NDCG@10 on a hand-labeled query set; citation accuracy (manual audit)
 
-### Phase 4 — Agentic Learning 🔮 **Planned**
-- [ ] **LangGraph AI Tutor** — Agent that decides whether to create new cards, review old ones, or explain concepts
-- [ ] **Error Pattern Analysis** — Detect why you keep forgetting certain cards and suggest mnemonics
-- [ ] **Adaptive Difficulty** — ML model that replaces static SM-2 with personalized predictions
+### Phase 4 — MCP Server 🔮 **Planned**
+> Expose Flashie as a Model Context Protocol server so external clients (Claude Desktop, Cursor, Zed) can read/write the deck.
+- [ ] **MCP Server Skeleton** — Python MCP server with stdio + SSE transports, packaged separately from FastAPI
+- [ ] **Resources** — `card://{id}`, `deck://{id}`, `document://{id}` exposed as MCP resources
+- [ ] **Tools** — `search_cards`, `create_card`, `get_due_cards`, `record_review`, `get_stats`, `generate_from_topic`, `search_in_document`
+- [ ] **Prompts** — Built-in prompt templates: "Drill me on weak cards", "Explain this card with mnemonics"
+- [ ] **Auth & Scoping** — Token-based auth so external clients only see their own decks
+- 📊 **Metrics:** Tool call success rate, end-to-end demo with Claude Desktop creating cards into the live database
 
-### Phase 5 — Multimodal 🔮 **Planned**
-- [ ] **Pronunciation Scoring** — Record yourself → Whisper STT → AI grades your pronunciation
-- [ ] **Text-to-Speech** — Native pronunciation playback on flip cards
-- [ ] **Vision Card Creation** — Take a photo → GPT-4o Vision generates vocabulary cards from real objects
+### Phase 5 — Daily English Tutor Agent 🔮 **Planned**
+> The headline feature: an agent that helps you learn English every day, end-to-end. Built on top of MCP tools from Phase 4.
+- [ ] **LangGraph Agent Core** — State machine with persistent memory (per-user profile: level, weak topics, schedule)
+- [ ] **Daily Routine Workflow** — Morning trigger: greet user → run due review → suggest N new words at user's level → end-of-day recap
+- [ ] **Conversation Mode** — Free chat in English; agent silently captures words the user struggles with → proposes new cards
+- [ ] **Error Pattern Analysis** — Cross-card analysis: "you keep mixing up *affect/effect*" → propose targeted mnemonic card
+- [ ] **Tool Orchestration via MCP** — Agent uses the same MCP tools from Phase 4 (single source of truth)
+- [ ] **Conversation Trace UI** — Frontend page that visualizes agent decisions step-by-step (educational + debugging)
+- 📊 **Metrics:** Agent task success rate (LLM-as-judge), tools-per-task, % of agent-suggested cards user accepts
 
-### Phase 6 — Production & MLOps 🔮 **Planned**
-- [ ] **LLM Observability** — LangSmith/Langfuse tracing for cost & quality monitoring
-- [ ] **Evaluation Pipeline** — Automated quality scoring of AI-generated cards
-- [ ] **Fine-tuned Model** — LoRA/QLoRA fine-tuned model specialized for EN-VI vocabulary
+### Phase 6 — Custom ML 🔮 **Planned**
+> Where I prove I can do real AI engineering, not just call APIs.
+- [ ] **LLM Distillation for Card Generation** — Distill GPT-4o card outputs into a 1-3B local model (Llama 3.2 / Phi-3 / Qwen 2.5) using Anki + synthetic data, LoRA/QLoRA fine-tuning, exported to GGUF and served via Ollama. **Goal: same quality as GPT-4o, $0/card, < 1s latency.**
+- [ ] **Embedding Fine-tuning** *(conditional on Phase 3 retrieval metrics being weak)* — Fine-tune `nomic-embed-text` on (word, definition, example) triples from Anki to improve domain retrieval
+- [ ] **Adaptive Difficulty** — Replace static SM-2 with a learned model (gradient boosting on review history features) that predicts forget probability per card
+- [ ] **A/B Framework** — Run learned-model vs. SM-2 in parallel and compare retention
+- 📊 **Metrics:** Distill model BLEU & LLM-judge score vs. GPT-4o reference, latency, $/1K cards, retention lift over SM-2 baseline
+
+### Phase 7 — Multimodal (Local-first) 🔮 **Planned**
+> Phase 2 supports displaying image/audio that already exist on a card. Phase 7 is about **generating new** image/audio for cards that don't have any (cards from Phase 3 RAG, Phase 5 agent, manual creation).
+- [ ] **TTS for New Cards** — Local TTS (Coqui XTTS / OpenVoice) auto-generates audio for any card without one; cached to disk
+- [ ] **Image for New Cards** — Pluggable provider: Unsplash/Pexels API for stock photo lookup, or local Stable Diffusion (SDXL-Turbo) for synthesized images
+- [ ] **Speech-to-Text** — Local Whisper for user-recorded pronunciation
+- [ ] **Pronunciation Scoring** — Compare user audio vs. reference (Anki MP3 or generated TTS) using phoneme-level alignment
+- [ ] **Vision Card Creation** — Local VLM (Qwen2.5-VL / Llama 3.2 Vision) generates vocab cards from photos — keeps the "100% local" promise
+
+### Phase 8 — Production & MLOps 🔮 **Planned**
+- [ ] **Containerization** — `docker-compose` for full stack (frontend, backend, Ollama, ChromaDB, Langfuse)
+- [ ] **Model Serving** — Migrate fine-tuned models to vLLM or TGI for production-grade throughput
+- [ ] **CI/CD with Eval Gate** — GitHub Actions: lint → tests → eval pipeline must pass before merge
+- [ ] **Monitoring Dashboard** — Grafana with key metrics from Langfuse + custom learning analytics
+- [ ] **Cost Dashboard** — Track $/active user across all LLM calls
 
 > 📄 See [`docs/AI_ROADMAP.md`](docs/AI_ROADMAP.md) for the complete technical breakdown of each phase.
 

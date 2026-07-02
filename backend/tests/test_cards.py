@@ -32,3 +32,25 @@ def test_delete_card(client):
     card = client.post(f"/api/decks/{deck['id']}/cards", json={"front_text": "x", "back_text": "y"}).json()
     response = client.delete(f"/api/cards/{card['id']}")
     assert response.status_code == 200
+
+
+def test_create_card_with_media_fields(client):
+    deck = client.post("/api/decks", json={"name": "Unit test"}).json()
+    resp = client.post(
+        f"/api/decks/{deck['id']}/cards",
+        json={
+            "front_text": "afraid",
+            "back_text": "Sợ hãi",
+            "pronunciation": "[ə'freɪd]",
+            "definition": "When someone is afraid, they feel fear.",
+            "example_sentence": "The woman was afraid of what she saw.",
+            "image_url": "/media/4000B1_001.jpg",
+            "audio_url": "/media/4000B1_afraid.mp3",
+            "example_audio_url": "/media/4000B1_afraid_example.mp3",
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["pronunciation"] == "[ə'freɪd]"
+    assert data["definition"] == "When someone is afraid, they feel fear."
+    assert data["example_audio_url"] == "/media/4000B1_afraid_example.mp3"

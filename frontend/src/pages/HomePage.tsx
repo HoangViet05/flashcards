@@ -6,6 +6,7 @@ import { getCards, createCard } from '../api/cards'
 import { generateAIBatchStream } from '../api/ai'
 import { useNotification } from '../components/NotificationProvider'
 import DeckCard from '../components/DeckCard'
+import ImportAnkiModal from '../components/ImportAnkiModal'
 import RobotAnimation from '../components/RobotAnimation'
 import type { Deck, Review } from '../types'
 
@@ -108,6 +109,7 @@ export default function HomePage() {
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [showImport, setShowImport] = useState(false)
 
   const [aiTopic, setAiTopic] = useState('')
   const [aiCount, setAiCount] = useState(5)
@@ -329,12 +331,20 @@ export default function HomePage() {
           <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 tracking-tight">Bộ thẻ của bạn</h1>
           {decks.length > 0 && <p className="text-gray-500 text-sm mt-1.5 font-medium">{decks.length} bộ thẻ đang theo dõi</p>}
         </div>
-        <button
-          onClick={() => setShowForm(f => !f)}
-          className="btn-primary px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(124,58,237,0.3)] hover:scale-[1.02] transition-transform"
-        >
-          <span className="text-lg leading-none mb-0.5">+</span> Tạo bộ thẻ
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowImport(true)}
+            className="btn-secondary px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 border border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/10 transition-all"
+          >
+            📥 Nhập từ Anki
+          </button>
+          <button
+            onClick={() => setShowForm(f => !f)}
+            className="btn-primary px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(124,58,237,0.3)] hover:scale-[1.02] transition-transform"
+          >
+            <span className="text-lg leading-none mb-0.5">+</span> Tạo bộ thẻ
+          </button>
+        </div>
       </div>
 
       {/* AI Generator Box */}
@@ -414,6 +424,8 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      <ImportAnkiModal open={showImport} onClose={() => setShowImport(false)} onImported={load} />
 
       {/* Create form modal */}
       {showForm && (

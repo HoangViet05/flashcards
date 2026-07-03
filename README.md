@@ -54,12 +54,12 @@ Most flashcard apps are either **too simple** (just flip cards) or **too bloated
       </ul>
     </td>
     <td width="50%">
-      <h4>📦 4000 Essential English Words Built-in</h4>
+      <h4>📦 4000 Essential English Words Built-in + Anki Import</h4>
       <ul>
         <li>Complete Book 1 deck: 600 words across 30 unit decks (20 words each)</li>
         <li>Each card: word, IPA transcription, Vietnamese meaning, English definition & example sentence</li>
         <li>Native audio for word & example + illustrative image per word</li>
-        <li>One-time import script from the original Anki collection</li>
+        <li>Import any <code>.apkg</code> from AnkiWeb via the 📥 button on the home page — 4000 Words series fully mapped, other decks best-effort</li>
       </ul>
     </td>
   </tr>
@@ -248,6 +248,8 @@ npm run dev
 ### 4️⃣ Start Learning
 
 Open `http://localhost:5173`, pick a unit deck (each has 20 new words), hit **"Học từ mới"**, flip cards, listen to the audio and rate yourself. Come back tomorrow — SM-2 schedules the reviews for you. 🔥
+
+**Want more decks?** Download any shared deck (`.apkg`) from [ankiweb.net/shared](https://ankiweb.net/shared/decks) → click **📥 Nhập từ Anki** on the home page and drop the file in. The 4000 Essential Words series (Books 2-6) imports with full media; other decks are converted best-effort. CLI alternative: `python import_anki.py --apkg path/to/deck.apkg`.
 
 > 💡 AI features (card generation, PDF import) are currently paused and marked "Sắp ra mắt ✨" in the UI. When they return, they'll only need a local Ollama install.
 

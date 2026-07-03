@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from app.database import Base, engine, ensure_card_columns
 from app.routers import decks, cards, review, documents
 from app.routers import ai
+from app.routers import anki_import
 
 Base.metadata.create_all(bind=engine)
 ensure_card_columns(engine)
@@ -27,6 +28,7 @@ app.include_router(cards.router)
 app.include_router(review.router)
 app.include_router(ai.router)
 app.include_router(documents.router)
+app.include_router(anki_import.router)
 
 app.mount("/media", StaticFiles(directory=MEDIA_DIR), name="media")
 

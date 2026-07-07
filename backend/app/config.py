@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     cors_origin_regex: str | None = None
     app_data_dir: Path = Path("data")
+    supabase_url: str | None = None
+    supabase_service_role_key: str | None = None
+    supabase_storage_bucket: str | None = None
+    supabase_storage_prefix: str = "flashcards"
 
     @property
     def parsed_cors_origins(self) -> list[str]:
@@ -25,6 +29,10 @@ class Settings(BaseSettings):
     @property
     def uploads_dir(self) -> Path:
         return self.data_dir / "uploads"
+
+    @property
+    def supabase_storage_enabled(self) -> bool:
+        return bool(self.supabase_url and self.supabase_service_role_key and self.supabase_storage_bucket)
 
 
 @lru_cache

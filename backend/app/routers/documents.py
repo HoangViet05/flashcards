@@ -8,6 +8,7 @@ from app.config import get_settings
 from app.database import get_db, SessionLocal
 from app.models.document import Document
 from app.schemas.document import DocumentResponse
+from app.services.storage import delete_public_file_url, storage_enabled, upload_public_file
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
@@ -82,16 +83,26 @@ async def upload_pdf(
     try:
         # Đọc toàn bộ nội dung file từ request và ghi xuống ổ cứng
         content = await file.read()
-        with open(saved_path, "wb") as f:
-            f.write(content)
+        if storage_enabled():
+            file_url = upload_public_file("documents", f"{file_id}{file_ext}", content, "application/pdf")
+            with fitz.open(stream=content, filetype="pdf") as pdf:
+                page_count = len(pdf)
+            status = "ready"
+        else:
+            with open(saved_path, "wb") as f:
+                f.write(content)
+            file_url = str(saved_path)
+            page_count = None
+            status = "processing"
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Không thể lưu file: {e}")
 
     # Lưu metadata vào DB với trạng thái ban đầu là 'processing'
     new_doc = Document(
         filename=file.filename,  # Tên gốc từ người dùng — để hiển thị trên UI
-        file_path=str(saved_path),    # Đường dẫn thực tế trên server — để đọc file sau này
-        status="processing"
+        file_path=file_url,    # Đường dẫn thực tế trên server — để đọc file sau này
+        page_count=page_count,
+        status=status
     )
     db.add(new_doc)
     db.commit()
@@ -99,7 +110,8 @@ async def upload_pdf(
 
     # Kích hoạt background task — chạy ngầm sau khi response đã trả về FE
     # Nhờ vậy API phản hồi ngay lập tức, không bị block bởi việc xử lý PDF
-    background_tasks.add_task(process_pdf_task, new_doc.id)
+    if not storage_enabled():
+        background_tasks.add_task(process_pdf_task, new_doc.id)
 
     return new_doc
 
@@ -111,7 +123,12 @@ async def delete_document(doc_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
 
     # Xóa file vật lý trước — nếu không xóa, file sẽ trở thành "rác" trên ổ cứng
-    if os.path.exists(doc.file_path):
+    if storage_enabled():
+        try:
+            delete_public_file_url(doc.file_path)
+        except Exception:
+            pass
+    elif os.path.exists(doc.file_path):
         try:
             os.remove(doc.file_path)
         except Exception:

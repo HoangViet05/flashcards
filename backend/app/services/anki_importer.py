@@ -1,6 +1,7 @@
 """Import Anki collections (.apkg or extracted dir) into the app DB."""
 import hashlib
 import json
+import mimetypes
 import re
 import sqlite3
 import tempfile
@@ -16,6 +17,7 @@ from app.config import get_settings
 from app.models.card import Card
 from app.models.deck import Deck
 from app.models.review import Review
+from app.services.storage import storage_enabled, upload_public_file
 from app.services.anki_parser import (
     SOUND_RE,
     clean_html,
@@ -154,13 +156,27 @@ class _MediaStore:
             return None
         if filename in self._resolved:
             name = self._resolved[filename]
-            return f"/media/{name}" if name else None
+            if not name:
+                return None
+            return name if name.startswith(("http://", "https://")) else f"/media/{name}"
         data = self._read(filename)
         if data is None:
             _warn(summary, f"Thiếu file media: {filename}")
             self._resolved[filename] = None
             return None
         safe = Path(filename).name  # chặn zip-slip
+        if storage_enabled():
+            unique = f"{hashlib.sha1(data).hexdigest()[:12]}_{safe}"
+            content_type = mimetypes.guess_type(safe)[0] or "application/octet-stream"
+            try:
+                url = upload_public_file("anki-media", unique, data, content_type)
+            except Exception as e:
+                _warn(summary, f"Khong the upload media {filename}: {e}")
+                self._resolved[filename] = None
+                return None
+            self._resolved[filename] = url
+            return url
+
         self._dest.mkdir(parents=True, exist_ok=True)
         target = self._dest / safe
         if target.exists() and target.stat().st_size != len(data):

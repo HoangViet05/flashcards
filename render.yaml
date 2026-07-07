@@ -11,6 +11,8 @@ services:
     envVars:
       - key: DATABASE_URL
         sync: false
+      - key: PYTHON_VERSION
+        value: 3.12.11
       - key: CORS_ORIGINS
         value: http://localhost:5173,http://127.0.0.1:5173
       - key: CORS_ORIGIN_REGEX

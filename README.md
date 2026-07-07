@@ -18,7 +18,7 @@
 
   <br />
 
-  [Features](#-features) · [Architecture](#-architecture) · [Quick Start](#-quick-start) · [Roadmap](#-roadmap)
+  [Features](#-features) · [Architecture](#-architecture) · [Quick Start](#-quick-start) · [Deploy](docs/DEPLOYMENT.md) · [Roadmap](#-roadmap)
 
 </div>
 

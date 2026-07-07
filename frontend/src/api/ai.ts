@@ -1,4 +1,5 @@
 import client from './client'
+import { API_BASE_URL } from './config'
 
 export interface AIGenerateResponse {
   front_text: string
@@ -22,7 +23,7 @@ export const generateAIBatchStream = async (
   excluded_words: string[] = [],
   onCardGenerated: (card: AIGenerateResponse) => void
 ): Promise<void> => {
-  const response = await fetch('/api/ai/generate-batch-stream', {
+  const response = await fetch(`${API_BASE_URL}/ai/generate-batch-stream`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

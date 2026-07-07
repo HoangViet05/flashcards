@@ -4,6 +4,7 @@ import fitz  # PyMuPDF
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
+from app.config import get_settings
 from app.database import get_db, SessionLocal
 from app.models.document import Document
 from app.schemas.document import DocumentResponse
@@ -11,8 +12,8 @@ from app.schemas.document import DocumentResponse
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
 # Đảm bảo thư mục lưu file tồn tại — tạo ra nếu chưa có
-UPLOAD_DIR = "data/uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+UPLOAD_DIR = get_settings().uploads_dir
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 def process_pdf_task(doc_id: str):
     """
@@ -76,7 +77,7 @@ async def upload_pdf(
     # (VD: hai người upload "report.pdf" sẽ không ghi đè nhau)
     file_id = str(uuid.uuid4())
     file_ext = os.path.splitext(file.filename)[1]  # Lấy phần đuôi file, VD: ".pdf"
-    saved_path = os.path.join(UPLOAD_DIR, f"{file_id}{file_ext}")
+    saved_path = UPLOAD_DIR / f"{file_id}{file_ext}"
 
     try:
         # Đọc toàn bộ nội dung file từ request và ghi xuống ổ cứng
@@ -89,7 +90,7 @@ async def upload_pdf(
     # Lưu metadata vào DB với trạng thái ban đầu là 'processing'
     new_doc = Document(
         filename=file.filename,  # Tên gốc từ người dùng — để hiển thị trên UI
-        file_path=saved_path,    # Đường dẫn thực tế trên server — để đọc file sau này
+        file_path=str(saved_path),    # Đường dẫn thực tế trên server — để đọc file sau này
         status="processing"
     )
     db.add(new_doc)

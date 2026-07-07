@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Card } from '../types'
+import { resolveAssetUrl } from '../api/config'
 
 interface Props {
   card: Card
@@ -17,9 +18,10 @@ const RATINGS = [
 ]
 
 function AudioButton({ src, small }: { src: string; small?: boolean }) {
+  const resolvedSrc = resolveAssetUrl(src)
   const play = (e: React.MouseEvent) => {
     e.stopPropagation()
-    new Audio(src).play().catch(() => {})
+    if (resolvedSrc) new Audio(resolvedSrc).play().catch(() => {})
   }
   return (
     <button
@@ -34,6 +36,7 @@ function AudioButton({ src, small }: { src: string; small?: boolean }) {
 
 export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: Props) {
   const [flipped, setFlipped] = useState(false)
+  const imageUrl = resolveAssetUrl(card.image_url)
 
   return (
     <div className="flex flex-col items-center gap-8 w-full">
@@ -108,8 +111,8 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
                 {card.example_audio_url && <AudioButton src={card.example_audio_url} small />}
               </div>
             )}
-            {card.image_url && (
-              <img src={card.image_url} alt="" className="max-h-28 rounded-xl object-cover mt-2 border border-white/10" />
+            {imageUrl && (
+              <img src={imageUrl} alt="" className="max-h-28 rounded-xl object-cover mt-2 border border-white/10" />
             )}
           </div>
         </div>

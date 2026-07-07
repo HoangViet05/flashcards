@@ -12,6 +12,7 @@ from typing import Callable
 
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.models.card import Card
 from app.models.deck import Deck
 from app.models.review import Review
@@ -23,7 +24,7 @@ from app.services.anki_parser import (
     strip_cloze,
 )
 
-DEFAULT_MEDIA_DEST = Path(__file__).resolve().parents[2] / "data" / "media"
+DEFAULT_MEDIA_DEST = get_settings().media_dir
 BOOK_MODEL_RE = re.compile(r"4000Book(\d+)")
 MAX_WARNINGS = 10
 

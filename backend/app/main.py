@@ -1,23 +1,26 @@
-from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from app.config import get_settings
 from app.database import Base, engine, ensure_card_columns
 from app.routers import decks, cards, review, documents
 from app.routers import ai
 from app.routers import anki_import
 
+settings = get_settings()
+
 Base.metadata.create_all(bind=engine)
 ensure_card_columns(engine)
 
-MEDIA_DIR = Path(__file__).resolve().parent.parent / "data" / "media"
+MEDIA_DIR = settings.media_dir
 MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="Flashcard API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=settings.parsed_cors_origins,
+    allow_origin_regex=settings.cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

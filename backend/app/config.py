@@ -8,6 +8,16 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./flashcards.db"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     cors_origin_regex: str | None = None
+    auth_secret: str = "change-me-in-production"
+    auth_token_expire_days: int = 30
+    frontend_url: str = "http://localhost:5173"
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str | None = None
+    smtp_use_tls: bool = True
+    reminder_cron_secret: str | None = None
     app_data_dir: Path = Path("data")
     supabase_url: str | None = None
     supabase_service_role_key: str | None = None

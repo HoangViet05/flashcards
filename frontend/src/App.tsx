@@ -6,6 +6,8 @@ import ReviewPage from './pages/ReviewPage'
 import StatsPage from './pages/StatsPage'
 import DocumentListPage from './pages/DocumentListPage'
 import DocumentDetailPage from './pages/DocumentDetailPage'
+import AuthPage from './pages/AuthPage'
+import AccountPage from './pages/AccountPage'
 
 export default function App() {
   return (
@@ -19,6 +21,9 @@ export default function App() {
           <Route path="/stats" element={<StatsPage />} />
           <Route path="/documents" element={<DocumentListPage />} />
           <Route path="/documents/:id" element={<DocumentDetailPage />} />
+          <Route path="/login" element={<AuthPage mode="login" />} />
+          <Route path="/register" element={<AuthPage mode="register" />} />
+          <Route path="/account" element={<AccountPage />} />
         </Routes>
       </div>
     </BrowserRouter>

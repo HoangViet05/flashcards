@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Bộ thẻ', icon: '🗂️' },
@@ -9,17 +10,21 @@ const NAV_ITEMS = [
 
 export default function Navbar() {
   const { pathname } = useLocation()
+  const { user, logout } = useAuth()
+
   return (
     <div className="sticky top-4 z-50 px-4 sm:px-6 max-w-7xl mx-auto mb-6 w-full pointer-events-none">
-      <nav className="flex items-center justify-between glass rounded-2xl sm:rounded-[1.5rem] px-3 sm:px-5 py-3 bg-black/50 backdrop-blur-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.6)] pointer-events-auto">
+      <nav className="flex items-center justify-between gap-3 glass rounded-2xl sm:rounded-[1.5rem] px-3 sm:px-5 py-3 bg-black/50 backdrop-blur-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.6)] pointer-events-auto">
         <Link to="/" className="flex items-center gap-3 pl-1 sm:pl-2 group shrink-0">
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-lg sm:text-xl shadow-[0_0_15px_rgba(139,92,246,0.5)] group-hover:shadow-[0_0_25px_rgba(139,92,246,0.6)] group-hover:scale-105 transition-all">
             ⚡
           </div>
-          <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 text-lg sm:text-xl tracking-wide hidden sm:block">Flash<span className="text-violet-400">cards</span></span>
+          <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 text-lg sm:text-xl tracking-wide hidden sm:block">
+            Flash<span className="text-violet-400">cards</span>
+          </span>
         </Link>
 
-        <div className="flex items-center gap-1 p-1.5 bg-white/[0.02] rounded-xl sm:rounded-2xl border border-white/5 shadow-inner">
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-1 overflow-x-auto p-1.5 bg-white/[0.02] rounded-xl sm:rounded-2xl border border-white/5 shadow-inner">
           {NAV_ITEMS.map(({ to, label, icon, soon }) => {
             const active = pathname === to
             return (
@@ -40,6 +45,46 @@ export default function Navbar() {
               </Link>
             )
           })}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          {user ? (
+            <>
+              <Link
+                to="/account"
+                className={`hidden sm:flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+                  pathname === '/account'
+                    ? 'border-cyan-500/40 bg-cyan-500/15 text-cyan-100'
+                    : 'border-white/10 bg-white/[0.03] text-gray-300 hover:bg-white/[0.07] hover:text-white'
+                }`}
+              >
+                <span>✉️</span>
+                <span>{user.name || user.email}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={logout}
+                className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-bold text-gray-400 transition hover:bg-white/[0.07] hover:text-white"
+              >
+                Đăng xuất
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-bold text-gray-300 transition hover:bg-white/[0.07] hover:text-white"
+              >
+                Đăng nhập
+              </Link>
+              <Link
+                to="/register"
+                className="btn-primary rounded-xl px-3 py-2 text-xs font-bold"
+              >
+                Đăng ký
+              </Link>
+            </>
+          )}
         </div>
       </nav>
     </div>

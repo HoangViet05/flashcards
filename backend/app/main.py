@@ -6,6 +6,7 @@ from app.database import Base, engine, ensure_card_columns
 from app.routers import decks, cards, review, documents
 from app.routers import ai
 from app.routers import anki_import
+from app.routers import auth, reminders
 
 settings = get_settings()
 
@@ -32,6 +33,8 @@ app.include_router(review.router)
 app.include_router(ai.router)
 app.include_router(documents.router)
 app.include_router(anki_import.router)
+app.include_router(auth.router)
+app.include_router(reminders.router)
 
 app.mount("/media", StaticFiles(directory=MEDIA_DIR), name="media")
 

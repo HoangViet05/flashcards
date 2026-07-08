@@ -39,7 +39,7 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
   const imageUrl = resolveAssetUrl(card.image_url)
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full">
+    <div className="flex flex-col items-center gap-5 sm:gap-8 w-full">
       {/* Card */}
       <div
         className="w-full cursor-pointer select-none"
@@ -52,13 +52,13 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
             display: 'grid',
             transformStyle: 'preserve-3d',
             transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-            minHeight: '440px',
+            minHeight: 'clamp(320px, 58vh, 440px)',
             transition: 'transform 0.55s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
           {/* Front */}
           <div
-            className="rounded-[2rem] flex flex-col items-center justify-center p-8 gap-5"
+            className="rounded-[2rem] flex flex-col items-center justify-center p-5 sm:p-8 gap-4 sm:gap-5 overflow-hidden"
             style={{
               gridArea: '1 / 1',
               backfaceVisibility: 'hidden',
@@ -70,21 +70,21 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
           >
             <div className="absolute top-0 right-0 w-48 h-48 bg-violet-500/10 rounded-full blur-[50px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
             
-            <p className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 text-center tracking-tight drop-shadow-sm">{card.front_text}</p>
+            <p className="max-w-full break-words text-3xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 text-center tracking-tight drop-shadow-sm">{card.front_text}</p>
             {card.pronunciation && (
-              <p className="text-cyan-200/70 text-xl font-medium tracking-wide">{card.pronunciation}</p>
+              <p className="text-cyan-200/70 text-lg sm:text-xl font-medium tracking-wide text-center break-words">{card.pronunciation}</p>
             )}
             {card.audio_url && <AudioButton src={card.audio_url} />}
-            <div className="flex items-center gap-3 mt-6">
-              <span className="w-12 h-px bg-gradient-to-r from-transparent to-violet-500/50" />
+            <div className="flex items-center gap-2 sm:gap-3 mt-4 sm:mt-6">
+              <span className="w-8 sm:w-12 h-px bg-gradient-to-r from-transparent to-violet-500/50" />
               <span className="text-violet-400/80 text-xs font-bold uppercase tracking-widest bg-violet-500/10 px-3 py-1 rounded-full border border-violet-500/20">nhấn để lật</span>
-              <span className="w-12 h-px bg-gradient-to-l from-transparent to-violet-500/50" />
+              <span className="w-8 sm:w-12 h-px bg-gradient-to-l from-transparent to-violet-500/50" />
             </div>
           </div>
 
           {/* Back */}
           <div
-            className="rounded-[2rem] flex flex-col items-center justify-center p-8 gap-5"
+            className="rounded-[2rem] flex flex-col items-center justify-center p-5 sm:p-8 gap-4 sm:gap-5 overflow-hidden"
             style={{
               gridArea: '1 / 1',
               backfaceVisibility: 'hidden',
@@ -104,13 +104,13 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
                   className="w-40 h-40 sm:w-52 sm:h-52 rounded-2xl object-cover border border-white/10 shadow-[0_18px_45px_rgba(6,182,212,0.18)] shrink-0"
                 />
               )}
-              <div className="flex flex-col items-center justify-center gap-5 min-w-0">
-                <p className="text-2xl sm:text-3xl font-bold text-white text-center leading-tight drop-shadow-md">{card.back_text}</p>
+              <div className="flex flex-col items-center justify-center gap-4 sm:gap-5 min-w-0 max-w-full">
+                <p className="max-w-full break-words text-xl sm:text-3xl font-bold text-white text-center leading-tight drop-shadow-md">{card.back_text}</p>
                 {card.definition && (
-                  <p className="text-gray-300 text-base text-center leading-relaxed max-w-md">{card.definition}</p>
+                  <p className="text-gray-300 text-sm sm:text-base text-center leading-relaxed max-w-md break-words">{card.definition}</p>
                 )}
                 {card.example_sentence && (
-                  <div className="mt-2 px-5 py-3 rounded-xl bg-white/5 border border-white/8 max-w-sm flex items-center gap-3">
+                  <div className="mt-2 px-4 sm:px-5 py-3 rounded-xl bg-white/5 border border-white/8 max-w-full sm:max-w-sm flex items-center gap-3">
                     <p className="text-gray-400 text-sm italic text-center leading-relaxed flex-1">
                       "{card.example_sentence}"
                     </p>
@@ -166,7 +166,7 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
           ) : (
             <>
               <p className="text-center text-gray-500 text-xs font-bold mb-4 uppercase tracking-[0.2em]">Đánh giá độ khó</p>
-              <div className="grid grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {RATINGS.map((r, i) => (
                   <button
                     key={r.quality}

@@ -42,12 +42,12 @@ export default function AccountPage() {
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+    <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       <section className="glass rounded-[2rem] border border-white/10 bg-[#0a0a0f]/75 p-6 sm:p-8 shadow-[0_24px_64px_rgba(0,0,0,0.42)]">
         <div className="flex flex-col gap-4 border-b border-white/10 pb-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-cyan-300">Tài khoản</p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-white">
+            <h1 className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-white break-words">
               {user.name || user.email}
             </h1>
             <p className="mt-1 text-sm font-medium text-gray-400">{user.email}</p>
@@ -62,8 +62,8 @@ export default function AccountPage() {
         </div>
 
         <form onSubmit={handleSave} className="mt-7 flex flex-col gap-6">
-          <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
-            <div>
+          <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 sm:px-5 py-4">
+            <div className="min-w-0">
               <h2 className="text-lg font-extrabold text-white">Email nhắc học hằng ngày</h2>
               <p className="mt-1 text-sm font-medium text-gray-400">
                 {enabled ? 'Đang bật' : 'Đang tắt'}
@@ -72,7 +72,7 @@ export default function AccountPage() {
             <button
               type="button"
               onClick={() => setEnabled(value => !value)}
-              className={`relative h-8 w-14 rounded-full border transition ${
+              className={`relative h-8 w-14 rounded-full border transition shrink-0 ${
                 enabled ? 'border-cyan-400/50 bg-cyan-500/40' : 'border-white/10 bg-white/10'
               }`}
               aria-pressed={enabled}
@@ -110,11 +110,11 @@ export default function AccountPage() {
             </label>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-stretch sm:justify-end">
             <button
               type="submit"
               disabled={saving}
-              className="btn-primary rounded-2xl px-7 py-3.5 text-base font-extrabold disabled:cursor-not-allowed disabled:opacity-60"
+              className="btn-primary w-full sm:w-auto rounded-2xl px-7 py-3.5 text-base font-extrabold disabled:cursor-not-allowed disabled:opacity-60"
             >
               {saving ? 'Đang lưu...' : 'Lưu cài đặt'}
             </button>

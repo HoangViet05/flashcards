@@ -280,7 +280,7 @@ export default function DeckDetailPage() {
   )
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
 
       {/* Global Flying Cards Layer */}
       {globalFlyingCards.map(fc => (
@@ -313,8 +313,8 @@ export default function DeckDetailPage() {
           {/* Decorative glare */}
           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-b from-white/10 to-transparent rotate-45 transform translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-50 mix-blend-overlay" />
 
-          <div className="flex items-center gap-5 relative z-10 w-full sm:w-auto">
-            <div className="w-16 h-16 rounded-[1.25rem] bg-gradient-to-br from-violet-500/20 to-purple-600/30 border border-violet-500/40 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(139,92,246,0.3)] shrink-0">
+          <div className="flex items-center gap-4 sm:gap-5 relative z-10 w-full sm:w-auto">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] bg-gradient-to-br from-violet-500/20 to-purple-600/30 border border-violet-500/40 flex items-center justify-center text-2xl sm:text-3xl shadow-[0_0_20px_rgba(139,92,246,0.3)] shrink-0">
               📚
             </div>
             <div className="flex-1 min-w-0">
@@ -414,7 +414,7 @@ export default function DeckDetailPage() {
             </div>
           </div>
 
-          <form onSubmit={handleGenerateAIBatch} className={`flex items-center gap-3 w-full md:w-auto ${AI_ENABLED ? '' : 'opacity-60'}`}>
+          <form onSubmit={handleGenerateAIBatch} className={`flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto ${AI_ENABLED ? '' : 'opacity-60'}`}>
             <div className="flex items-center bg-white/[0.03] border border-white/10 rounded-xl p-1.5 transition-all hover:bg-white/[0.04] focus-within:bg-white/[0.05] focus-within:border-cyan-500/50 flex-1 md:flex-none">
               <span className="text-gray-500 text-sm font-medium ml-3 mr-2 whitespace-nowrap hidden sm:inline">Số thẻ bổ sung:</span>
               <span className="text-gray-500 text-sm font-medium ml-2 mr-1 whitespace-nowrap sm:hidden">SL:</span>
@@ -444,7 +444,7 @@ export default function DeckDetailPage() {
             <button
               type="submit"
               disabled={!AI_ENABLED || isBatchGenerating}
-              className="btn-primary bg-cyan-600 hover:bg-cyan-500 px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
+              className="btn-primary bg-cyan-600 hover:bg-cyan-500 px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap w-full sm:w-auto"
             >
               {isBatchGenerating ? (
                 <><div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />Đang tạo...</>
@@ -460,7 +460,7 @@ export default function DeckDetailPage() {
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowForm(false)} />
-          <div className="glass rounded-[2rem] p-8 w-full max-w-xl animate-fade-in-up relative overflow-hidden bg-[#0a0a0f] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+          <div className="glass rounded-[2rem] p-5 sm:p-8 w-full max-w-xl max-h-[calc(100vh-2rem)] overflow-y-auto animate-fade-in-up relative bg-[#0a0a0f] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
             <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-[60px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 relative z-10">
               <span className="w-10 h-10 rounded-xl bg-violet-500/20 border border-violet-500/40 flex items-center justify-center text-lg shadow-[0_0_15px_rgba(124,58,237,0.3)]">✨</span>
@@ -510,7 +510,7 @@ export default function DeckDetailPage() {
                   className="bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-cyan-100 placeholder-gray-600 text-base resize-none focus:bg-white/[0.05] focus:border-cyan-500/50 transition-all outline-none shadow-inner"
                 />
               </div>
-              <div className="flex gap-4 mt-2 justify-end">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 mt-2 justify-end">
                 <button type="button" onClick={() => setShowForm(false)} className="px-6 py-3 rounded-2xl text-base font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition-all">Hủy</button>
                 <button type="submit" className="btn-primary px-8 py-3 rounded-2xl text-base font-bold shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:scale-[1.03] active:scale-95 transition-all">Lưu thẻ</button>
               </div>
@@ -564,7 +564,7 @@ export default function DeckDetailPage() {
                       </button>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                       <button onClick={(e) => { e.stopPropagation(); handleDelete(card.id); }}
                         className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 bg-white/5 hover:text-white hover:bg-red-500 border border-transparent hover:border-red-400/50 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all"
                         title="Xóa thẻ">

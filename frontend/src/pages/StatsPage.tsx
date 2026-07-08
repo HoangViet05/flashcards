@@ -28,16 +28,16 @@ export default function StatsPage() {
   ]
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-12 relative">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-12 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-500/10 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/3 -z-10" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none translate-y-1/3 -translate-x-1/3 -z-10" />
 
-      <div className="mb-10 animate-fade-in-up flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 tracking-tight">Thống kê học tập</h1>
+      <div className="mb-8 sm:mb-10 animate-fade-in-up flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 tracking-tight">Thống kê học tập</h1>
           <p className="text-gray-500 text-sm mt-2 font-medium">Theo dõi tiến độ và thành tích của bạn</p>
         </div>
-        <div className="w-16 h-16 rounded-[1.25rem] bg-gradient-to-br from-white/5 to-white/10 border border-white/10 flex items-center justify-center text-3xl shadow-inner backdrop-blur-md">
+        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] bg-gradient-to-br from-white/5 to-white/10 border border-white/10 flex items-center justify-center text-2xl sm:text-3xl shadow-inner backdrop-blur-md shrink-0">
           📊
         </div>
       </div>
@@ -46,9 +46,9 @@ export default function StatsPage() {
       {stats.streak > 0 && (
         <div className="mb-8 relative rounded-[2rem] p-[1px] animate-fade-in-up" style={{ animationDelay: '60ms', boxShadow: '0 20px 40px -15px rgba(251,146,60,0.2)' }}>
           <div className="absolute inset-0 bg-gradient-to-r from-orange-500/50 via-red-500/40 to-pink-500/40 opacity-80 blur-md pointer-events-none rounded-[2rem]" />
-          <div className="relative glass rounded-[2rem] p-6 flex items-center gap-6 overflow-hidden bg-black/40 backdrop-blur-xl border border-white/10">
+          <div className="relative glass rounded-[2rem] p-5 sm:p-6 flex items-start sm:items-center gap-4 sm:gap-6 overflow-hidden bg-black/40 backdrop-blur-xl border border-white/10">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
-            <div className="w-16 h-16 rounded-[1.25rem] bg-gradient-to-br from-orange-500/20 to-red-500/30 border border-orange-500/40 flex items-center justify-center text-4xl shadow-[0_0_20px_rgba(249,115,22,0.3)] shrink-0 animate-pulse-glow">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] bg-gradient-to-br from-orange-500/20 to-red-500/30 border border-orange-500/40 flex items-center justify-center text-3xl sm:text-4xl shadow-[0_0_20px_rgba(249,115,22,0.3)] shrink-0 animate-pulse-glow">
               🔥
             </div>
             <div>
@@ -62,7 +62,7 @@ export default function StatsPage() {
       )}
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-10">
         {STAT_CARDS.map((s, i) => (
           <div
             key={s.label}
@@ -70,13 +70,13 @@ export default function StatsPage() {
             style={{ animationDelay: `${(i * 60) + 120}ms` }}
           >
             <div className={`absolute inset-0 bg-gradient-to-br ${s.color} opacity-80 pointer-events-none transition-opacity duration-300 group-hover:opacity-100`} />
-            <div className={`relative h-full glass rounded-[1.5rem] p-6 flex items-center gap-5 bg-black/40 backdrop-blur-xl border ${s.border} transition-transform duration-300 group-hover:scale-[1.02]`}>
+            <div className={`relative h-full glass rounded-[1.5rem] p-5 sm:p-6 flex items-center gap-4 sm:gap-5 bg-black/40 backdrop-blur-xl border ${s.border} transition-transform duration-300 group-hover:scale-[1.02]`}>
               <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-xl pointer-events-none -translate-y-1/2 translate-x-1/2 group-hover:bg-white/10 transition-colors" />
-              <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-3xl shrink-0 shadow-inner group-hover:scale-110 transition-transform duration-300">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl sm:text-3xl shrink-0 shadow-inner group-hover:scale-110 transition-transform duration-300">
                 {s.icon}
               </div>
               <div>
-                <p className={`text-3xl font-black ${s.text} tracking-tight drop-shadow-md`}>{s.value}</p>
+                <p className={`text-2xl sm:text-3xl font-black ${s.text} tracking-tight drop-shadow-md`}>{s.value}</p>
                 <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mt-1">{s.label}</p>
               </div>
             </div>
@@ -98,8 +98,8 @@ export default function StatsPage() {
               const dateObj = new Date(d)
               const label = dateObj.toLocaleDateString('vi-VN', { weekday: 'short', month: 'numeric', day: 'numeric' })
               return (
-                <div key={d} className="flex items-center gap-4 group">
-                  <span className="text-gray-400 text-sm font-medium w-24 shrink-0 group-hover:text-gray-300 transition-colors">{label}</span>
+                <div key={d} className="flex items-center gap-3 sm:gap-4 group">
+                  <span className="text-gray-400 text-xs sm:text-sm font-medium w-20 sm:w-24 shrink-0 group-hover:text-gray-300 transition-colors">{label}</span>
                   <div className="flex-1 h-3 bg-white/[0.03] rounded-full overflow-hidden border border-white/5 shadow-inner">
                     <div
                       className="h-full rounded-full transition-all duration-1000 ease-out relative"

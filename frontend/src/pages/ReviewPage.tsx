@@ -158,11 +158,11 @@ export default function ReviewPage() {
                   :                           'animate-slide-in-prev';
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-12 relative">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-12 relative">
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 -z-10" />
       <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none translate-y-1/2 -z-10" />
       
-      <div className="mb-10 animate-fade-in-up">
+      <div className="mb-6 sm:mb-10 animate-fade-in-up">
         <div className="flex justify-between items-center mb-4 px-2">
           <div className="glass px-4 py-1.5 rounded-full flex items-center gap-2 backdrop-blur-md">
             <span className="text-white font-bold text-sm bg-white/10 w-6 h-6 rounded-full flex items-center justify-center">{current + 1}</span>

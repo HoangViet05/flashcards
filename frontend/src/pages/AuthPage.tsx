@@ -40,14 +40,14 @@ export default function AuthPage({ mode }: AuthPageProps) {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       <div className="grid min-h-[calc(100vh-11rem)] place-items-center">
-        <section className="glass w-full max-w-md rounded-[2rem] border border-white/10 bg-[#0a0a0f]/85 p-7 shadow-[0_28px_70px_rgba(0,0,0,0.45)]">
+        <section className="glass w-full max-w-md rounded-[2rem] border border-white/10 bg-[#0a0a0f]/85 p-5 sm:p-7 shadow-[0_28px_70px_rgba(0,0,0,0.45)]">
           <div className="mb-7">
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-cyan-300">
               {isRegister ? 'Tạo tài khoản' : 'Đăng nhập'}
             </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-white">
+            <h1 className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-white">
               {isRegister ? 'Bắt đầu nhận nhắc học' : 'Tiếp tục học bài'}
             </h1>
           </div>

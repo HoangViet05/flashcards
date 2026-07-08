@@ -63,7 +63,7 @@ export default function DeckCard({ deck, dueCount = 0, newCount = 0, cardCount =
         style={{ animationDelay: `${index * 60}ms` }}
       >
         <div className={`absolute inset-0 bg-gradient-to-br ${DECK_GRADIENTS[i]} opacity-80 rounded-[2rem] pointer-events-none group-hover:opacity-100 transition-opacity duration-300`} />
-        <div className={`relative h-full flex flex-col gap-4 bg-black/40 backdrop-blur-xl rounded-[2rem] p-6 border ${DECK_ACCENTS[i]} transition-colors duration-300 overflow-hidden`}>
+        <div className={`relative h-full flex flex-col gap-4 bg-black/40 backdrop-blur-xl rounded-[2rem] p-5 sm:p-6 border ${DECK_ACCENTS[i]} transition-colors duration-300 overflow-hidden`}>
           
           {/* Subtle background glow effect */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-[40px] pointer-events-none -translate-y-1/2 translate-x-1/2 group-hover:bg-white/10 transition-colors" />
@@ -75,7 +75,7 @@ export default function DeckCard({ deck, dueCount = 0, newCount = 0, cardCount =
                 e.stopPropagation(); 
                 onDelete(deck.id); 
             }}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500/80 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all shrink-0 z-20 opacity-0 group-hover:opacity-100 focus:opacity-100 border border-white/5 hover:border-transparent bg-white/5 backdrop-blur-md"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500/80 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all shrink-0 z-20 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 border border-white/5 hover:border-transparent bg-white/5 backdrop-blur-md"
             title="Xóa bộ thẻ"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,7 +104,7 @@ export default function DeckCard({ deck, dueCount = 0, newCount = 0, cardCount =
         )}
 
             {/* Stats row */}
-            <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5 group-hover:border-white/10 transition-colors duration-300">
+            <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between gap-2 mt-auto pt-4 border-t border-white/5 group-hover:border-white/10 transition-colors duration-300">
               <span className="text-gray-400 text-sm font-medium bg-white/[0.03] px-3 py-1 rounded-full border border-white/5">{cardCount} thẻ</span>
               
               {cardCount === 0 ? (

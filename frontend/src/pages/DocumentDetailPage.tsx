@@ -74,20 +74,20 @@ export default function DocumentDetailPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-24 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-24 space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
         <Link to="/documents" className="text-sm font-medium text-gray-400 hover:text-white flex items-center gap-1 mb-4 w-fit transition-colors">
           ← Quay Thư viện
         </Link>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center text-3xl border border-violet-500/20">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-4 min-w-0">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center text-2xl sm:text-3xl border border-violet-500/20 shrink-0">
               📄
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-100 mb-1">{doc.filename}</h1>
-              <div className="flex items-center gap-3 text-sm">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-100 mb-1 break-words">{doc.filename}</h1>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm">
                 <span className={`px-2 py-0.5 rounded-md font-medium ${
                   doc.status === 'ready' ? 'bg-emerald-400/10 text-emerald-400' :
                   doc.status === 'processing' ? 'bg-amber-400/10 text-amber-400' :
@@ -106,7 +106,7 @@ export default function DocumentDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Generate Cards Form */}
-        <div className="glass rounded-3xl p-6 border border-white/5">
+        <div className="glass rounded-3xl p-5 sm:p-6 border border-white/5">
           <div className="mb-6">
             <h2 className="text-xl font-bold flex items-center gap-2 mb-1">
               ✨ Auto-Gen Cards (RAG)
@@ -176,7 +176,7 @@ export default function DocumentDetailPage() {
         </div>
 
         {/* Semantic Search box (Placeholder for next sub-phase) */}
-        <div className="glass rounded-3xl p-6 border border-white/5 opacity-50 relative overflow-hidden group">
+        <div className="glass rounded-3xl p-5 sm:p-6 border border-white/5 opacity-50 relative overflow-hidden group">
           <div className="absolute inset-0 bg-black/60 z-10 flex flex-col items-center justify-center">
             <span className="bg-white/10 px-3 py-1 text-sm rounded-full backdrop-blur font-medium mb-2">Comming Soon</span>
             <span className="text-gray-400 font-medium">Semantic Search</span>

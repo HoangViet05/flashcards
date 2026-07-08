@@ -2,91 +2,180 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Bộ thẻ', icon: '🗂️' },
-  { to: '/documents', label: 'Tài liệu', icon: '📄', soon: true },
-  { to: '/review', label: 'Ôn tập', icon: '🧠' },
-  { to: '/stats', label: 'Thống kê', icon: '📊' },
-]
+  { to: '/', label: 'Bộ thẻ', icon: 'deck', soon: false },
+  { to: '/documents', label: 'Tài liệu', icon: 'document', soon: true },
+  { to: '/review', label: 'Ôn tập', icon: 'review', soon: false },
+  { to: '/stats', label: 'Thống kê', icon: 'stats', soon: false },
+] as const
+
+type NavIconName = (typeof NAV_ITEMS)[number]['icon'] | 'mail' | 'login' | 'logout'
+
+function NavIcon({ name, className = '' }: { name: NavIconName; className?: string }) {
+  const common = {
+    className,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.9,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+  }
+
+  switch (name) {
+    case 'deck':
+      return (
+        <svg {...common}>
+          <path d="M5 7.5h14" />
+          <path d="M7 4.5h10a2 2 0 0 1 2 2v10.5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2Z" />
+          <path d="M8 11h8M8 14.5h5" />
+        </svg>
+      )
+    case 'document':
+      return (
+        <svg {...common}>
+          <path d="M7 3.5h6l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z" />
+          <path d="M13 3.5v4h4" />
+          <path d="M8.5 12h7M8.5 15.5h5" />
+        </svg>
+      )
+    case 'review':
+      return (
+        <svg {...common}>
+          <path d="M12 5.5a6.5 6.5 0 1 0 6.5 6.5" />
+          <path d="M18.5 5.5v5h-5" />
+          <path d="M18.2 10.5A6.5 6.5 0 0 0 12 5.5" />
+          <path d="M9.5 12.2 11.2 14l3.5-4" />
+        </svg>
+      )
+    case 'stats':
+      return (
+        <svg {...common}>
+          <path d="M5 20V10" />
+          <path d="M12 20V4" />
+          <path d="M19 20v-7" />
+          <path d="M3.5 20.5h17" />
+        </svg>
+      )
+    case 'mail':
+      return (
+        <svg {...common}>
+          <path d="M4.5 6.5h15v11h-15z" />
+          <path d="m5 7 7 5.5L19 7" />
+        </svg>
+      )
+    case 'login':
+      return (
+        <svg {...common}>
+          <path d="M9.5 7.5 14 12l-4.5 4.5" />
+          <path d="M14 12H3.5" />
+          <path d="M14.5 4.5h4a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-4" />
+        </svg>
+      )
+    case 'logout':
+      return (
+        <svg {...common}>
+          <path d="M14.5 7.5 19 12l-4.5 4.5" />
+          <path d="M19 12H8.5" />
+          <path d="M9.5 4.5h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h4" />
+        </svg>
+      )
+  }
+}
+
+function isRouteActive(pathname: string, to: string) {
+  if (to === '/') {
+    return pathname === '/' || pathname.startsWith('/decks')
+  }
+
+  return pathname === to || pathname.startsWith(`${to}/`)
+}
 
 export default function Navbar() {
   const { pathname } = useLocation()
   const { user, logout } = useAuth()
 
   return (
-    <div className="sticky top-0 sm:top-4 z-50 px-3 pt-3 sm:px-6 sm:pt-0 max-w-7xl mx-auto mb-4 sm:mb-6 w-full pointer-events-none">
-      <nav className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 glass rounded-2xl sm:rounded-[1.5rem] px-3 sm:px-5 py-3 bg-black/60 backdrop-blur-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.6)] pointer-events-auto">
-        <div className="flex items-center justify-between gap-3 sm:contents">
-        <Link to="/" className="flex items-center gap-3 pl-1 sm:pl-2 group shrink-0">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-lg sm:text-xl shadow-[0_0_15px_rgba(139,92,246,0.5)] group-hover:shadow-[0_0_25px_rgba(139,92,246,0.6)] group-hover:scale-105 transition-all">
-            ⚡
+    <div className="sticky top-0 sm:top-4 z-50 mx-auto mb-4 w-full max-w-7xl px-3 pt-3 sm:mb-7 sm:px-6 sm:pt-0 pointer-events-none">
+      <nav className="pointer-events-auto overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#0b0d16]/85 shadow-[0_18px_55px_rgba(0,0,0,0.45)] ring-1 ring-white/[0.03] backdrop-blur-2xl">
+        <div className="flex flex-col gap-3 p-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="flex items-center justify-between gap-3 sm:contents">
+            <Link to="/" className="group flex shrink-0 items-center gap-2.5 rounded-2xl px-1.5 py-1.5 transition hover:bg-white/[0.04] sm:gap-3 sm:px-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-white/15 bg-[linear-gradient(135deg,#7c3aed,#06b6d4)] text-sm font-black text-white shadow-[0_10px_25px_rgba(6,182,212,0.18)] transition group-hover:scale-105 group-hover:shadow-[0_14px_34px_rgba(124,58,237,0.28)] sm:h-10 sm:w-10 sm:rounded-[0.9rem] sm:text-base">
+                F
+              </div>
+              <span className="text-lg font-black tracking-normal text-white sm:text-[1.35rem]">
+                Flash<span className="text-cyan-300">cards</span>
+              </span>
+            </Link>
+
+            <div className="flex shrink-0 items-center gap-1.5 sm:order-3">
+              {user ? (
+                <>
+                  <Link
+                    to="/account"
+                    className={`flex h-10 max-w-[11rem] items-center gap-2 rounded-xl border px-3 text-xs font-bold transition ${
+                      pathname === '/account'
+                        ? 'border-cyan-300/35 bg-cyan-300/12 text-cyan-100 shadow-[0_0_22px_rgba(34,211,238,0.12)]'
+                        : 'border-white/10 bg-white/[0.04] text-slate-300 hover:border-white/18 hover:bg-white/[0.07] hover:text-white'
+                    }`}
+                    title={user.name || user.email}
+                  >
+                    <NavIcon name="mail" className="h-4 w-4 shrink-0" />
+                    <span className="hidden truncate md:inline">{user.name || user.email}</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-xs font-bold text-slate-400 transition hover:border-white/18 hover:bg-white/[0.07] hover:text-white"
+                  >
+                    <NavIcon name="logout" className="h-4 w-4" />
+                    <span className="hidden lg:inline">Đăng xuất</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-xs font-bold text-slate-300 transition hover:border-white/18 hover:bg-white/[0.07] hover:text-white"
+                    aria-label="Đăng nhập"
+                  >
+                    <NavIcon name="login" className="h-4 w-4" />
+                    <span className="hidden sm:inline">Đăng nhập</span>
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="hidden h-10 items-center rounded-xl border border-violet-400/40 bg-violet-500/80 px-3 text-xs font-bold text-white shadow-[0_10px_24px_rgba(124,58,237,0.25)] transition hover:bg-violet-400 min-[360px]:flex"
+                  >
+                    Đăng ký
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
-          <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 text-lg sm:text-xl tracking-wide">
-            Flash<span className="text-violet-400">cards</span>
-          </span>
-        </Link>
 
-        <div className="flex shrink-0 items-center gap-2 sm:order-3">
-          {user ? (
-            <>
-              <Link
-                to="/account"
-                className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition ${
-                  pathname === '/account'
-                    ? 'border-cyan-500/40 bg-cyan-500/15 text-cyan-100'
-                    : 'border-white/10 bg-white/[0.03] text-gray-300 hover:bg-white/[0.07] hover:text-white'
-                }`}
-              >
-                <span>✉️</span>
-                <span className="hidden md:inline max-w-[9rem] truncate">{user.name || user.email}</span>
-              </Link>
-              <button
-                type="button"
-                onClick={logout}
-                className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-bold text-gray-400 transition hover:bg-white/[0.07] hover:text-white"
-              >
-                Đăng xuất
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-bold text-gray-300 transition hover:bg-white/[0.07] hover:text-white"
-              >
-                Đăng nhập
-              </Link>
-              <Link
-                to="/register"
-                className="btn-primary rounded-xl px-3 py-2 text-xs font-bold"
-              >
-                Đăng ký
-              </Link>
-            </>
-          )}
-        </div>
-        </div>
-
-        <div className="grid grid-cols-4 sm:flex min-w-0 sm:flex-1 items-stretch sm:items-center justify-center gap-1 p-1.5 bg-white/[0.02] rounded-xl sm:rounded-2xl border border-white/5 shadow-inner">
+          <div className="grid min-w-0 grid-cols-4 items-center gap-1 rounded-2xl border border-white/[0.07] bg-black/20 p-1 shadow-inner shadow-black/30 sm:flex sm:flex-1 sm:justify-center">
           {NAV_ITEMS.map(({ to, label, icon, soon }) => {
-            const active = pathname === to
+            const active = isRouteActive(pathname, to)
             return (
               <Link
                 key={to}
                 to={to}
-                className={`min-w-0 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-2 sm:px-5 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-sm font-bold transition-all duration-300 ${
+                className={`group relative flex h-12 min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 text-[11px] font-bold transition duration-200 sm:h-10 sm:min-w-[7.25rem] sm:flex-row sm:gap-2 sm:px-4 sm:text-sm ${
                   active
-                    ? 'bg-gradient-to-br from-violet-600/40 to-purple-600/30 text-white border border-violet-500/30 shadow-[0_0_20px_rgba(124,58,237,0.2)] scale-[1.02]'
-                    : 'text-gray-400 hover:text-white hover:bg-white/[0.06] border border-transparent hover:scale-[1.02]'
+                    ? 'border border-cyan-300/25 bg-white/[0.09] text-white shadow-[0_8px_24px_rgba(6,182,212,0.12)]'
+                    : 'border border-transparent text-slate-400 hover:bg-white/[0.05] hover:text-slate-100'
                 }`}
               >
-                <span className="text-sm sm:text-base">{icon}</span>
-                <span className="tracking-wide leading-tight text-center truncate max-w-full">{label}</span>
+                <NavIcon className={`h-4.5 w-4.5 shrink-0 ${active ? 'text-cyan-300' : 'text-slate-500 group-hover:text-slate-200'}`} name={icon} />
+                <span className="max-w-full truncate text-center leading-tight">{label}</span>
                 {soon && (
-                  <span className="hidden sm:inline text-[8px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full px-1.5 py-0.5">soon</span>
+                  <span className="hidden rounded-full border border-amber-300/25 bg-amber-300/12 px-1.5 py-0.5 text-[8px] font-black uppercase leading-none text-amber-200 sm:inline">soon</span>
                 )}
               </Link>
             )
           })}
+          </div>
         </div>
       </nav>
     </div>

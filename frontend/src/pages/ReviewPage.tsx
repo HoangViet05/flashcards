@@ -80,6 +80,32 @@ export default function ReviewPage() {
 
   const isPractice = new URLSearchParams(window.location.search).get('mode') === 'practice'
 
+  useEffect(() => {
+    if (!isPractice || current >= queue.length) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const isTyping =
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.tagName === 'SELECT' ||
+        target?.isContentEditable
+
+      if (isTyping || animatingDir) return
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        handleNext()
+      } else if (event.key === 'ArrowLeft' && current > 0) {
+        event.preventDefault()
+        handlePrev()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isPractice, current, queue.length, animatingDir])
+
   if (loading) return (
     <div className="flex items-center justify-center h-64">
       <div className="flex items-center gap-3 text-gray-600">
@@ -132,7 +158,7 @@ export default function ReviewPage() {
                   :                           'animate-slide-in-prev';
 
   return (
-    <div className="max-w-xl mx-auto px-6 py-12 relative">
+    <div className="max-w-3xl mx-auto px-6 py-12 relative">
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 -z-10" />
       <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none translate-y-1/2 -z-10" />
       

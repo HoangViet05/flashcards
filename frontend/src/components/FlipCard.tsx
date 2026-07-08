@@ -70,9 +70,6 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
           >
             <div className="absolute top-0 right-0 w-48 h-48 bg-violet-500/10 rounded-full blur-[50px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
             
-            <div className="w-16 h-16 rounded-[1.25rem] bg-gradient-to-br from-violet-500/20 to-purple-600/30 border border-violet-500/40 flex items-center justify-center text-3xl mb-2 shadow-[0_0_20px_rgba(139,92,246,0.2)]">
-              🔤
-            </div>
             <p className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 text-center tracking-tight drop-shadow-sm">{card.front_text}</p>
             {card.pronunciation && (
               <p className="text-cyan-200/70 text-xl font-medium tracking-wide">{card.pronunciation}</p>
@@ -99,27 +96,56 @@ export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: P
             }}
           >
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-[50px] pointer-events-none translate-y-1/2 -translate-x-1/2" />
-            <p className="text-2xl sm:text-3xl font-bold text-white text-center leading-tight drop-shadow-md relative z-10">{card.back_text}</p>
-            {card.definition && (
-              <p className="text-gray-300 text-base text-center leading-relaxed max-w-md relative z-10">{card.definition}</p>
-            )}
-            {card.example_sentence && (
-              <div className="mt-2 px-5 py-3 rounded-xl bg-white/5 border border-white/8 max-w-sm flex items-center gap-3">
-                <p className="text-gray-400 text-sm italic text-center leading-relaxed flex-1">
-                  "{card.example_sentence}"
-                </p>
-                {card.example_audio_url && <AudioButton src={card.example_audio_url} small />}
+            <div className={`relative z-10 w-full max-w-2xl flex ${imageUrl ? 'flex-col md:flex-row' : 'flex-col'} items-center justify-center gap-7`}>
+              {imageUrl && (
+                <img
+                  src={imageUrl}
+                  alt=""
+                  className="w-40 h-40 sm:w-52 sm:h-52 rounded-2xl object-cover border border-white/10 shadow-[0_18px_45px_rgba(6,182,212,0.18)] shrink-0"
+                />
+              )}
+              <div className="flex flex-col items-center justify-center gap-5 min-w-0">
+                <p className="text-2xl sm:text-3xl font-bold text-white text-center leading-tight drop-shadow-md">{card.back_text}</p>
+                {card.definition && (
+                  <p className="text-gray-300 text-base text-center leading-relaxed max-w-md">{card.definition}</p>
+                )}
+                {card.example_sentence && (
+                  <div className="mt-2 px-5 py-3 rounded-xl bg-white/5 border border-white/8 max-w-sm flex items-center gap-3">
+                    <p className="text-gray-400 text-sm italic text-center leading-relaxed flex-1">
+                      "{card.example_sentence}"
+                    </p>
+                    {card.example_audio_url && <AudioButton src={card.example_audio_url} small />}
+                  </div>
+                )}
               </div>
-            )}
-            {imageUrl && (
-              <img src={imageUrl} alt="" className="max-h-28 rounded-xl object-cover mt-2 border border-white/10" />
-            )}
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Practice navigation */}
+      {isPractice && (
+        <div className="w-full mt-2">
+          <div className="flex justify-center gap-3 mt-2 w-full max-w-md mx-auto">
+            <button
+              onClick={onPrev}
+              disabled={!onPrev}
+              className="btn-secondary flex-1 px-4 py-3.5 rounded-2xl font-bold flex items-center justify-center shadow-[0_4px_20px_rgba(6,182,212,0.15)] hover:scale-[1.02] transition-all text-sm sm:text-base border border-cyan-500/30 text-cyan-200/80 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Quay lại
+            </button>
+            <button
+              onClick={onNext}
+              className="btn-primary flex-1 px-4 py-3.5 rounded-2xl font-bold flex items-center justify-center shadow-[0_4px_20px_rgba(124,58,237,0.3)] hover:scale-[1.02] transition-all text-sm sm:text-base border border-violet-500/40"
+            >
+              Tiếp theo
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Rating buttons */}
-      {flipped && (
+      {!isPractice && flipped && (
         <div className="w-full animate-fade-in-up mt-2" style={{ animationDelay: '100ms' }}>
           {isPractice ? (
             <div className="flex justify-center gap-3 mt-2 w-full max-w-md mx-auto">

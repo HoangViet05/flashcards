@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import type { Card } from '../types'
+import type { Card, StudyVariant } from '../types'
 import { resolveAssetUrl } from '../api/config'
 
 interface Props {
   card: Card
+  variant?: StudyVariant
   onRate: (quality: number) => void
   onNext?: () => void
   onPrev?: () => void
@@ -16,6 +17,26 @@ const RATINGS = [
   { label: 'Ổn', quality: 3, bg: 'bg-yellow-500/15 hover:bg-yellow-500/30 border-yellow-500/30 hover:border-yellow-400/60 text-yellow-300', icon: '🙂' },
   { label: 'Dễ', quality: 5, bg: 'bg-emerald-500/15 hover:bg-emerald-500/30 border-emerald-500/30 hover:border-emerald-400/60 text-emerald-300', icon: '😄' },
 ]
+
+function normalizeAnswer(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[.,!?;:()[\]{}"']/g, '')
+    .replace(/\s+/g, ' ')
+}
+
+function makeClozeText(sentence: string | null, target: string) {
+  if (!sentence) return ''
+
+  const lowerSentence = sentence.toLowerCase()
+  const lowerTarget = target.toLowerCase().trim()
+  const index = lowerSentence.indexOf(lowerTarget)
+
+  if (index < 0) return sentence
+
+  return `${sentence.slice(0, index)}______${sentence.slice(index + target.length)}`
+}
 
 function AudioButton({ src, small }: { src: string; small?: boolean }) {
   const resolvedSrc = resolveAssetUrl(src)
@@ -34,9 +55,128 @@ function AudioButton({ src, small }: { src: string; small?: boolean }) {
   )
 }
 
-export default function FlipCard({ card, onRate, onNext, onPrev, isPractice }: Props) {
+export default function FlipCard({ card, variant = 'standard', onRate, onNext, onPrev, isPractice }: Props) {
   const [flipped, setFlipped] = useState(false)
+  const [answer, setAnswer] = useState('')
+  const [checked, setChecked] = useState(false)
   const imageUrl = resolveAssetUrl(card.image_url)
+  const isAnswerMode = variant === 'cloze' || variant === 'reverse'
+  const expectedAnswer = card.front_text
+  const answerIsCorrect = normalizeAnswer(answer) === normalizeAnswer(expectedAnswer)
+
+  if (isAnswerMode) {
+    const promptTitle = variant === 'cloze' ? 'Điền vào chỗ trống' : 'Thẻ đảo ngược'
+    const promptText = variant === 'cloze' ? makeClozeText(card.example_sentence, card.front_text) : card.back_text
+
+    return (
+      <div className="flex flex-col items-center gap-5 sm:gap-8 w-full">
+        <div
+          className="w-full rounded-[2rem] flex flex-col items-center justify-center p-5 sm:p-8 gap-5 sm:gap-6 overflow-hidden min-h-[clamp(340px,58vh,460px)]"
+          style={{
+            background: variant === 'cloze'
+              ? 'linear-gradient(135deg, rgba(245,158,11,0.14) 0%, rgba(8,8,16,0.94) 100%)'
+              : 'linear-gradient(135deg, rgba(6,182,212,0.16) 0%, rgba(8,8,16,0.95) 100%)',
+            border: variant === 'cloze' ? '1px solid rgba(245,158,11,0.3)' : '1px solid rgba(6,182,212,0.3)',
+            boxShadow: '0 30px 60px -15px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(20px)',
+          }}
+        >
+          <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-[50px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
+          <div className="relative z-10 w-full max-w-2xl flex flex-col items-center gap-5">
+            <span className={`text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${variant === 'cloze' ? 'text-amber-300 bg-amber-500/10 border-amber-500/25' : 'text-cyan-300 bg-cyan-500/10 border-cyan-500/25'}`}>
+              {promptTitle}
+            </span>
+
+            {variant === 'reverse' && imageUrl && (
+              <img
+                src={imageUrl}
+                alt=""
+                className="w-36 h-36 sm:w-44 sm:h-44 rounded-2xl object-cover border border-white/10 shadow-[0_18px_45px_rgba(6,182,212,0.18)]"
+              />
+            )}
+
+            <p className="max-w-full break-words text-2xl sm:text-4xl font-extrabold text-white text-center leading-tight drop-shadow-sm">
+              {promptText}
+            </p>
+
+            <div className="w-full max-w-md flex flex-col gap-3">
+              <input
+                value={answer}
+                onChange={e => {
+                  setAnswer(e.target.value)
+                  setChecked(false)
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && answer.trim()) setChecked(true)
+                }}
+                placeholder="Gõ từ tiếng Anh..."
+                className="w-full bg-white/[0.04] border border-white/10 rounded-2xl px-5 py-4 text-cyan-100 font-bold text-lg text-center placeholder-gray-600 focus:bg-white/[0.06] focus:border-cyan-500/50 transition-all outline-none"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => setChecked(true)}
+                disabled={!answer.trim()}
+                className="btn-primary px-5 py-3 rounded-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Kiểm tra
+              </button>
+            </div>
+
+            {checked && (
+              <div className={`w-full max-w-md rounded-2xl border px-5 py-4 text-center ${answerIsCorrect ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200' : 'bg-red-500/10 border-red-500/30 text-red-200'}`}>
+                <p className="text-sm font-bold uppercase tracking-wider mb-1">
+                  {answerIsCorrect ? 'Chính xác' : 'Đáp án đúng'}
+                </p>
+                <p className="text-2xl font-extrabold break-words">{expectedAnswer}</p>
+                {card.pronunciation && <p className="text-sm text-gray-300 mt-1">{card.pronunciation}</p>}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {isPractice && (
+          <div className="w-full mt-2">
+            <div className="flex justify-center gap-3 mt-2 w-full max-w-md mx-auto">
+              <button
+                onClick={onPrev}
+                disabled={!onPrev}
+                className="btn-secondary flex-1 px-4 py-3.5 rounded-2xl font-bold flex items-center justify-center shadow-[0_4px_20px_rgba(6,182,212,0.15)] hover:scale-[1.02] transition-all text-sm sm:text-base border border-cyan-500/30 text-cyan-200/80 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Quay lại
+              </button>
+              <button
+                onClick={onNext}
+                className="btn-primary flex-1 px-4 py-3.5 rounded-2xl font-bold flex items-center justify-center shadow-[0_4px_20px_rgba(124,58,237,0.3)] hover:scale-[1.02] transition-all text-sm sm:text-base border border-violet-500/40"
+              >
+                Tiếp theo
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!isPractice && checked && (
+          <div className="w-full animate-fade-in-up mt-2" style={{ animationDelay: '100ms' }}>
+            <p className="text-center text-gray-500 text-xs font-bold mb-4 uppercase tracking-[0.2em]">Đánh giá độ khó</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              {RATINGS.map((r, i) => (
+                <button
+                  key={r.quality}
+                  onClick={() => onRate(r.quality)}
+                  className={`group relative flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] hover:shadow-lg overflow-hidden bg-black/20 backdrop-blur-md ${r.bg}`}
+                  style={{ animationDelay: `${(i * 50) + 100}ms` }}
+                >
+                  <span className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full blur-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="text-2xl sm:text-3xl filter drop-shadow-md group-hover:scale-110 transition-transform">{r.icon}</span>
+                  <span className="text-xs sm:text-sm font-bold tracking-wide">{r.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col items-center gap-5 sm:gap-8 w-full">

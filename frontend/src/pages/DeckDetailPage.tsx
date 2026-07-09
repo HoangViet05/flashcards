@@ -355,6 +355,9 @@ export default function DeckDetailPage() {
               const today = new Date().toISOString().split('T')[0];
               const newCards = cards.filter(c => !c.review || c.review.repetitions === 0);
               const dueCards = cards.filter(c => c.review && c.review.repetitions > 0 && c.review.due_date <= today);
+              const clozeCards = cards.filter(c => c.example_sentence && c.example_sentence.toLowerCase().includes(c.front_text.toLowerCase()));
+              const reverseCards = cards.filter(c => c.back_text || c.image_url);
+              const typedMode = dueCards.length > 0 ? 'review' : newCards.length > 0 ? 'learn' : 'practice';
 
               return (
                 <>
@@ -380,6 +383,22 @@ export default function DeckDetailPage() {
                       className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.08] text-white border border-white/10 px-5 py-2.5 rounded-xl text-sm font-bold shadow-inner transition-all hover:scale-[1.02]"
                     >
                       <span>🔄</span> Lướt thẻ
+                    </Link>
+                  )}
+                  {clozeCards.length > 0 && (
+                    <Link
+                      to={`/review?deckId=${deck.id}&mode=${typedMode}&type=cloze`}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(245,158,11,0.1)] transition-all hover:scale-[1.02]"
+                    >
+                      <span>___</span> Cloze
+                    </Link>
+                  )}
+                  {reverseCards.length > 0 && (
+                    <Link
+                      to={`/review?deckId=${deck.id}&mode=${typedMode}&type=reverse`}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-teal-600/20 hover:bg-teal-600/30 text-teal-300 border border-teal-500/30 px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(20,184,166,0.1)] transition-all hover:scale-[1.02]"
+                    >
+                      <span>EN</span> Đảo ngược
                     </Link>
                   )}
                 </>

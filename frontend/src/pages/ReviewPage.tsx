@@ -4,10 +4,44 @@ import { getDueCards, submitReview } from '../api/review'
 import { getCards } from '../api/cards'
 import { getDecks } from '../api/decks'
 import FlipCard from '../components/FlipCard'
-import type { Review, Card } from '../types'
+import type { Review, Card, StudyVariant } from '../types'
+
+type ReviewQueueItem = {
+  review: Review | null
+  card: Card
+  variant: StudyVariant
+}
+
+const CARD_TYPE_PARAM_TO_VARIANT: Record<string, StudyVariant> = {
+  standard: 'standard',
+  basic: 'standard',
+  cloze: 'cloze',
+  reverse: 'reverse',
+  reversed: 'reverse',
+}
+
+function getStudyVariant() {
+  const params = new URLSearchParams(window.location.search)
+  const typeParam = params.get('type')?.toLowerCase() || 'standard'
+  return CARD_TYPE_PARAM_TO_VARIANT[typeParam] || 'standard'
+}
+
+function cardSupportsVariant(card: Card, variant: StudyVariant) {
+  if (variant === 'cloze') {
+    const sentence = card.example_sentence?.trim()
+    const target = card.front_text.trim()
+    return Boolean(sentence && target && sentence.toLowerCase().includes(target.toLowerCase()))
+  }
+
+  if (variant === 'reverse') {
+    return Boolean(card.back_text.trim() || card.image_url)
+  }
+
+  return true
+}
 
 export default function ReviewPage() {
-  const [queue, setQueue] = useState<Array<{ review: Review; card: Card }>>([])
+  const [queue, setQueue] = useState<ReviewQueueItem[]>([])
   const [current, setCurrent] = useState(0)
   const [done, setDone] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -19,6 +53,7 @@ export default function ReviewPage() {
     const params = new URLSearchParams(window.location.search)
     const deckIdFilter = params.get('deckId')
     const modeFilter = params.get('mode') // 'learn', 'review', or 'practice'
+    const studyVariant = getStudyVariant()
 
     const load = async () => {
       const [dueReviews, decks] = await Promise.all([getDueCards(), getDecks()])
@@ -32,17 +67,19 @@ export default function ReviewPage() {
       }
       
       const cardMap = Object.fromEntries(allCards.map(c => [c.id, c]))
-      let items = dueReviews
-        .map(r => ({ review: r, card: cardMap[r.card_id] }))
+      let items: ReviewQueueItem[] = dueReviews
+        .map(r => ({ review: r, card: cardMap[r.card_id], variant: studyVariant }))
         .filter(item => item.card != null)
 
       if (modeFilter === 'learn') {
-        items = items.filter(item => item.review.repetitions === 0)
+        items = items.filter(item => item.review && item.review.repetitions === 0)
       } else if (modeFilter === 'review') {
-        items = items.filter(item => item.review.repetitions > 0)
+        items = items.filter(item => item.review && item.review.repetitions > 0)
       } else if (modeFilter === 'practice') {
-        items = allCards.map(c => ({ review: null as any, card: c }))
+        items = allCards.map(c => ({ review: null, card: c, variant: studyVariant }))
       }
+
+      items = items.filter(item => cardSupportsVariant(item.card, item.variant))
       
       setQueue(items)
       setLoading(false)
@@ -186,6 +223,7 @@ export default function ReviewPage() {
       <div key={current} className={`relative z-10 w-full ${animClass}`}>
         <FlipCard 
           card={item.card} 
+          variant={item.variant}
           onRate={handleRate} 
           onNext={handleNext}
           onPrev={current > 0 ? handlePrev : undefined}

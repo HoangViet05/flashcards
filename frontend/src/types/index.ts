@@ -22,6 +22,8 @@ export interface Card {
   review: Review | null
 }
 
+export type StudyVariant = 'standard' | 'cloze' | 'reverse'
+
 export interface Review {
   id: string
   card_id: string

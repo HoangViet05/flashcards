@@ -40,6 +40,84 @@ function cardSupportsVariant(card: Card, variant: StudyVariant) {
   return true
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000
+
+function parseDateOnly(value: string) {
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+function formatInterval(days: number) {
+  if (days === 0) return 'today'
+  if (days === 1) return '1 day'
+  return `${days} days`
+}
+
+function formatDueDate(value: string) {
+  return parseDateOnly(value).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function getDueExplanation(review: Review) {
+  const today = new Date()
+  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const dueDate = parseDateOnly(review.due_date)
+  const dayDiff = Math.round((todayOnly.getTime() - dueDate.getTime()) / DAY_MS)
+
+  if (review.repetitions === 0) {
+    return `This is a new card. It is due now because it has not been reviewed yet.`
+  }
+
+  if (dayDiff === 0) {
+    return `This card is scheduled for today after its ${formatInterval(review.interval)} SM-2 interval.`
+  }
+
+  if (dayDiff > 0) {
+    return `This card was scheduled ${formatInterval(dayDiff)} ago after its ${formatInterval(review.interval)} SM-2 interval.`
+  }
+
+  return `This card is in the queue because its scheduled due date is ${formatDueDate(review.due_date)}.`
+}
+
+function SrsDetailsPanel({ review }: { review: Review }) {
+  const stats = [
+    { label: 'Repetitions', value: review.repetitions },
+    { label: 'Easiness', value: review.ease_factor.toFixed(2) },
+    { label: 'Next interval', value: formatInterval(review.interval) },
+    { label: 'Due date', value: formatDueDate(review.due_date) },
+  ]
+
+  return (
+    <details className="group mt-5 rounded-2xl border border-white/10 bg-black/20 backdrop-blur-md overflow-hidden">
+      <summary className="cursor-pointer select-none list-none px-4 sm:px-5 py-3 flex items-center justify-between gap-3 text-sm font-bold text-gray-300 hover:text-white transition-colors">
+        <span className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-cyan-300/80 shadow-[0_0_12px_rgba(103,232,249,0.5)]" />
+          SRS details
+        </span>
+        <span className="text-gray-500 group-open:rotate-180 transition-transform">v</span>
+      </summary>
+
+      <div className="border-t border-white/10 px-4 sm:px-5 py-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          {stats.map(stat => (
+            <div key={stat.label} className="rounded-xl bg-white/[0.04] border border-white/8 px-3 py-3">
+              <p className="text-[0.68rem] uppercase tracking-widest text-gray-500 font-bold mb-1">{stat.label}</p>
+              <p className="text-base sm:text-lg font-extrabold text-white break-words">{stat.value}</p>
+            </div>
+          ))}
+        </div>
+
+        <p className="text-sm leading-relaxed text-gray-400">
+          {getDueExplanation(review)}
+        </p>
+      </div>
+    </details>
+  )
+}
+
 export default function ReviewPage() {
   const [queue, setQueue] = useState<ReviewQueueItem[]>([])
   const [current, setCurrent] = useState(0)
@@ -229,6 +307,7 @@ export default function ReviewPage() {
           onPrev={current > 0 ? handlePrev : undefined}
           isPractice={isPractice} 
         />
+        {item.review && <SrsDetailsPanel review={item.review} />}
       </div>
     </div>
   )

@@ -40,6 +40,17 @@ CARD_EXTRA_COLUMNS = {
     "example_audio_url": "VARCHAR(500)",
 }
 
+REVIEW_EXTRA_COLUMNS = {
+    "last_auto_quality": "INTEGER",
+    "last_rating_source": "VARCHAR(20)",
+    "last_response_time_ms": "INTEGER",
+    "last_flip_count": "INTEGER",
+    "last_audio_play_count": "INTEGER",
+    "last_answer_mode": "VARCHAR(30)",
+    "last_answer_correct": "BOOLEAN",
+    "last_attempt_count": "INTEGER",
+}
+
 
 def ensure_card_columns(engine_) -> None:
     """Lightweight migration: add new nullable Card columns to existing DBs."""
@@ -52,4 +63,18 @@ def ensure_card_columns(engine_) -> None:
         for name, ddl in CARD_EXTRA_COLUMNS.items():
             if name not in existing:
                 conn.execute(text(f'ALTER TABLE cards ADD COLUMN "{name}" {ddl}'))
+        conn.commit()
+
+
+def ensure_review_columns(engine_) -> None:
+    """Lightweight migration: add review telemetry columns to existing DBs."""
+    inspector = inspect(engine_)
+    if not inspector.has_table("reviews"):
+        return
+
+    existing = {column["name"] for column in inspector.get_columns("reviews")}
+    with engine_.connect() as conn:
+        for name, ddl in REVIEW_EXTRA_COLUMNS.items():
+            if name not in existing:
+                conn.execute(text(f'ALTER TABLE reviews ADD COLUMN "{name}" {ddl}'))
         conn.commit()

@@ -4,6 +4,14 @@ from datetime import date, datetime
 
 class ReviewSubmit(BaseModel):
     quality: int  # 0-5
+    auto_quality: int | None = None
+    rating_source: str = "manual"
+    response_time_ms: int | None = None
+    flip_count: int | None = None
+    audio_play_count: int | None = None
+    answer_mode: str | None = None
+    answer_correct: bool | None = None
+    attempt_count: int | None = None
 
 
 class ReviewOut(BaseModel):
@@ -14,6 +22,14 @@ class ReviewOut(BaseModel):
     repetitions: int
     due_date: date
     last_quality: int | None
+    last_auto_quality: int | None
+    last_rating_source: str | None
+    last_response_time_ms: int | None
+    last_flip_count: int | None
+    last_audio_play_count: int | None
+    last_answer_mode: str | None
+    last_answer_correct: bool | None
+    last_attempt_count: int | None
     reviewed_at: datetime | None
 
     model_config = {"from_attributes": True}

@@ -1,22 +1,28 @@
-import { useState } from 'react'
-import type { Card, StudyVariant } from '../types'
+import { useMemo, useRef, useState } from 'react'
+import type { MouseEvent } from 'react'
+import type { Card, ReviewSubmission, StudyVariant } from '../types'
 import { resolveAssetUrl } from '../api/config'
 
 interface Props {
   card: Card
   variant?: StudyVariant
-  onRate: (quality: number) => void
+  onRate: (submission: ReviewSubmission) => void
   onNext?: () => void
   onPrev?: () => void
   isPractice?: boolean
 }
 
 const RATINGS = [
-  { label: 'Không nhớ', quality: 0, bg: 'bg-red-500/15 hover:bg-red-500/30 border-red-500/30 hover:border-red-400/60 text-red-300', icon: '😵' },
-  { label: 'Khó', quality: 1, bg: 'bg-orange-500/15 hover:bg-orange-500/30 border-orange-500/30 hover:border-orange-400/60 text-orange-300', icon: '😓' },
-  { label: 'Ổn', quality: 3, bg: 'bg-yellow-500/15 hover:bg-yellow-500/30 border-yellow-500/30 hover:border-yellow-400/60 text-yellow-300', icon: '🙂' },
-  { label: 'Dễ', quality: 5, bg: 'bg-emerald-500/15 hover:bg-emerald-500/30 border-emerald-500/30 hover:border-emerald-400/60 text-emerald-300', icon: '😄' },
+  { label: 'Không nhớ', quality: 0, bg: 'bg-red-500/15 hover:bg-red-500/30 border-red-500/30 hover:border-red-400/60 text-red-300', icon: '😵', hint: 'Sai hoặc không nhớ được.' },
+  { label: 'Khó', quality: 1, bg: 'bg-orange-500/15 hover:bg-orange-500/30 border-orange-500/30 hover:border-orange-400/60 text-orange-300', icon: '😓', hint: 'Nhớ chậm, cần gợi ý hoặc thử lại.' },
+  { label: 'Ổn', quality: 3, bg: 'bg-yellow-500/15 hover:bg-yellow-500/30 border-yellow-500/30 hover:border-yellow-400/60 text-yellow-300', icon: '🙂', hint: 'Trả lời đúng nhưng chưa thật nhanh.' },
+  { label: 'Dễ', quality: 5, bg: 'bg-emerald-500/15 hover:bg-emerald-500/30 border-emerald-500/30 hover:border-emerald-400/60 text-emerald-300', icon: '😄', hint: 'Nhớ nhanh và ít cần hỗ trợ.' },
 ]
+
+const SELF_CHECK_FAST_MS = 5000
+const SELF_CHECK_OK_MS = 12000
+const TYPED_FAST_MS = 8000
+const TYPED_OK_MS = 15000
 
 function normalizeAnswer(value: string) {
   return value
@@ -38,10 +44,73 @@ function makeClozeText(sentence: string | null, target: string) {
   return `${sentence.slice(0, index)}______${sentence.slice(index + target.length)}`
 }
 
-function AudioButton({ src, small }: { src: string; small?: boolean }) {
+function getRating(quality: number) {
+  if (quality >= 5) return RATINGS[3]
+  if (quality >= 3) return RATINGS[2]
+  if (quality >= 1) return RATINGS[1]
+  return RATINGS[0]
+}
+
+function formatSeconds(ms: number) {
+  return `${Math.max(1, Math.round(ms / 1000))}s`
+}
+
+function inferSelfCheckQuality(responseTimeMs: number, flipCount: number, audioPlayCount: number) {
+  if (responseTimeMs <= SELF_CHECK_FAST_MS && flipCount <= 1 && audioPlayCount <= 1) {
+    return {
+      quality: 5,
+      reason: `Bạn lật thẻ sau ${formatSeconds(responseTimeMs)} và gần như không cần hỗ trợ.`,
+    }
+  }
+
+  if (responseTimeMs <= SELF_CHECK_OK_MS && flipCount <= 2 && audioPlayCount <= 2) {
+    return {
+      quality: 3,
+      reason: `Bạn cần ${formatSeconds(responseTimeMs)} trước khi xem đáp án.`,
+    }
+  }
+
+  return {
+    quality: 1,
+    reason: `Bạn mất ${formatSeconds(responseTimeMs)} hoặc cần nghe/lật lại nhiều lần.`,
+  }
+}
+
+function inferTypedAnswerQuality(correct: boolean, responseTimeMs: number, attempts: number) {
+  if (!correct) {
+    return {
+      quality: 0,
+      reason: 'Câu trả lời chưa đúng trong lần kiểm tra này.',
+    }
+  }
+
+  if (attempts <= 1 && responseTimeMs <= TYPED_FAST_MS) {
+    return {
+      quality: 5,
+      reason: `Bạn trả lời đúng ngay trong ${formatSeconds(responseTimeMs)}.`,
+    }
+  }
+
+  if (attempts <= 1 && responseTimeMs <= TYPED_OK_MS) {
+    return {
+      quality: 3,
+      reason: `Bạn trả lời đúng sau ${formatSeconds(responseTimeMs)}.`,
+    }
+  }
+
+  return {
+    quality: 1,
+    reason: attempts > 1
+      ? `Bạn trả lời đúng sau ${attempts} lần thử.`
+      : `Bạn trả lời đúng nhưng cần ${formatSeconds(responseTimeMs)}.`,
+  }
+}
+
+function AudioButton({ src, small, onPlay }: { src: string; small?: boolean; onPlay?: () => void }) {
   const resolvedSrc = resolveAssetUrl(src)
-  const play = (e: React.MouseEvent) => {
+  const play = (e: MouseEvent) => {
     e.stopPropagation()
+    onPlay?.()
     if (resolvedSrc) new Audio(resolvedSrc).play().catch(() => {})
   }
   return (
@@ -55,14 +124,109 @@ function AudioButton({ src, small }: { src: string; small?: boolean }) {
   )
 }
 
+function AutoAssessment({
+  quality,
+  reason,
+  onAccept,
+}: {
+  quality: number
+  reason: string
+  onAccept: () => void
+}) {
+  const rating = getRating(quality)
+
+  return (
+    <div className="w-full max-w-2xl mx-auto rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.06] px-4 py-4 sm:px-5 backdrop-blur-md">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-[0.68rem] uppercase tracking-[0.2em] text-cyan-300/80 font-bold mb-2">Đánh giá tự động</p>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl" aria-hidden="true">{rating.icon}</span>
+            <div className="min-w-0">
+              <p className="font-extrabold text-white">{rating.label}</p>
+              <p className="text-sm text-gray-400 leading-relaxed">{reason}</p>
+            </div>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onAccept}
+          className="btn-primary shrink-0 px-4 py-3 rounded-2xl font-bold text-sm"
+        >
+          Dùng đánh giá này
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function FlipCard({ card, variant = 'standard', onRate, onNext, onPrev, isPractice }: Props) {
   const [flipped, setFlipped] = useState(false)
   const [answer, setAnswer] = useState('')
   const [checked, setChecked] = useState(false)
+  const [attempts, setAttempts] = useState(0)
+  const [responseTimeMs, setResponseTimeMs] = useState<number | null>(null)
+  const [flipCount, setFlipCount] = useState(0)
+  const [audioPlayCount, setAudioPlayCount] = useState(0)
+  const startedAtRef = useRef(Date.now())
   const imageUrl = resolveAssetUrl(card.image_url)
   const isAnswerMode = variant === 'cloze' || variant === 'reverse'
   const expectedAnswer = card.front_text
   const answerIsCorrect = normalizeAnswer(answer) === normalizeAnswer(expectedAnswer)
+
+  const elapsedMs = () => Math.max(0, Date.now() - startedAtRef.current)
+
+  const selfCheckAssessment = useMemo(() => {
+    const measuredMs = responseTimeMs ?? elapsedMs()
+    return inferSelfCheckQuality(measuredMs, flipCount, audioPlayCount)
+  }, [responseTimeMs, flipCount, audioPlayCount])
+
+  const typedAnswerAssessment = useMemo(() => {
+    if (!checked || responseTimeMs == null) return null
+    return inferTypedAnswerQuality(answerIsCorrect, responseTimeMs, attempts)
+  }, [answerIsCorrect, attempts, checked, responseTimeMs])
+
+  const makeSubmission = (
+    quality: number,
+    ratingSource: 'manual' | 'auto',
+    autoQuality: number | null,
+    answerMode: ReviewSubmission['answer_mode'],
+    answerCorrect: boolean | null,
+  ): ReviewSubmission => ({
+    quality,
+    auto_quality: autoQuality,
+    rating_source: ratingSource,
+    response_time_ms: responseTimeMs ?? elapsedMs(),
+    flip_count: flipCount,
+    audio_play_count: audioPlayCount,
+    answer_mode: answerMode,
+    answer_correct: answerCorrect,
+    attempt_count: attempts || null,
+  })
+
+  const handleManualRate = (quality: number, answerMode: ReviewSubmission['answer_mode'], answerCorrect: boolean | null, autoQuality: number | null) => {
+    onRate(makeSubmission(quality, 'manual', autoQuality, answerMode, answerCorrect))
+  }
+
+  const handleAutoRate = (quality: number, answerMode: ReviewSubmission['answer_mode'], answerCorrect: boolean | null) => {
+    onRate(makeSubmission(quality, 'auto', quality, answerMode, answerCorrect))
+  }
+
+  const handleCheckAnswer = () => {
+    if (!answer.trim()) return
+    setAttempts(value => value + 1)
+    setResponseTimeMs(elapsedMs())
+    setChecked(true)
+  }
+
+  const handleCardFlip = () => {
+    const nextFlipped = !flipped
+    setFlipped(nextFlipped)
+    setFlipCount(value => value + 1)
+    if (nextFlipped && responseTimeMs == null) {
+      setResponseTimeMs(elapsedMs())
+    }
+  }
 
   if (isAnswerMode) {
     const promptTitle = variant === 'cloze' ? 'Điền vào chỗ trống' : 'Thẻ đảo ngược'
@@ -105,9 +269,10 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
                 onChange={e => {
                   setAnswer(e.target.value)
                   setChecked(false)
+                  setResponseTimeMs(null)
                 }}
                 onKeyDown={e => {
-                  if (e.key === 'Enter' && answer.trim()) setChecked(true)
+                  if (e.key === 'Enter') handleCheckAnswer()
                 }}
                 placeholder="Gõ từ tiếng Anh..."
                 className="w-full bg-white/[0.04] border border-white/10 rounded-2xl px-5 py-4 text-cyan-100 font-bold text-lg text-center placeholder-gray-600 focus:bg-white/[0.06] focus:border-cyan-500/50 transition-all outline-none"
@@ -115,7 +280,7 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
               />
               <button
                 type="button"
-                onClick={() => setChecked(true)}
+                onClick={handleCheckAnswer}
                 disabled={!answer.trim()}
                 className="btn-primary px-5 py-3 rounded-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -157,14 +322,24 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
 
         {!isPractice && checked && (
           <div className="w-full animate-fade-in-up mt-2" style={{ animationDelay: '100ms' }}>
+            {typedAnswerAssessment && (
+              <div className="mb-4">
+                <AutoAssessment
+                  quality={typedAnswerAssessment.quality}
+                  reason={typedAnswerAssessment.reason}
+                  onAccept={() => handleAutoRate(typedAnswerAssessment.quality, 'typed-answer', answerIsCorrect)}
+                />
+              </div>
+            )}
             <p className="text-center text-gray-500 text-xs font-bold mb-4 uppercase tracking-[0.2em]">Đánh giá độ khó</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               {RATINGS.map((r, i) => (
                 <button
                   key={r.quality}
-                  onClick={() => onRate(r.quality)}
+                  onClick={() => handleManualRate(r.quality, 'typed-answer', answerIsCorrect, typedAnswerAssessment?.quality ?? null)}
                   className={`group relative flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] hover:shadow-lg overflow-hidden bg-black/20 backdrop-blur-md ${r.bg}`}
                   style={{ animationDelay: `${(i * 50) + 100}ms` }}
+                  title={r.hint}
                 >
                   <span className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full blur-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span className="text-2xl sm:text-3xl filter drop-shadow-md group-hover:scale-110 transition-transform">{r.icon}</span>
@@ -184,7 +359,7 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
       <div
         className="w-full cursor-pointer select-none"
         style={{ perspective: '1200px' }}
-        onClick={() => setFlipped(f => !f)}
+        onClick={handleCardFlip}
       >
         <div
           className="relative w-full transition-all duration-600"
@@ -214,7 +389,7 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
             {card.pronunciation && (
               <p className="text-cyan-200/70 text-lg sm:text-xl font-medium tracking-wide text-center break-words">{card.pronunciation}</p>
             )}
-            {card.audio_url && <AudioButton src={card.audio_url} />}
+            {card.audio_url && <AudioButton src={card.audio_url} onPlay={() => setAudioPlayCount(value => value + 1)} />}
             <div className="flex items-center gap-2 sm:gap-3 mt-4 sm:mt-6">
               <span className="w-8 sm:w-12 h-px bg-gradient-to-r from-transparent to-violet-500/50" />
               <span className="text-violet-400/80 text-xs font-bold uppercase tracking-widest bg-violet-500/10 px-3 py-1 rounded-full border border-violet-500/20">nhấn để lật</span>
@@ -254,7 +429,7 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
                     <p className="text-gray-400 text-sm italic text-center leading-relaxed flex-1">
                       "{card.example_sentence}"
                     </p>
-                    {card.example_audio_url && <AudioButton src={card.example_audio_url} small />}
+                    {card.example_audio_url && <AudioButton src={card.example_audio_url} small onPlay={() => setAudioPlayCount(value => value + 1)} />}
                   </div>
                 )}
               </div>
@@ -305,14 +480,22 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
             </div>
           ) : (
             <>
+              <div className="mb-4">
+                <AutoAssessment
+                  quality={selfCheckAssessment.quality}
+                  reason={selfCheckAssessment.reason}
+                  onAccept={() => handleAutoRate(selfCheckAssessment.quality, 'self-check', null)}
+                />
+              </div>
               <p className="text-center text-gray-500 text-xs font-bold mb-4 uppercase tracking-[0.2em]">Đánh giá độ khó</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {RATINGS.map((r, i) => (
                   <button
                     key={r.quality}
-                    onClick={() => onRate(r.quality)}
+                    onClick={() => handleManualRate(r.quality, 'self-check', null, selfCheckAssessment.quality)}
                     className={`group relative flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] hover:shadow-lg overflow-hidden bg-black/20 backdrop-blur-md ${r.bg}`}
                     style={{ animationDelay: `${(i * 50) + 100}ms` }}
+                    title={r.hint}
                   >
                     {/* Hover glare effect */}
                     <span className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full blur-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />

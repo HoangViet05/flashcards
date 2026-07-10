@@ -4,7 +4,7 @@ import { getDueCards, submitReview } from '../api/review'
 import { getCards } from '../api/cards'
 import { getDecks } from '../api/decks'
 import FlipCard from '../components/FlipCard'
-import type { Review, Card, StudyVariant } from '../types'
+import type { Review, ReviewSubmission, Card, StudyVariant } from '../types'
 
 type ReviewQueueItem = {
   review: Review | null
@@ -187,10 +187,10 @@ export default function ReviewPage() {
     }, 250)
   }
 
-  const handleRate = async (quality: number) => {
+  const handleRate = async (submission: ReviewSubmission) => {
     const item = queue[current]
     if (item.review) {
-      submitReview(item.card.id, quality).catch(err => console.error(err))
+      submitReview(item.card.id, submission).catch(err => console.error(err))
     }
     handleNext()
   }

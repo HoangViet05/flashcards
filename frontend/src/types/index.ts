@@ -32,7 +32,27 @@ export interface Review {
   repetitions: number
   due_date: string
   last_quality: number | null
+  last_auto_quality: number | null
+  last_rating_source: string | null
+  last_response_time_ms: number | null
+  last_flip_count: number | null
+  last_audio_play_count: number | null
+  last_answer_mode: string | null
+  last_answer_correct: boolean | null
+  last_attempt_count: number | null
   reviewed_at: string | null
+}
+
+export interface ReviewSubmission {
+  quality: number
+  auto_quality?: number | null
+  rating_source?: 'manual' | 'auto'
+  response_time_ms?: number | null
+  flip_count?: number | null
+  audio_play_count?: number | null
+  answer_mode?: 'self-check' | 'typed-answer' | null
+  answer_correct?: boolean | null
+  attempt_count?: number | null
 }
 
 export interface Stats {

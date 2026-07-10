@@ -20,6 +20,8 @@ def get_due_cards(db: Session = Depends(get_db)):
 def submit_review(card_id: str, body: ReviewSubmit, db: Session = Depends(get_db)):
     if body.quality < 0 or body.quality > 5:
         raise HTTPException(status_code=400, detail="Quality must be 0-5")
+    if body.auto_quality is not None and (body.auto_quality < 0 or body.auto_quality > 5):
+        raise HTTPException(status_code=400, detail="Auto quality must be 0-5")
     review = db.query(Review).filter(Review.card_id == card_id).first()
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
@@ -34,6 +36,14 @@ def submit_review(card_id: str, body: ReviewSubmit, db: Session = Depends(get_db
     review.repetitions = result["repetitions"]
     review.due_date = date.today() + timedelta(days=result["interval"])
     review.last_quality = body.quality
+    review.last_auto_quality = body.auto_quality
+    review.last_rating_source = body.rating_source
+    review.last_response_time_ms = body.response_time_ms
+    review.last_flip_count = body.flip_count
+    review.last_audio_play_count = body.audio_play_count
+    review.last_answer_mode = body.answer_mode
+    review.last_answer_correct = body.answer_correct
+    review.last_attempt_count = body.attempt_count
     review.reviewed_at = datetime.utcnow()
     db.commit()
     db.refresh(review)

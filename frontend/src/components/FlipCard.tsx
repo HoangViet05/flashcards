@@ -71,7 +71,7 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
     return (
       <div className="flex flex-col items-center gap-5 sm:gap-8 w-full">
         <div
-          className="w-full rounded-[2rem] flex flex-col items-center justify-center p-5 sm:p-8 gap-5 sm:gap-6 overflow-hidden min-h-[clamp(340px,58vh,460px)]"
+          className="relative w-full rounded-[2rem] flex flex-col items-center justify-center p-5 sm:p-8 gap-5 sm:gap-6 overflow-hidden min-h-[clamp(340px,58vh,460px)]"
           style={{
             background: variant === 'cloze'
               ? 'linear-gradient(135deg, rgba(245,158,11,0.14) 0%, rgba(8,8,16,0.94) 100%)'
@@ -198,7 +198,7 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
         >
           {/* Front */}
           <div
-            className="rounded-[2rem] flex flex-col items-center justify-center p-5 sm:p-8 gap-4 sm:gap-5 overflow-hidden"
+            className="relative rounded-[2rem] flex flex-col items-center justify-center p-5 sm:p-8 gap-4 sm:gap-5 overflow-hidden"
             style={{
               gridArea: '1 / 1',
               backfaceVisibility: 'hidden',
@@ -224,7 +224,7 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
 
           {/* Back */}
           <div
-            className="rounded-[2rem] flex flex-col items-center justify-center p-5 sm:p-8 gap-4 sm:gap-5 overflow-hidden"
+            className="relative rounded-[2rem] flex flex-col items-center justify-center p-5 sm:p-8 gap-4 sm:gap-5 overflow-hidden"
             style={{
               gridArea: '1 / 1',
               backfaceVisibility: 'hidden',

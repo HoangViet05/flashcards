@@ -2,6 +2,9 @@
 
 html {
   min-height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -18,7 +21,9 @@ body {
   /* Dark premium background */
   color: #e5e7eb;
   min-height: 100vh;
-  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
   background-image:
     radial-gradient(circle 800px at 10% 0%, rgba(124, 58, 237, 0.22) 0%, transparent 60%),
     radial-gradient(circle 1000px at 90% 20%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
@@ -28,6 +33,17 @@ body {
 
 #root {
   min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+@supports not (overflow: clip) {
+  html,
+  body,
+  #root {
+    overflow-x: hidden;
+  }
 }
 
 button,

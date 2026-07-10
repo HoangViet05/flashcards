@@ -275,7 +275,7 @@ export default function ReviewPage() {
                   :                           'animate-slide-in-prev';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12 relative">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12 relative isolate overflow-hidden">
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 -z-10" />
       <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none translate-y-1/2 -z-10" />
       
@@ -302,7 +302,7 @@ export default function ReviewPage() {
         </div>
       </div>
       
-      <div key={current} className={`relative z-10 w-full ${animClass}`}>
+      <div key={current} className={`relative z-10 w-full min-w-0 overflow-hidden ${animClass}`}>
         <FlipCard 
           card={item.card} 
           variant={item.variant}

@@ -91,17 +91,16 @@ function SrsDetailsPanel({ review }: { review: Review }) {
   ]
 
   return (
-    <details className="group mt-5 rounded-2xl border border-white/10 bg-black/20 backdrop-blur-md overflow-hidden">
-      <summary className="cursor-pointer select-none list-none px-4 sm:px-5 py-3 flex items-center justify-between gap-3 text-sm font-bold text-gray-300 hover:text-white transition-colors">
-        <span className="flex items-center gap-2">
+    <aside className="rounded-2xl border border-white/10 bg-black/25 backdrop-blur-md overflow-hidden shadow-[0_18px_45px_rgba(0,0,0,0.22)] lg:sticky lg:top-28">
+      <div className="px-4 sm:px-5 py-3 border-b border-white/10">
+        <h2 className="flex items-center gap-2 text-sm font-bold text-gray-200">
           <span className="w-2 h-2 rounded-full bg-cyan-300/80 shadow-[0_0_12px_rgba(103,232,249,0.5)]" />
           SRS details
-        </span>
-        <span className="text-gray-500 group-open:rotate-180 transition-transform">v</span>
-      </summary>
+        </h2>
+      </div>
 
-      <div className="border-t border-white/10 px-4 sm:px-5 py-4">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+      <div className="px-4 sm:px-5 py-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
           {stats.map(stat => (
             <div key={stat.label} className="rounded-xl bg-white/[0.04] border border-white/8 px-3 py-3">
               <p className="text-[0.68rem] uppercase tracking-widest text-gray-500 font-bold mb-1">{stat.label}</p>
@@ -110,11 +109,14 @@ function SrsDetailsPanel({ review }: { review: Review }) {
           ))}
         </div>
 
-        <p className="text-sm leading-relaxed text-gray-400">
-          {getDueExplanation(review)}
-        </p>
+        <div className="mt-4 rounded-xl border border-cyan-500/15 bg-cyan-500/[0.04] px-3 py-3">
+          <p className="text-[0.68rem] uppercase tracking-widest text-cyan-300/80 font-bold mb-2">Why now</p>
+          <p className="text-sm leading-relaxed text-gray-400">
+            {getDueExplanation(review)}
+          </p>
+        </div>
       </div>
-    </details>
+    </aside>
   )
 }
 
@@ -273,10 +275,12 @@ export default function ReviewPage() {
                   :                           'animate-slide-in-prev';
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-12 relative">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12 relative">
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 -z-10" />
       <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none translate-y-1/2 -z-10" />
       
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,48rem)_minmax(18rem,22rem)] lg:justify-center lg:gap-8">
+        <div className="w-full max-w-3xl min-w-0 mx-auto lg:max-w-none">
       <div className="mb-6 sm:mb-10 animate-fade-in-up">
         <div className="flex justify-between items-center mb-4 px-2">
           <div className="glass px-4 py-1.5 rounded-full flex items-center gap-2 backdrop-blur-md">
@@ -307,7 +311,14 @@ export default function ReviewPage() {
           onPrev={current > 0 ? handlePrev : undefined}
           isPractice={isPractice} 
         />
-        {item.review && <SrsDetailsPanel review={item.review} />}
+      </div>
+        </div>
+
+        {item.review && (
+          <div key={`${current}-srs`} className="relative z-10 w-full max-w-3xl mx-auto lg:max-w-none lg:pt-[5.35rem]">
+            <SrsDetailsPanel review={item.review} />
+          </div>
+        )}
       </div>
     </div>
   )

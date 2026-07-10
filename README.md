@@ -42,12 +42,10 @@ Most flashcard apps are either **too simple** (just flip cards) or **too bloated
 
 ### ✅ Implemented
 
-#### Account & daily email reminders
+#### Account
 
 - Register and log in with email/password at `/register` and `/login`.
-- Configure daily study reminders from `/account`.
-- Configure SMTP with `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, and `SMTP_FROM_EMAIL`.
-- Trigger reminder delivery from a scheduler or cron with `POST /api/reminders/send-daily`. If `REMINDER_CRON_SECRET` is set, send it as the `X-Reminder-Secret` header.
+- View account details and sign out from `/account`.
 
 <table>
   <tr>

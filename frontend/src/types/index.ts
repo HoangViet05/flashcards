@@ -57,9 +57,5 @@ export interface User {
   id: string
   email: string
   name: string | null
-  reminder_enabled: boolean
-  reminder_time: string
-  timezone: string
-  last_reminder_sent_on: string | null
   created_at: string
 }

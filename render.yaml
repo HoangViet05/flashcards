@@ -25,3 +25,5 @@ services:
         sync: false
       - key: SUPABASE_STORAGE_PREFIX
         value: flashcards
+      - key: AUTH_SECRET
+        generateValue: true

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.auth import AuthToken, LoginRequest, RegisterRequest, ReminderSettingsUpdate, UserOut
+from app.schemas.auth import AuthToken, LoginRequest, RegisterRequest, UserOut
 from app.services.security import create_access_token, get_current_user, hash_password, verify_password
 
 
@@ -41,23 +41,4 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserOut)
 def me(current_user: User = Depends(get_current_user)):
-    return current_user
-
-
-@router.get("/reminder", response_model=UserOut)
-def get_reminder_settings(current_user: User = Depends(get_current_user)):
-    return current_user
-
-
-@router.put("/reminder", response_model=UserOut)
-def update_reminder_settings(
-    body: ReminderSettingsUpdate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    current_user.reminder_enabled = body.reminder_enabled
-    current_user.reminder_time = body.reminder_time
-    current_user.timezone = body.timezone
-    db.commit()
-    db.refresh(current_user)
     return current_user

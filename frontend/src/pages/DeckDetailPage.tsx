@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getDeck } from '../api/decks'
-import { getCards, createCard, updateCard, deleteCard } from '../api/cards'
+import { getAllCards, getCards, createCard, updateCard, deleteCard } from '../api/cards'
 import { generateAIContent, generateAIBatchStream } from '../api/ai'
 import { useNotification } from '../components/NotificationProvider'
 import RobotAnimation from '../components/RobotAnimation'
@@ -100,6 +100,8 @@ export default function DeckDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [deck, setDeck] = useState<Deck | null>(null)
   const [cards, setCards] = useState<Card[]>([])
+  const [total, setTotal] = useState(0)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [front, setFront] = useState('')
   const [back, setBack] = useState('')
@@ -121,13 +123,27 @@ export default function DeckDetailPage() {
 
   const load = async () => {
     if (!id) return
-    const [d, c] = await Promise.all([getDeck(id), getCards(id)])
+    const [d, page] = await Promise.all([getDeck(id), getCards(id, { limit: 100, offset: 0 })])
     setDeck(d)
-    setCards(c)
+    setCards(page.items)
+    setTotal(page.total)
+  }
+
+  const handleLoadMore = async () => {
+    if (!id || loadingMore || cards.length >= total) return
+    setLoadingMore(true)
+    try {
+      const page = await getCards(id, { limit: 100, offset: cards.length })
+      setCards(previous => [...previous, ...page.items])
+      setTotal(page.total)
+    } finally {
+      setLoadingMore(false)
+    }
   }
 
   const handleGenerateAI = async () => {
     if (!AI_ENABLED) return
+    if (!deck) return
     if (!front.trim()) {
       toast('Vui lòng nhập từ khóa vào mặt trước trước khi dùng AI', 'warning')
       return
@@ -135,7 +151,7 @@ export default function DeckDetailPage() {
 
     setIsGenerating(true)
     try {
-      const excludedWords = cards.map(c => c.front_text)
+      const excludedWords = (await getAllCards(deck.id)).map(c => c.front_text)
       const result = await generateAIContent(front.trim(), excludedWords)
       setFront(result.front_text || front)
       setBack(result.back_text || '')
@@ -158,7 +174,7 @@ export default function DeckDetailPage() {
     setRobotAction('thinking')
     try {
       let successCount = 0;
-      const excludedWords = cards.map(c => c.front_text)
+      const excludedWords = (await getAllCards(deck.id)).map(c => c.front_text)
 
       await generateAIBatchStream(deck.name, aiCount, excludedWords, async (card) => {
         try {
@@ -322,62 +338,55 @@ export default function DeckDetailPage() {
               {deck.description && <p className="text-gray-400 text-sm mt-1.5 line-clamp-2 leading-relaxed">{deck.description}</p>}
               <div className="flex items-center gap-2 mt-2.5">
                 <span id="deck-card-count-badge" className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-gray-300 backdrop-blur-md shadow-inner">
-                  {cards.length} thẻ
+                  {total} thẻ
                 </span>
 
-                {cards.filter(c => !c.review || c.review.repetitions === 0).length > 0 && (
+                {deck.new_count > 0 && (
                   <>
                     <div className="w-1.5 h-1.5 rounded-full bg-violet-500/30" />
                     <span className="text-xs text-violet-300/80 font-medium">
-                      {cards.filter(c => !c.review || c.review.repetitions === 0).length} mới
+                      {deck.new_count} mới
                     </span>
                   </>
                 )}
 
-                {(() => {
-                  const today = new Date().toISOString().split('T')[0];
-                  const dueCount = cards.filter(c => c.review && c.review.repetitions > 0 && c.review.due_date <= today).length;
-                  return dueCount > 0 ? (
+                {deck.due_count > 0 && (
                     <>
                       <div className="w-1.5 h-1.5 rounded-full bg-cyan-500/30" />
                       <span className="text-xs text-cyan-300/80 font-medium">
-                        {dueCount} cần ôn
+                        {deck.due_count} cần ôn
                       </span>
                     </>
-                  ) : null;
-                })()}
+                )}
               </div>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-3 shrink-0 relative z-10 w-full sm:w-auto mt-2 sm:mt-0">
             {(() => {
-              const today = new Date().toISOString().split('T')[0];
-              const newCards = cards.filter(c => !c.review || c.review.repetitions === 0);
-              const dueCards = cards.filter(c => c.review && c.review.repetitions > 0 && c.review.due_date <= today);
               const clozeCards = cards.filter(c => c.example_sentence && c.example_sentence.toLowerCase().includes(c.front_text.toLowerCase()));
               const reverseCards = cards.filter(c => c.back_text || c.image_url);
-              const typedMode = dueCards.length > 0 ? 'review' : newCards.length > 0 ? 'learn' : 'practice';
+              const typedMode = deck.due_count > 0 ? 'review' : deck.new_count > 0 ? 'learn' : 'practice';
 
               return (
                 <>
-                  {newCards.length > 0 && (
+                  {deck.new_count > 0 && (
                     <Link
                       to={`/review?deckId=${deck.id}&mode=learn`}
                       className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(124,58,237,0.3)] transition-all hover:scale-[1.02]"
                     >
-                      <span>✨</span> Học {newCards.length} thẻ mới
+                      <span>✨</span> Học {deck.new_count} thẻ mới
                     </Link>
                   )}
-                  {dueCards.length > 0 && (
+                  {deck.due_count > 0 && (
                     <Link
                       to={`/review?deckId=${deck.id}&mode=review`}
                       className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(6,182,212,0.1)] transition-all hover:scale-[1.02]"
                     >
-                      <span>🧠</span> Ôn tập {dueCards.length} thẻ
+                      <span>🧠</span> Ôn tập {deck.due_count} thẻ
                     </Link>
                   )}
-                  {cards.length > 0 && (
+                  {total > 0 && (
                     <Link
                       to={`/review?deckId=${deck.id}&mode=practice`}
                       className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.08] text-white border border-white/10 px-5 py-2.5 rounded-xl text-sm font-bold shadow-inner transition-all hover:scale-[1.02]"
@@ -644,7 +653,20 @@ export default function DeckDetailPage() {
           )
         })}
 
-        {cards.length === 0 && !showForm && (
+        {cards.length < total && (
+          <div className="flex justify-center pt-3">
+            <button
+              type="button"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+              className="rounded-xl border border-violet-500/30 bg-violet-500/10 px-6 py-3 font-bold text-violet-200 transition-colors hover:bg-violet-500/20 disabled:cursor-wait disabled:opacity-60"
+            >
+              {loadingMore ? 'Đang tải...' : `Tải thêm (${cards.length}/${total})`}
+            </button>
+          </div>
+        )}
+
+        {total === 0 && !showForm && (
           <div className="col-span-full text-center py-24 animate-fade-in relative">
             <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
               <div className="w-64 h-64 bg-violet-500/10 rounded-full blur-[80px]" />

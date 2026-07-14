@@ -6,6 +6,14 @@ from pathlib import Path
 import pytest
 
 from app.services.anki_importer import ApkgFormatError, import_apkg, map_generic_note
+from app.models.user import User
+
+
+def _owner(db, email="importer@test.com") -> str:
+    user = User(email=email, password_hash="x")
+    db.add(user)
+    db.commit()
+    return user.id
 
 
 def make_apkg(
@@ -57,11 +65,13 @@ def test_import_apkg_creates_deck_cards_reviews(db, tmp_path):
         deck_name="English::Basics",
         media_files={"hi.mp3": b"MP3DATA", "hi.jpg": b"JPGDATA"},
     )
-    summary = import_apkg(apkg, db, media_dest=tmp_path / "media")
+    user_id = _owner(db)
+    summary = import_apkg(apkg, db, user_id, media_dest=tmp_path / "media")
 
     assert summary.decks_created == 1
     assert summary.cards_created == 2
     deck = db.query(Deck).filter(Deck.name == "English · Basics").one()
+    assert deck.user_id == user_id
     cards = db.query(Card).filter(Card.deck_id == deck.id).all()
     assert {c.front_text for c in cards} == {"hello", "cat"}
     hello = next(c for c in cards if c.front_text == "hello")
@@ -73,8 +83,9 @@ def test_import_apkg_creates_deck_cards_reviews(db, tmp_path):
 
 def test_import_apkg_idempotent_by_deck_name(db, tmp_path):
     apkg = make_apkg(tmp_path / "deck.apkg")
-    import_apkg(apkg, db, media_dest=tmp_path / "media")
-    summary2 = import_apkg(apkg, db, media_dest=tmp_path / "media")
+    user_id = _owner(db)
+    import_apkg(apkg, db, user_id, media_dest=tmp_path / "media")
+    summary2 = import_apkg(apkg, db, user_id, media_dest=tmp_path / "media")
     assert summary2.decks_created == 0
     assert summary2.decks_skipped == 1
     assert summary2.cards_created == 0
@@ -86,8 +97,9 @@ def test_import_apkg_media_name_collision(db, tmp_path):
                       notes=[("one [sound:a.mp3]", "một")], media_files={"a.mp3": b"AAA"})
     apkg2 = make_apkg(tmp_path / "b.apkg", deck_name="Deck B",
                       notes=[("two [sound:a.mp3]", "hai")], media_files={"a.mp3": b"DIFFERENT"})
-    import_apkg(apkg1, db, media_dest=media_dest)
-    import_apkg(apkg2, db, media_dest=media_dest)
+    user_id = _owner(db)
+    import_apkg(apkg1, db, user_id, media_dest=media_dest)
+    import_apkg(apkg2, db, user_id, media_dest=media_dest)
 
     from app.models.card import Card
     two = db.query(Card).filter(Card.front_text == "two").one()
@@ -104,7 +116,7 @@ def test_import_apkg_rejects_new_format(db, tmp_path):
         zf.writestr("collection.anki21b", b"zstd...")
         zf.writestr("media", b"\x00proto")
     with pytest.raises(ApkgFormatError):
-        import_apkg(p, db, media_dest=tmp_path / "media")
+        import_apkg(p, db, _owner(db), media_dest=tmp_path / "media")
 
 
 def test_import_apkg_prefers_anki21(db, tmp_path):
@@ -119,8 +131,20 @@ def test_import_apkg_prefers_anki21(db, tmp_path):
         with zipfile.ZipFile(real) as zr:
             zf.writestr("collection.anki21", zr.read("collection.anki21"))
         zf.writestr("media", "{}")
-    summary = import_apkg(combined, db, media_dest=tmp_path / "media")
+    summary = import_apkg(combined, db, _owner(db), media_dest=tmp_path / "media")
     assert summary.cards_created == 1
+
+
+def test_import_same_deck_name_is_scoped_per_owner(db, tmp_path):
+    apkg = make_apkg(tmp_path / "shared-name.apkg", deck_name="Shared")
+    user_a = _owner(db, "a@test.com")
+    user_b = _owner(db, "b@test.com")
+
+    first = import_apkg(apkg, db, user_a, media_dest=tmp_path / "media")
+    second = import_apkg(apkg, db, user_b, media_dest=tmp_path / "media")
+
+    assert first.decks_created == 1
+    assert second.decks_created == 1
 
 
 def test_generic_maps_named_fields():

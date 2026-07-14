@@ -22,3 +22,11 @@ def test_import_endpoint_rejects_wrong_extension(client):
 def test_import_endpoint_rejects_invalid_zip(client):
     resp = client.post("/api/anki/import", files={"file": ("fake.apkg", b"not a zip", "application/octet-stream")})
     assert resp.status_code == 400
+
+
+def test_import_requires_auth(anon_client):
+    resp = anon_client.post(
+        "/api/anki/import",
+        files={"file": ("x.apkg", b"zz", "application/zip")},
+    )
+    assert resp.status_code == 401

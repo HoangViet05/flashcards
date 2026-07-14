@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getDueCards, submitReview } from '../api/review'
-import { getCards } from '../api/cards'
+import { getAllCards } from '../api/cards'
 import { getDecks } from '../api/decks'
 import FlipCard from '../components/FlipCard'
 import type { Review, ReviewSubmission, Card, StudyVariant } from '../types'
@@ -142,7 +142,7 @@ export default function ReviewPage() {
       const decksToLoad = deckIdFilter ? decks.filter(d => d.id === deckIdFilter) : decks
       
       for (const deck of decksToLoad) {
-        const cards = await getCards(deck.id)
+        const cards = await getAllCards(deck.id)
         allCards.push(...cards)
       }
       

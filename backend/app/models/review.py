@@ -13,7 +13,7 @@ class Review(Base):
     ease_factor: Mapped[float] = mapped_column(Float, default=2.5)
     interval: Mapped[int] = mapped_column(Integer, default=1)
     repetitions: Mapped[int] = mapped_column(Integer, default=0)
-    due_date: Mapped[date] = mapped_column(Date, default=date.today)
+    due_date: Mapped[date] = mapped_column(Date, default=date.today, index=True)
     last_quality: Mapped[int | None] = mapped_column(Integer, nullable=True)
     last_auto_quality: Mapped[int | None] = mapped_column(Integer, nullable=True)
     last_rating_source: Mapped[str | None] = mapped_column(String(20), nullable=True)

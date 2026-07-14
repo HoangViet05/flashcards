@@ -1,7 +1,19 @@
-from sqlalchemy import create_engine, inspect, text
+import sqlite3
+
+from sqlalchemy import create_engine, event, inspect, text
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 from app.config import get_settings
+
+
+@event.listens_for(Engine, "connect")
+def _enable_sqlite_foreign_keys(dbapi_connection, _connection_record) -> None:
+    """Make SQLite honor FK actions such as ReviewLog.card_id SET NULL."""
+    if isinstance(dbapi_connection, sqlite3.Connection):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 
 def _normalize_database_url(url: str) -> str:
@@ -51,6 +63,8 @@ REVIEW_EXTRA_COLUMNS = {
     "last_attempt_count": "INTEGER",
 }
 
+OWNER_COLUMN_TABLES = ("decks", "documents")
+
 
 def ensure_card_columns(engine_) -> None:
     """Lightweight migration: add new nullable Card columns to existing DBs."""
@@ -77,4 +91,17 @@ def ensure_review_columns(engine_) -> None:
         for name, ddl in REVIEW_EXTRA_COLUMNS.items():
             if name not in existing:
                 conn.execute(text(f'ALTER TABLE reviews ADD COLUMN "{name}" {ddl}'))
+        conn.commit()
+
+
+def ensure_owner_columns(engine_) -> None:
+    """Add nullable owner columns to legacy DBs before an explicit data reset."""
+    inspector = inspect(engine_)
+    with engine_.connect() as conn:
+        for table in OWNER_COLUMN_TABLES:
+            if not inspector.has_table(table):
+                continue
+            existing = {column["name"] for column in inspector.get_columns(table)}
+            if "user_id" not in existing:
+                conn.execute(text(f'ALTER TABLE {table} ADD COLUMN "user_id" VARCHAR(36)'))
         conn.commit()

@@ -38,3 +38,27 @@ def test_delete_deck(client):
     response = client.delete(f"/api/decks/{created['id']}")
     assert response.status_code == 200
     assert client.get(f"/api/decks/{created['id']}").status_code == 404
+
+
+def test_decks_require_auth(anon_client):
+    assert anon_client.get("/api/decks").status_code == 401
+
+
+def test_deck_isolated_between_users(client, user_b_client):
+    created = client.post("/api/decks", json={"name": "Private"}).json()
+    assert user_b_client.get("/api/decks").json() == []
+    assert user_b_client.get(f"/api/decks/{created['id']}").status_code == 404
+    assert user_b_client.put(f"/api/decks/{created['id']}", json={"name": "Hack"}).status_code == 404
+    assert user_b_client.delete(f"/api/decks/{created['id']}").status_code == 404
+
+
+def test_deck_list_returns_counts(client):
+    deck = client.post("/api/decks", json={"name": "Counted"}).json()
+    client.post(
+        f"/api/decks/{deck['id']}/cards",
+        json={"front_text": "hello", "back_text": "xin chào"},
+    )
+    listed = client.get("/api/decks").json()
+    assert listed[0]["card_count"] == 1
+    assert listed[0]["new_count"] == 1
+    assert listed[0]["due_count"] == 0

@@ -5,7 +5,7 @@ from datetime import date, datetime
 class ReviewSubmit(BaseModel):
     quality: int  # 0-5
     auto_quality: int | None = None
-    rating_source: str = "manual"
+    rating_source: str = "flip"
     response_time_ms: int | None = None
     flip_count: int | None = None
     audio_play_count: int | None = None

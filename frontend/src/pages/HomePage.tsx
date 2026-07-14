@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getDecks, createDeck, deleteDeck } from '../api/decks'
 import { getDueCards } from '../api/review'
-import { getCards, createCard } from '../api/cards'
+import { createCard, getAllCards } from '../api/cards'
 import { generateAIBatchStream } from '../api/ai'
+import { useAuth } from '../auth/AuthContext'
 import { useNotification } from '../components/NotificationProvider'
 import DeckCard from '../components/DeckCard'
 import ImportAnkiModal from '../components/ImportAnkiModal'
 import RobotAnimation from '../components/RobotAnimation'
-import type { Deck, Review } from '../types'
+import { useCachedQuery } from '../hooks/useCachedQuery'
 
 // Tính năng AI tạm hoãn — bật lại khi phát hành các tính năng AI
 const AI_ENABLED = false
@@ -101,11 +102,13 @@ function FlyingGlassCard({ data, onComplete }: { data: GlobalFlyingCardData, onC
 }
 
 export default function HomePage() {
-  const [decks, setDecks] = useState<Deck[]>([])
-  const [dueReviews, setDueReviews] = useState<Review[]>([])
-  const [cardCounts, setCardCounts] = useState<Record<string, number>>({})
-  const [dueCounts, setDueCounts] = useState<Record<string, number>>({})
-  const [newCounts, setNewCounts] = useState<Record<string, number>>({})
+  const { user } = useAuth()
+  const decksQuery = useCachedQuery(user ? `home:${user.id}` : null, async () => {
+    const [decks, due] = await Promise.all([getDecks(), getDueCards()])
+    return { decks, due }
+  })
+  const decks = decksQuery.data?.decks ?? []
+  const dueReviews = decksQuery.data?.due ?? []
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
   const [showForm, setShowForm] = useState(false)
@@ -120,39 +123,13 @@ export default function HomePage() {
 
   const { toast, confirm } = useNotification()
 
-  const load = async () => {
-    const [d, r] = await Promise.all([getDecks(), getDueCards()])
-    setDecks(d)
-    setDueReviews(r)
-
-    // Load card counts and due/new counts per deck
-    const counts: Record<string, number> = {}
-    const dueByDeck: Record<string, number> = {}
-    const newByDeck: Record<string, number> = {}
-
-    await Promise.all(d.map(async deck => {
-      const cards = await getCards(deck.id)
-      counts[deck.id] = cards.length
-
-      const cardIds = new Set(cards.map(c => c.id))
-      dueByDeck[deck.id] = r.filter(rev => cardIds.has(rev.card_id) && rev.repetitions > 0).length
-      newByDeck[deck.id] = r.filter(rev => cardIds.has(rev.card_id) && rev.repetitions === 0).length
-    }))
-
-    setCardCounts(counts)
-    setDueCounts(dueByDeck)
-    setNewCounts(newByDeck)
-  }
-
-  useEffect(() => { load() }, [])
-
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
     await createDeck({ name: name.trim(), description: desc.trim() || undefined })
     toast(`Đã tạo bộ thẻ "${name.trim()}"`, 'success')
     setName(''); setDesc(''); setShowForm(false)
-    load()
+    void decksQuery.refresh()
   }
 
   const handleGenerateAICard = async (e: React.FormEvent) => {
@@ -171,7 +148,7 @@ export default function HomePage() {
       if (existingDeck) {
         targetDeckId = existingDeck.id
         // Lấy danh sách thẻ hiện có để exclude khỏi AI (chống gen trùng)
-        const existingCards = await getCards(targetDeckId)
+        const existingCards = await getAllCards(targetDeckId)
         excludedWords = existingCards.map(c => c.front_text)
       }
 
@@ -179,7 +156,7 @@ export default function HomePage() {
         const newDeck = await createDeck({ name: topic })
         targetDeckId = newDeck.id
         // Load immediately so the new deck appears on screen before cards are added
-        await load()
+        await decksQuery.refresh()
       }
 
       let successCount = 0;
@@ -210,7 +187,7 @@ export default function HomePage() {
             setRobotAction('add')
             actionTimeoutRef.current = setTimeout(() => setRobotAction('thinking'), 1000)
 
-            load() // Real-time update count on GUI
+            void decksQuery.refresh() // Real-time update count on GUI
           }
         } catch (e) {
           console.warn("Lỗi khi thêm một thẻ:", e)
@@ -223,7 +200,7 @@ export default function HomePage() {
         toast(`Không thể tạo thẻ nào, có thể chủ đề này đã có đầy đủ thẻ.`, 'info')
       }
       setAiTopic('')
-      load()
+      void decksQuery.refresh()
     } catch (err: any) {
       console.error(err)
       toast("Không thể tạo từ AI. Vui lòng kiểm tra lại kết nối.", 'error')
@@ -242,12 +219,12 @@ export default function HomePage() {
       onConfirm: async () => {
         await deleteDeck(id)
         toast('Đã xóa bộ thẻ', 'success')
-        load()
+        await decksQuery.refresh()
       }
     })
   }
 
-  const totalCards = Object.values(cardCounts).reduce((a, b) => a + b, 0)
+  const totalCards = decks.reduce((sum, deck) => sum + deck.card_count, 0)
   const newReviews = dueReviews.filter(r => r.repetitions === 0)
   const dueOnly = dueReviews.filter(r => r.repetitions > 0)
 
@@ -425,7 +402,11 @@ export default function HomePage() {
         </div>
       </div>
 
-      <ImportAnkiModal open={showImport} onClose={() => setShowImport(false)} onImported={load} />
+      <ImportAnkiModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        onImported={() => { void decksQuery.refresh() }}
+      />
 
       {/* Create form modal */}
       {showForm && (
@@ -464,7 +445,16 @@ export default function HomePage() {
       )}
 
       {/* Deck grid */}
-      {decks.length === 0 ? (
+      {decksQuery.loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" aria-label="Đang tải bộ thẻ">
+          {Array.from({ length: 6 }, (_, index) => (
+            <div
+              key={index}
+              className="h-48 animate-pulse rounded-[1.5rem] border border-white/10 bg-white/[0.04]"
+            />
+          ))}
+        </div>
+      ) : decks.length === 0 ? (
         <div className="text-center py-20 animate-fade-in relative">
           <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
             <div className="w-64 h-64 bg-violet-500/10 rounded-full blur-[80px]" />
@@ -487,9 +477,9 @@ export default function HomePage() {
             <DeckCard
               key={deck.id}
               deck={deck}
-              dueCount={dueCounts[deck.id] ?? 0}
-              newCount={newCounts[deck.id] ?? 0}
-              cardCount={cardCounts[deck.id] ?? 0}
+              dueCount={deck.due_count}
+              newCount={deck.new_count}
+              cardCount={deck.card_count}
               onDelete={handleDelete}
               index={i}
             />

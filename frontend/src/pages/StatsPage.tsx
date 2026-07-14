@@ -1,17 +1,19 @@
-import { useEffect, useState } from 'react'
 import { getStats } from '../api/review'
-import type { Stats } from '../types'
+import { useAuth } from '../auth/AuthContext'
+import { useCachedQuery } from '../hooks/useCachedQuery'
 
 export default function StatsPage() {
-  const [stats, setStats] = useState<Stats | null>(null)
-
-  useEffect(() => { getStats().then(setStats) }, [])
+  const { user } = useAuth()
+  const statsQuery = useCachedQuery(user ? `stats:${user.id}` : null, getStats)
+  const stats = statsQuery.data
 
   if (!stats) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="flex items-center gap-3 text-gray-600">
-        <div className="w-5 h-5 border-2 border-violet-500/50 border-t-violet-500 rounded-full animate-spin" />
-        Đang tải...
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-12" aria-label="Đang tải thống kê">
+      <div className="mb-8 h-16 animate-pulse rounded-2xl bg-white/[0.04]" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {Array.from({ length: 5 }, (_, index) => (
+          <div key={index} className="h-28 animate-pulse rounded-[1.5rem] border border-white/10 bg-white/[0.04]" />
+        ))}
       </div>
     </div>
   )

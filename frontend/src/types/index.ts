@@ -4,6 +4,9 @@ export interface Deck {
   description: string | null
   created_at: string
   updated_at: string
+  card_count: number
+  due_count: number
+  new_count: number
 }
 
 export interface Card {

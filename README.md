@@ -228,12 +228,6 @@ conda create -n flashcard python=3.12 && conda activate flashcard  # Conda
 # Install dependencies
 pip install -r requirements.txt
 
-# Import the 4000 Essential English Words deck (first time only)
-python import_anki.py
-
-# Optional: extra sample decks
-python seed.py
-
 # Start server
 uvicorn app.main:app --reload --port 8000
 ```
@@ -250,11 +244,23 @@ npm run dev
 
 > 📍 App at `http://localhost:5173`
 
-### 4️⃣ Start Learning
+### 4️⃣ Create an account and import data
+
+Open `http://localhost:5173` and register the account that will own the decks. Then, from a second terminal in `backend/`:
+
+```bash
+# Import the 4000 Essential English Words deck (first time only)
+python import_anki.py --user-email you@example.com
+
+# Optional: replace this account's decks with sample data
+python seed.py --user-email you@example.com
+```
+
+### 5️⃣ Start Learning
 
 Open `http://localhost:5173`, pick a unit deck (each has 20 new words), hit **"Học từ mới"**, flip cards, listen to the audio and rate yourself. Come back tomorrow — SM-2 schedules the reviews for you. 🔥
 
-**Want more decks?** Download any shared deck (`.apkg`) from [ankiweb.net/shared](https://ankiweb.net/shared/decks) → click **📥 Nhập từ Anki** on the home page and drop the file in. The 4000 Essential Words series (Books 2-6) imports with full media; other decks are converted best-effort. CLI alternative: `python import_anki.py --apkg path/to/deck.apkg`.
+**Want more decks?** Download any shared deck (`.apkg`) from [ankiweb.net/shared](https://ankiweb.net/shared/decks) → click **📥 Nhập từ Anki** on the home page and drop the file in. The 4000 Essential Words series (Books 2-6) imports with full media; other decks are converted best-effort. CLI alternative: `python import_anki.py --user-email you@example.com --apkg path/to/deck.apkg`.
 
 > 💡 AI features (card generation, PDF import) are currently paused and marked "Sắp ra mắt ✨" in the UI. When they return, they'll only need a local Ollama install.
 

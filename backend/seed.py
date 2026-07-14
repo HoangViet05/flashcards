@@ -1,7 +1,8 @@
 """
 Seed sample data for testing.
-Run: conda activate flashcard && cd backend && python seed.py
+Run: conda activate flashcard && cd backend && python seed.py --user-email you@example.com
 """
+import argparse
 import sys
 import os
 sys.path.insert(0, os.path.dirname(__file__))
@@ -11,6 +12,8 @@ from app.database import SessionLocal, Base, engine
 from app.models.deck import Deck
 from app.models.card import Card
 from app.models.review import Review
+from app.models.user import User
+import app.models  # noqa: F401
 
 Base.metadata.create_all(bind=engine)
 
@@ -54,20 +57,27 @@ DECKS = [
     },
 ]
 
-def seed():
+def seed(user_email: str):
     db = SessionLocal()
     try:
-        # Clear existing data
-        db.query(Review).delete()
-        db.query(Card).delete()
-        db.query(Deck).delete()
+        owner = db.query(User).filter(User.email == user_email.strip().lower()).first()
+        if not owner:
+            raise ValueError(f"Không tìm thấy user {user_email}; hãy đăng ký tài khoản trước.")
+
+        # Replace only this owner's sample data. ORM deletion preserves cascades.
+        for existing_deck in db.query(Deck).filter(Deck.user_id == owner.id).all():
+            db.delete(existing_deck)
         db.commit()
 
         today = date.today()
         card_count = 0
 
         for deck_data in DECKS:
-            deck = Deck(name=deck_data["name"], description=deck_data["description"])
+            deck = Deck(
+                name=deck_data["name"],
+                description=deck_data["description"],
+                user_id=owner.id,
+            )
             db.add(deck)
             db.flush()
 
@@ -110,4 +120,6 @@ def seed():
         db.close()
 
 if __name__ == "__main__":
-    seed()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--user-email", required=True)
+    seed(parser.parse_args().user_email)

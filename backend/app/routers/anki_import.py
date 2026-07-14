@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.models.user import User
 from app.schemas.anki_import import AnkiImportOut
+from app.services.security import get_current_user
 from app.services import anki_importer
 from app.services.anki_importer import ApkgFormatError, import_apkg
 
@@ -14,7 +16,11 @@ router = APIRouter(prefix="/api/anki", tags=["anki"])
 
 
 @router.post("/import", response_model=AnkiImportOut)
-def import_anki_package(file: UploadFile = File(...), db: Session = Depends(get_db)):
+def import_anki_package(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     name = (file.filename or "").lower()
     if not name.endswith((".apkg", ".zip")):
         raise HTTPException(status_code=400, detail="Vui lòng chọn file .apkg xuất từ Anki.")
@@ -23,7 +29,7 @@ def import_anki_package(file: UploadFile = File(...), db: Session = Depends(get_
         shutil.copyfileobj(file.file, tmp)
         tmp_path = Path(tmp.name)
     try:
-        summary = import_apkg(tmp_path, db, media_dest=anki_importer.DEFAULT_MEDIA_DEST)
+        summary = import_apkg(tmp_path, db, user.id, media_dest=anki_importer.DEFAULT_MEDIA_DEST)
     except ApkgFormatError as e:
         raise HTTPException(status_code=400, detail=str(e))
     finally:

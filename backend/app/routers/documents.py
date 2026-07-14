@@ -7,7 +7,9 @@ from typing import List
 from app.config import get_settings
 from app.database import get_db, SessionLocal
 from app.models.document import Document
+from app.models.user import User
 from app.schemas.document import DocumentResponse
+from app.services.security import get_current_user
 from app.services.storage import delete_public_file_url, storage_enabled, upload_public_file
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
@@ -25,6 +27,7 @@ def process_pdf_task(doc_id: str):
     # Mở một session DB mới độc lập — vì đây là background task,
     # không dùng chung session với request gốc (đã đóng rồi)
     db = SessionLocal()
+    doc = None
     try:
         doc = db.query(Document).filter(Document.id == doc_id).first()
         if not doc:
@@ -48,14 +51,26 @@ def process_pdf_task(doc_id: str):
         db.close()
 
 @router.get("", response_model=List[DocumentResponse])
-async def list_documents(db: Session = Depends(get_db)):
+async def list_documents(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """Lấy danh sách tất cả tài liệu đã upload, sắp xếp mới nhất trước."""
-    return db.query(Document).order_by(Document.created_at.desc()).all()
+    return (
+        db.query(Document)
+        .filter(Document.user_id == user.id)
+        .order_by(Document.created_at.desc())
+        .all()
+    )
 
 @router.get("/{doc_id}", response_model=DocumentResponse)
-async def get_document(doc_id: str, db: Session = Depends(get_db)):
+async def get_document(
+    doc_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """Lấy thông tin chi tiết của một tài liệu theo ID."""
-    doc = db.query(Document).filter(Document.id == doc_id).first()
+    doc = db.query(Document).filter(Document.id == doc_id, Document.user_id == user.id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
     return doc
@@ -64,7 +79,8 @@ async def get_document(doc_id: str, db: Session = Depends(get_db)):
 async def upload_pdf(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),  # File(...) nghĩa là tham số này bắt buộc phải có
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Upload file PDF lên server.
@@ -99,6 +115,7 @@ async def upload_pdf(
 
     # Lưu metadata vào DB với trạng thái ban đầu là 'processing'
     new_doc = Document(
+        user_id=user.id,
         filename=file.filename,  # Tên gốc từ người dùng — để hiển thị trên UI
         file_path=file_url,    # Đường dẫn thực tế trên server — để đọc file sau này
         page_count=page_count,
@@ -116,9 +133,13 @@ async def upload_pdf(
     return new_doc
 
 @router.delete("/{doc_id}")
-async def delete_document(doc_id: str, db: Session = Depends(get_db)):
+async def delete_document(
+    doc_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """Xóa tài liệu: xóa file trên ổ cứng và xóa bản ghi trong DB."""
-    doc = db.query(Document).filter(Document.id == doc_id).first()
+    doc = db.query(Document).filter(Document.id == doc_id, Document.user_id == user.id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
 

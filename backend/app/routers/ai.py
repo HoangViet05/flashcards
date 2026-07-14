@@ -1,10 +1,15 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from app.schemas.ai import AIGenerateRequest, AIGenerateResponse, AIBatchGenerateRequest, AIBatchGenerateResponse
 from app.services.ai_service import ai_service
 from fastapi.responses import StreamingResponse
+from app.services.security import get_current_user
 import json
 
-router = APIRouter(prefix="/api/ai", tags=["ai"])
+router = APIRouter(
+    prefix="/api/ai",
+    tags=["ai"],
+    dependencies=[Depends(get_current_user)],
+)
 
 @router.post("/generate", response_model=AIGenerateResponse)
 async def generate_vocab(body: AIGenerateRequest):

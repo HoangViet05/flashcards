@@ -192,6 +192,7 @@ def import_collection(
     collection_path: Path,
     media_reader: Callable[[str], bytes | None],
     db: Session,
+    user_id: str,
     media_dest: Path,
 ) -> ImportSummary:
     summary = ImportSummary()
@@ -232,7 +233,7 @@ def import_collection(
         anki_name = deck_names.get(did, f"Deck {did}")
         model_name = model_name_by_mid.get(rows[0][0], "")
         deck_name = _deck_display_name(anki_name, model_name)
-        if db.query(Deck).filter(Deck.name == deck_name).first():
+        if db.query(Deck).filter(Deck.name == deck_name, Deck.user_id == user_id).first():
             summary.decks_skipped += 1
             continue
 
@@ -257,7 +258,7 @@ def import_collection(
             f"4000 Essential English Words – Book {m.group(1)} · {len(mapped)} từ kèm hình ảnh & phát âm"
             if m else f"Nhập từ Anki · {len(mapped)} thẻ"
         )
-        deck = Deck(name=deck_name, description=description)
+        deck = Deck(name=deck_name, description=description, user_id=user_id)
         db.add(deck)
         db.flush()
 
@@ -289,7 +290,12 @@ def import_collection(
     return summary
 
 
-def import_apkg(apkg_path: Path, db: Session, media_dest: Path = DEFAULT_MEDIA_DEST) -> ImportSummary:
+def import_apkg(
+    apkg_path: Path,
+    db: Session,
+    user_id: str,
+    media_dest: Path = DEFAULT_MEDIA_DEST,
+) -> ImportSummary:
     try:
         zf = zipfile.ZipFile(apkg_path)
     except zipfile.BadZipFile as e:
@@ -321,12 +327,17 @@ def import_apkg(apkg_path: Path, db: Session, media_dest: Path = DEFAULT_MEDIA_D
             tmp.write(zf.read(entry))
             tmp_path = Path(tmp.name)
         try:
-            return import_collection(tmp_path, media_reader, db, media_dest)
+            return import_collection(tmp_path, media_reader, db, user_id, media_dest)
         finally:
             tmp_path.unlink(missing_ok=True)
 
 
-def import_extracted_dir(dir_path: Path, db: Session, media_dest: Path = DEFAULT_MEDIA_DEST) -> ImportSummary:
+def import_extracted_dir(
+    dir_path: Path,
+    db: Session,
+    user_id: str,
+    media_dest: Path = DEFAULT_MEDIA_DEST,
+) -> ImportSummary:
     collection = dir_path / "collection.anki2"
     if not collection.exists():
         raise ApkgFormatError(f"Không thấy collection.anki2 trong {dir_path}")
@@ -348,4 +359,4 @@ def import_extracted_dir(dir_path: Path, db: Session, media_dest: Path = DEFAULT
             return (dir_path / num).read_bytes()
         return None
 
-    return import_collection(collection, media_reader, db, media_dest)
+    return import_collection(collection, media_reader, db, user_id, media_dest)

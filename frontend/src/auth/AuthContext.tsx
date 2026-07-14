@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from 'react'
 import * as authApi from '../api/auth'
 import type { User } from '../types'
+import { clearQueryCache } from '../hooks/useCachedQuery'
 
 const TOKEN_KEY = 'flashcards.auth.token'
 const USER_KEY = 'flashcards.auth.user'
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
+    clearQueryCache()
     window.localStorage.removeItem(TOKEN_KEY)
     window.localStorage.removeItem(USER_KEY)
     setToken(null)

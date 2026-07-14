@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { useNotification } from '../components/NotificationProvider'
 
@@ -12,12 +12,18 @@ export default function AuthPage({ mode }: AuthPageProps) {
   const { user, login, register } = useAuth()
   const { toast } = useNotification()
   const navigate = useNavigate()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  if (user) return <Navigate to="/account" replace />
+  const from = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from
+  const destination = from
+    ? `${from.pathname ?? '/'}${from.search ?? ''}${from.hash ?? ''}`
+    : '/'
+
+  if (user) return <Navigate to={destination} replace />
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -30,7 +36,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
         await login(email, password)
         toast('Đăng nhập thành công', 'success')
       }
-      navigate('/account')
+      navigate(destination, { replace: true })
     } catch (error: any) {
       const message = error.response?.data?.detail || 'Không thể xử lý yêu cầu'
       toast(message, 'error')

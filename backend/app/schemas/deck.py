@@ -18,5 +18,8 @@ class DeckOut(BaseModel):
     description: str | None
     created_at: datetime
     updated_at: datetime
+    card_count: int = 0
+    due_count: int = 0
+    new_count: int = 0
 
     model_config = {"from_attributes": True}

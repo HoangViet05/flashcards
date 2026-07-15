@@ -66,11 +66,11 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       {children}
 
       {/* Toast Container */}
-      <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
+      <div className="fixed inset-x-4 bottom-4 z-[100] flex flex-col gap-3 pointer-events-none sm:inset-x-auto sm:bottom-6 sm:right-6">
         {toasts.map(t => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center gap-3 px-6 py-4 rounded-2xl glass backdrop-blur-2xl border min-w-[300px] shadow-2xl animate-fade-in-up transition-all ${
+            className={`pointer-events-auto flex items-center gap-3 px-6 py-4 rounded-2xl glass backdrop-blur-2xl border min-w-0 sm:min-w-[300px] shadow-2xl animate-fade-in-up transition-all ${
               t.type === 'success' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300' :
               t.type === 'error' ? 'border-red-500/30 bg-red-500/10 text-red-300' :
               t.type === 'warning' ? 'border-amber-500/30 bg-amber-500/10 text-amber-300' :

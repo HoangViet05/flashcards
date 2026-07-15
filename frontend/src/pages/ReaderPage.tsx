@@ -77,19 +77,21 @@ export default function ReaderPage() {
   }
 
   if (!article) {
-    return <div className="w-full max-w-3xl px-4 py-8 lg:ml-8 xl:ml-16"><div className="h-64 animate-pulse rounded-2xl bg-white/[.05]" /></div>
+    return <div className="mx-auto max-w-3xl px-4 py-8"><div className="h-64 animate-pulse rounded-2xl bg-white/[.05]" /></div>
   }
 
   let sentenceIndex = -1
   return (
-    <div className="w-full max-w-3xl px-4 py-8 pb-40 lg:ml-8 xl:ml-16">
-      <Link to="/reader" className="text-sm text-slate-400 hover:text-cyan-300">← Danh sách bài đọc</Link>
-      <h1 className="mt-2 text-2xl font-black text-white">{article.title}</h1>
-      <p className="mb-6 mt-1 text-xs text-slate-500">
-        {article.word_count} từ {article.source_url && <>· <a href={article.source_url} target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline">nguồn</a></>}
-      </p>
+    <div className="px-4 py-8 pb-40">
+      <header className="mx-auto max-w-3xl">
+        <Link to="/reader" className="text-sm text-slate-400 hover:text-cyan-300">← Danh sách bài đọc</Link>
+        <h1 className="mt-2 text-2xl font-black text-white">{article.title}</h1>
+        <p className="mb-6 mt-1 text-xs text-slate-500">
+          {article.word_count} từ {article.source_url && <>· <a href={article.source_url} target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline">nguồn</a></>}
+        </p>
+      </header>
 
-      <div className="sticky top-20 z-10 mb-6 flex items-center gap-2 rounded-2xl border border-white/[.07] bg-slate-900/90 p-2 backdrop-blur">
+      <div className="sticky top-20 z-10 mb-6 flex max-w-3xl flex-wrap items-center gap-2 rounded-2xl border border-white/[.07] bg-slate-900/90 p-2 backdrop-blur lg:ml-8 xl:ml-16">
         {tts.playing
           ? <button onClick={stopSpeaking} className="rounded-xl bg-rose-400/10 px-4 py-2 text-sm font-bold text-rose-300">⏹ Dừng</button>
           : <button onClick={() => speakFrom(0)} className="rounded-xl bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-300">▶ Đọc bài</button>}
@@ -102,7 +104,7 @@ export default function ReaderPage() {
         <span className="ml-auto hidden text-xs text-slate-500 sm:block">💡 Click từ để tra nghĩa</span>
       </div>
 
-      <article className="space-y-4 text-[17px] leading-8 text-slate-200">
+      <article className="mx-auto max-w-3xl space-y-4 text-[17px] leading-8 text-slate-200">
         {paragraphs.map((paragraph, paragraphIndex) => (
           <p key={paragraphIndex}>
             {sentenceParts(paragraph).map((sentence, childIndex) => {

@@ -7,6 +7,48 @@ import { stripTranscriptTimestamps } from '../utils/readerText'
 
 const sentenceParts = (text: string) => text.match(/[^.!?]+[.!?]+["')\]]*|[^.!?]+$/g) ?? [text]
 
+const VOICE_STORAGE_KEY = 'reader-speech-voice'
+const SPEECH_CHUNK_LENGTH = 360
+
+type SpeechChunk = {
+  text: string
+  startSentence: number
+  sentenceOffsets: number[]
+}
+
+// Reading a short group of sentences per utterance reduces the artificial gap
+// between sentences without making individual browser utterances too long.
+function makeSpeechChunks(sentences: string[]): SpeechChunk[] {
+  const chunks: SpeechChunk[] = []
+  let buffer: string[] = []
+  let startSentence = 0
+  let length = 0
+
+  const flush = () => {
+    if (!buffer.length) return
+    let offset = 0
+    const sentenceOffsets = buffer.map((sentence, index) => {
+      if (index) offset += 1
+      const result = offset
+      offset += sentence.length
+      return result
+    })
+    chunks.push({ text: buffer.join(' '), startSentence, sentenceOffsets })
+    startSentence += buffer.length
+    buffer = []
+    length = 0
+  }
+
+  for (const sentence of sentences) {
+    const addition = sentence.length + (buffer.length ? 1 : 0)
+    if (buffer.length && length + addition > SPEECH_CHUNK_LENGTH) flush()
+    buffer.push(sentence)
+    length += sentence.length + (buffer.length > 1 ? 1 : 0)
+  }
+  flush()
+  return chunks
+}
+
 export function extractSentence(paragraph: string, charIndex: number): string {
   const parts = sentenceParts(paragraph)
   let position = 0
@@ -25,6 +67,8 @@ export default function ReaderPage() {
   const [picked, setPicked] = useState<{ word: string; sentence: string } | null>(null)
   const [rate, setRate] = useState(1)
   const [tts, setTts] = useState({ playing: false, sentence: -1 })
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
+  const [voiceURI, setVoiceURI] = useState(() => window.localStorage.getItem(VOICE_STORAGE_KEY) ?? '')
   const speechRun = useRef(0)
 
   useEffect(() => {
@@ -41,6 +85,22 @@ export default function ReaderPage() {
     () => paragraphs.flatMap(sentenceParts).map(value => value.trim()).filter(Boolean),
     [paragraphs],
   )
+  const chunks = useMemo(() => makeSpeechChunks(sentences), [sentences])
+  const availableVoices = useMemo(() => {
+    const englishVoices = voices.filter(voice => /^en(?:-|_)/i.test(voice.lang))
+    return englishVoices.length ? englishVoices : voices
+  }, [voices])
+  const selectedVoice = useMemo(
+    () => availableVoices.find(voice => voice.voiceURI === voiceURI),
+    [availableVoices, voiceURI],
+  )
+
+  useEffect(() => {
+    const loadVoices = () => setVoices(window.speechSynthesis.getVoices())
+    loadVoices()
+    window.speechSynthesis.addEventListener('voiceschanged', loadVoices)
+    return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices)
+  }, [])
 
   const stopSpeaking = () => {
     // Some browsers emit onend after cancel(). Invalidate that sequence first.
@@ -54,18 +114,31 @@ export default function ReaderPage() {
     speechRun.current = run
     window.speechSynthesis.cancel()
 
-    const speak = (index: number) => {
-      if (speechRun.current !== run || index >= sentences.length) {
+    const startChunk = Math.max(0, chunks.findIndex(chunk => start >= chunk.startSentence && start < chunk.startSentence + chunk.sentenceOffsets.length))
+
+    const speak = (chunkIndex: number) => {
+      if (speechRun.current !== run || chunkIndex >= chunks.length) {
         if (speechRun.current === run) setTts({ playing: false, sentence: -1 })
         return
       }
 
-      setTts({ playing: true, sentence: index })
-      const utterance = new SpeechSynthesisUtterance(sentences[index])
-      utterance.lang = 'en-US'
+      const chunk = chunks[chunkIndex]
+      setTts({ playing: true, sentence: chunk.startSentence })
+      const utterance = new SpeechSynthesisUtterance(chunk.text)
+      utterance.lang = selectedVoice?.lang || 'en-US'
+      if (selectedVoice) utterance.voice = selectedVoice
       utterance.rate = rate
+      utterance.onboundary = event => {
+        if (speechRun.current !== run || typeof event.charIndex !== 'number') return
+        let sentenceOffset = 0
+        for (let index = 0; index < chunk.sentenceOffsets.length; index += 1) {
+          if (event.charIndex >= chunk.sentenceOffsets[index]) sentenceOffset = index
+          else break
+        }
+        setTts({ playing: true, sentence: chunk.startSentence + sentenceOffset })
+      }
       utterance.onend = () => {
-        if (speechRun.current === run) speak(index + 1)
+        if (speechRun.current === run) speak(chunkIndex + 1)
       }
       utterance.onerror = () => {
         if (speechRun.current === run) setTts({ playing: false, sentence: -1 })
@@ -73,7 +146,14 @@ export default function ReaderPage() {
       window.speechSynthesis.speak(utterance)
     }
 
-    speak(start)
+    speak(startChunk)
+  }
+
+  const selectVoice = (nextVoiceURI: string) => {
+    if (tts.playing) stopSpeaking()
+    setVoiceURI(nextVoiceURI)
+    if (nextVoiceURI) window.localStorage.setItem(VOICE_STORAGE_KEY, nextVoiceURI)
+    else window.localStorage.removeItem(VOICE_STORAGE_KEY)
   }
 
   if (!article) return <div className="mx-auto max-w-3xl px-4 py-8"><div className="h-64 animate-pulse rounded-2xl bg-white/[.05]" /></div>
@@ -104,6 +184,14 @@ export default function ReaderPage() {
               <div className="grid grid-cols-3 gap-1 rounded-xl bg-black/20 p-1">
                 {[.75, 1, 1.25].map(value => <button key={value} onClick={() => setRate(value)} className={`rounded-lg px-1 py-2 text-xs font-bold transition ${rate === value ? 'bg-white/[.12] text-white shadow-sm' : 'text-slate-500 hover:bg-white/[.05] hover:text-slate-300'}`}>{value}x</button>)}
               </div>
+            </div>
+            <div className="mt-3 border-t border-white/[.07] pt-3">
+              <label htmlFor="reader-voice" className="mb-2 block px-1 text-[10px] font-black uppercase tracking-[.12em] text-slate-500">Giọng đọc</label>
+              <select id="reader-voice" value={selectedVoice?.voiceURI ?? ''} onChange={event => selectVoice(event.target.value)} className="w-full truncate rounded-xl border border-white/10 bg-black/20 px-2.5 py-2 text-xs font-medium text-slate-200 outline-none transition focus:border-cyan-300/50" title="Giọng đọc có sẵn trên thiết bị">
+                <option value="">Mặc định của trình duyệt</option>
+                {availableVoices.map(voice => <option key={voice.voiceURI} value={voice.voiceURI}>{voice.name} ({voice.lang})</option>)}
+              </select>
+              <p className="mt-1.5 px-1 text-[10px] leading-4 text-slate-600">{voices.length ? 'Danh sách giọng do thiết bị của bạn cung cấp.' : 'Đang tải các giọng có sẵn…'}</p>
             </div>
             <p className="mt-3 rounded-xl bg-white/[.035] px-2.5 py-2 text-[11px] leading-4 text-slate-500">{tts.playing ? `Đang đọc câu ${tts.sentence + 1}/${sentences.length}` : 'Chọn một từ trong bài để tra nghĩa.'}</p>
           </section>

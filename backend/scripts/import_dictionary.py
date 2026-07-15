@@ -66,7 +66,8 @@ def main() -> None:
             db.commit(); total += len(batch)
     finally:
         db.close()
-    print(f"Hoàn tất: {total} mục từ điển.")
+    # Keep CLI output ASCII so the importer also works in legacy Windows consoles.
+    print(f"Completed: {total} dictionary entries.")
 
 
 if __name__ == "__main__":

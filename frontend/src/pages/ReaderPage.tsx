@@ -76,14 +76,12 @@ export default function ReaderPage() {
     speak(start)
   }
 
-  if (!article) {
-    return <div className="mx-auto max-w-3xl px-4 py-8"><div className="h-64 animate-pulse rounded-2xl bg-white/[.05]" /></div>
-  }
+  if (!article) return <div className="mx-auto max-w-3xl px-4 py-8"><div className="h-64 animate-pulse rounded-2xl bg-white/[.05]" /></div>
 
   let sentenceIndex = -1
   return (
-    <div className="px-4 py-8 pb-40">
-      <header className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-6xl px-4 py-8 pb-40 sm:px-6">
+      <header className="mx-auto max-w-3xl lg:ml-60">
         <Link to="/reader" className="text-sm text-slate-400 hover:text-cyan-300">← Danh sách bài đọc</Link>
         <h1 className="mt-2 text-2xl font-black text-white">{article.title}</h1>
         <p className="mb-6 mt-1 text-xs text-slate-500">
@@ -91,40 +89,48 @@ export default function ReaderPage() {
         </p>
       </header>
 
-      <div className="sticky top-20 z-10 mb-6 flex max-w-3xl flex-wrap items-center gap-2 rounded-2xl border border-white/[.07] bg-slate-900/90 p-2 backdrop-blur lg:ml-8 xl:ml-16">
-        {tts.playing
-          ? <button onClick={stopSpeaking} className="rounded-xl bg-rose-400/10 px-4 py-2 text-sm font-bold text-rose-300">⏹ Dừng</button>
-          : <button onClick={() => speakFrom(0)} className="rounded-xl bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-300">▶ Đọc bài</button>}
-        <span className="text-xs text-slate-500">Tốc độ:</span>
-        {[.75, 1, 1.25].map(value => (
-          <button key={value} onClick={() => setRate(value)} className={`rounded-lg px-2 py-1 text-xs font-bold ${rate === value ? 'bg-white/10 text-white' : 'text-slate-500'}`}>
-            {value}x
-          </button>
-        ))}
-        <span className="ml-auto hidden text-xs text-slate-500 sm:block">💡 Click từ để tra nghĩa</span>
-      </div>
+      <div className="grid items-start gap-6 lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-8">
+        <aside className="z-10 lg:sticky lg:top-24">
+          <section className="rounded-2xl border border-cyan-300/[.12] bg-slate-950/70 p-3 shadow-[0_18px_45px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+            <div className="mb-3 flex items-center gap-2 px-1">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-400/10 text-sm text-cyan-300">◖</span>
+              <div><p className="text-[10px] font-black uppercase tracking-[.14em] text-cyan-300/80">Audio reader</p><p className="text-xs font-bold text-slate-200">Nghe bài viết</p></div>
+            </div>
+            {tts.playing
+              ? <button onClick={stopSpeaking} className="w-full rounded-xl border border-rose-300/20 bg-rose-400/10 px-3 py-2.5 text-sm font-bold text-rose-200 transition hover:bg-rose-400/15">⏹ Dừng đọc</button>
+              : <button onClick={() => speakFrom(0)} className="w-full rounded-xl border border-cyan-300/20 bg-cyan-400/10 px-3 py-2.5 text-sm font-bold text-cyan-200 transition hover:bg-cyan-400/15">▶ Đọc từ đầu</button>}
+            <div className="mt-3 border-t border-white/[.07] pt-3">
+              <p className="mb-2 px-1 text-[10px] font-black uppercase tracking-[.12em] text-slate-500">Tốc độ đọc</p>
+              <div className="grid grid-cols-3 gap-1 rounded-xl bg-black/20 p-1">
+                {[.75, 1, 1.25].map(value => <button key={value} onClick={() => setRate(value)} className={`rounded-lg px-1 py-2 text-xs font-bold transition ${rate === value ? 'bg-white/[.12] text-white shadow-sm' : 'text-slate-500 hover:bg-white/[.05] hover:text-slate-300'}`}>{value}x</button>)}
+              </div>
+            </div>
+            <p className="mt-3 rounded-xl bg-white/[.035] px-2.5 py-2 text-[11px] leading-4 text-slate-500">{tts.playing ? `Đang đọc câu ${tts.sentence + 1}/${sentences.length}` : 'Chọn một từ trong bài để tra nghĩa.'}</p>
+          </section>
+        </aside>
 
-      <article className="mx-auto max-w-3xl space-y-4 text-[17px] leading-8 text-slate-200">
-        {paragraphs.map((paragraph, paragraphIndex) => (
-          <p key={paragraphIndex}>
-            {sentenceParts(paragraph).map((sentence, childIndex) => {
-              sentenceIndex += 1
-              const current = sentenceIndex
-              return (
-                <span key={childIndex} className={tts.sentence === current ? 'rounded bg-cyan-400/15' : undefined}>
-                  {sentence.split(/(\s+)/).map((token, tokenIndex) => {
-                    const word = cleanToken(token)
-                    return !word || /^\s+$/.test(token)
-                      ? token
-                      : <span key={tokenIndex} onClick={() => setPicked({ word: word.toLowerCase(), sentence: sentence.trim() })} className="cursor-pointer rounded-sm transition hover:bg-cyan-400/20">{token}</span>
-                  })}
-                  {' '}
-                </span>
-              )
-            })}
-          </p>
-        ))}
-      </article>
+        <article className="min-w-0 max-w-3xl space-y-4 text-[17px] leading-8 text-slate-200">
+          {paragraphs.map((paragraph, paragraphIndex) => (
+            <p key={paragraphIndex}>
+              {sentenceParts(paragraph).map((sentence, childIndex) => {
+                sentenceIndex += 1
+                const current = sentenceIndex
+                return (
+                  <span key={childIndex} className={tts.sentence === current ? 'rounded bg-cyan-400/15' : undefined}>
+                    {sentence.split(/(\s+)/).map((token, tokenIndex) => {
+                      const word = cleanToken(token)
+                      return !word || /^\s+$/.test(token)
+                        ? token
+                        : <span key={tokenIndex} onClick={() => setPicked({ word: word.toLowerCase(), sentence: sentence.trim() })} className="cursor-pointer rounded-sm transition hover:bg-cyan-400/20">{token}</span>
+                    })}
+                    {' '}
+                  </span>
+                )
+              })}
+            </p>
+          ))}
+        </article>
+      </div>
       {picked && <WordPopup word={picked.word} sentence={picked.sentence} onClose={() => setPicked(null)} />}
     </div>
   )

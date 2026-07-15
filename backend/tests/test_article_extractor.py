@@ -14,6 +14,11 @@ def test_extract_html_and_normalize():
         extract_from_html("<html><body></body></html>", "x")
 
 
+def test_normalize_text_removes_standalone_transcript_timestamps():
+    text = "**00:00**\n**Hi.**\n00:06\nThis is a talk.\n1:02:03\nFinal sentence."
+    assert normalize_text(text) == "**Hi.**\nThis is a talk.\nFinal sentence."
+
+
 def test_extract_pdf(tmp_path):
     path = tmp_path / "sample.pdf"; document = fitz.open(); page = document.new_page(); page.insert_text((72, 72), "Kubernetes orchestrates containers at scale."); document.save(str(path)); document.close()
     assert "Kubernetes orchestrates" in extract_from_pdf_source(str(path))

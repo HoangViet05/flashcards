@@ -6,15 +6,97 @@ import { useAuth } from '../auth/AuthContext'
 import { useNotification } from '../components/NotificationProvider'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import type { Document } from '../types'
+import { stripTranscriptTimestamps } from '../utils/readerText'
 
 type Tab = 'paste' | 'url' | 'pdf'
 const BADGES: Record<string, string> = { paste: '📋 Dán', url: '🔗 Web', pdf: '📄 PDF', rss: '📰 RSS' }
 
 export default function ReaderListPage() {
-  const { user } = useAuth(); const navigate = useNavigate(); const { toast, confirm } = useNotification(); const articlesQuery = useCachedQuery(user ? `articles:${user.id}` : null, getArticles); const [show, setShow] = useState(false); const [tab, setTab] = useState<Tab>('paste'); const [title, setTitle] = useState(''); const [text, setText] = useState(''); const [url, setUrl] = useState(''); const [docId, setDocId] = useState(''); const [docs, setDocs] = useState<Document[] | null>(null); const [creating, setCreating] = useState(false)
-  const openPdf = () => { setTab('pdf'); if (!docs) void getDocuments().then(setDocs).catch(() => toast('Không tải được tài liệu PDF', 'error')) }
-  const create = async () => { setCreating(true); try { const input = tab === 'paste' ? { title: title || undefined, text } : tab === 'url' ? { title: title || undefined, url } : { title: title || undefined, document_id: docId }; const article = await createArticle(input); setShow(false); setTitle(''); setText(''); setUrl(''); setDocId(''); await articlesQuery.refresh(); navigate(`/reader/${article.id}`) } catch (error: any) { toast(error?.response?.data?.detail ?? 'Không tạo được bài đọc', 'error') } finally { setCreating(false) } }
-  const remove = (id: string, name: string) => confirm({ title: 'Xóa bài đọc?', message: `“${name}” sẽ bị xóa vĩnh viễn.`, variant: 'danger', confirmText: 'Xóa', onConfirm: () => { void deleteArticle(id).then(() => articlesQuery.refresh()).catch(() => toast('Không xóa được bài đọc', 'error')) } })
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const { toast, confirm } = useNotification()
+  const articlesQuery = useCachedQuery(user ? `articles:${user.id}` : null, getArticles)
+  const [show, setShow] = useState(false)
+  const [tab, setTab] = useState<Tab>('paste')
+  const [title, setTitle] = useState('')
+  const [text, setText] = useState('')
+  const [url, setUrl] = useState('')
+  const [docId, setDocId] = useState('')
+  const [docs, setDocs] = useState<Document[] | null>(null)
+  const [creating, setCreating] = useState(false)
+
+  const openPdf = () => {
+    setTab('pdf')
+    if (!docs) void getDocuments().then(setDocs).catch(() => toast('Không tải được tài liệu PDF', 'error'))
+  }
+
+  const create = async () => {
+    setCreating(true)
+    try {
+      const input = tab === 'paste'
+        ? { title: title || undefined, text: stripTranscriptTimestamps(text) }
+        : tab === 'url'
+          ? { title: title || undefined, url }
+          : { title: title || undefined, document_id: docId }
+      const article = await createArticle(input)
+      setShow(false)
+      setTitle('')
+      setText('')
+      setUrl('')
+      setDocId('')
+      await articlesQuery.refresh()
+      navigate(`/reader/${article.id}`)
+    } catch (error: any) {
+      toast(error?.response?.data?.detail ?? 'Không tạo được bài đọc', 'error')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const remove = (id: string, name: string) => confirm({
+    title: 'Xóa bài đọc?',
+    message: `“${name}” sẽ bị xóa vĩnh viễn.`,
+    variant: 'danger',
+    confirmText: 'Xóa',
+    onConfirm: () => {
+      void deleteArticle(id).then(() => articlesQuery.refresh()).catch(() => toast('Không xóa được bài đọc', 'error'))
+    },
+  })
+
   const articles = articlesQuery.data ?? []
-  return <div className="mx-auto max-w-4xl px-4 py-8"><div className="mb-6 flex items-center justify-between"><div><h1 className="text-2xl font-black text-white">📖 Tech Reader</h1><p className="mt-1 text-sm text-slate-400">Đọc, tra từ và lưu thẻ ngay trong ngữ cảnh.</p></div><button onClick={() => setShow(true)} className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-200">+ Bài mới</button></div>{articlesQuery.loading ? <div className="grid gap-3 sm:grid-cols-2">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-24 animate-pulse rounded-2xl bg-white/[.05]" />)}</div> : articles.length === 0 ? <p className="rounded-2xl border border-white/[.07] bg-white/[.03] p-8 text-center text-slate-400">Chưa có bài đọc nào — dán một bài báo IT hoặc JD để bắt đầu.</p> : <div className="grid gap-3 sm:grid-cols-2">{articles.map(article => <div key={article.id} className="group relative rounded-2xl border border-white/[.07] bg-white/[.03] p-4 hover:border-cyan-300/20"><Link to={`/reader/${article.id}`} className="block"><h3 className="line-clamp-2 font-bold text-slate-100">{article.title}</h3><p className="mt-2 text-xs text-slate-500">{BADGES[article.source_type]} · {article.word_count} từ · {new Date(article.created_at).toLocaleDateString('vi-VN')}</p></Link><button onClick={() => remove(article.id, article.title)} className="absolute right-3 top-3 hidden rounded-lg px-2 py-1 text-xs text-rose-300 hover:bg-rose-500/10 group-hover:block">Xóa</button></div>)}</div>}{show && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setShow(false)}><div className="w-full max-w-lg rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl" onClick={event => event.stopPropagation()}><h2 className="mb-4 text-lg font-black text-white">Bài đọc mới</h2><div className="mb-4 flex gap-1 rounded-xl bg-black/30 p-1">{([['paste', '📋 Dán text'], ['url', '🔗 URL'], ['pdf', '📄 PDF']] as [Tab, string][]).map(([value, label]) => <button key={value} onClick={() => value === 'pdf' ? openPdf() : setTab(value)} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${tab === value ? 'bg-white/10 text-white' : 'text-slate-400'}`}>{label}</button>)}</div><input value={title} onChange={event => setTitle(event.target.value)} placeholder="Tiêu đề (tùy chọn)" className="mb-3 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500" />{tab === 'paste' && <textarea value={text} onChange={event => setText(event.target.value)} rows={8} placeholder="Dán bài báo, JD, tài liệu..." className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500" />}{tab === 'url' && <input value={url} onChange={event => setUrl(event.target.value)} placeholder="https://example.com/..." className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500" />}{tab === 'pdf' && (docs === null ? <p className="text-sm text-slate-400">Đang tải danh sách tài liệu…</p> : docs.length ? <select value={docId} onChange={event => setDocId(event.target.value)} className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"><option value="">— Chọn tài liệu —</option>{docs.map(document => <option key={document.id} value={document.id}>{document.filename}</option>)}</select> : <p className="text-sm text-slate-400">Chưa có PDF — upload ở trang <Link to="/documents" className="text-cyan-300 underline">Tài liệu</Link>.</p>)}<div className="mt-4 flex justify-end gap-2"><button onClick={() => setShow(false)} className="rounded-xl px-4 py-2 text-sm font-bold text-slate-400">Hủy</button><button onClick={() => void create()} disabled={creating || (tab === 'paste' ? !text.trim() : tab === 'url' ? !url.trim() : !docId)} className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-200 disabled:opacity-50">{creating ? 'Đang xử lý…' : 'Tạo bài đọc'}</button></div></div></div>}</div>
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black text-white">📖 Tech Reader</h1>
+          <p className="mt-1 text-sm text-slate-400">Đọc, tra từ và lưu thẻ ngay trong ngữ cảnh.</p>
+        </div>
+        <button onClick={() => setShow(true)} className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-200">+ Bài mới</button>
+      </div>
+
+      {articlesQuery.loading ? <div className="grid gap-3 sm:grid-cols-2">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-24 animate-pulse rounded-2xl bg-white/[.05]" />)}</div>
+        : articles.length === 0 ? <p className="rounded-2xl border border-white/[.07] bg-white/[.03] p-8 text-center text-slate-400">Chưa có bài đọc nào — dán một bài báo IT hoặc JD để bắt đầu.</p>
+          : <div className="grid gap-3 sm:grid-cols-2">{articles.map(article => <div key={article.id} className="group relative rounded-2xl border border-white/[.07] bg-white/[.03] p-4 hover:border-cyan-300/20"><Link to={`/reader/${article.id}`} className="block"><h3 className="line-clamp-2 font-bold text-slate-100">{article.title}</h3><p className="mt-2 text-xs text-slate-500">{BADGES[article.source_type]} · {article.word_count} từ · {new Date(article.created_at).toLocaleDateString('vi-VN')}</p></Link><button onClick={() => remove(article.id, article.title)} className="absolute right-3 top-3 hidden rounded-lg px-2 py-1 text-xs text-rose-300 hover:bg-rose-500/10 group-hover:block">Xóa</button></div>)}</div>}
+
+      {show && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setShow(false)}>
+        <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl" onClick={event => event.stopPropagation()}>
+          <h2 className="mb-4 text-lg font-black text-white">Bài đọc mới</h2>
+          <div className="mb-4 flex gap-1 rounded-xl bg-black/30 p-1">
+            {([['paste', '📋 Dán text'], ['url', '🔗 URL'], ['pdf', '📄 PDF']] as [Tab, string][]).map(([value, label]) => <button key={value} onClick={() => value === 'pdf' ? openPdf() : setTab(value)} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${tab === value ? 'bg-white/10 text-white' : 'text-slate-400'}`}>{label}</button>)}
+          </div>
+          <input value={title} onChange={event => setTitle(event.target.value)} placeholder="Tiêu đề (tùy chọn)" className="mb-3 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
+          {tab === 'paste' && <>
+            <textarea value={text} onChange={event => setText(stripTranscriptTimestamps(event.target.value))} rows={8} placeholder="Dán bài báo, JD, tài liệu..." className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
+            <p className="mt-2 text-xs text-slate-500">Timestamp video dạng 00:00 sẽ tự được bỏ.</p>
+          </>}
+          {tab === 'url' && <input value={url} onChange={event => setUrl(event.target.value)} placeholder="https://example.com/..." className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500" />}
+          {tab === 'pdf' && (docs === null ? <p className="text-sm text-slate-400">Đang tải danh sách tài liệu…</p> : docs.length ? <select value={docId} onChange={event => setDocId(event.target.value)} className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"><option value="">— Chọn tài liệu —</option>{docs.map(document => <option key={document.id} value={document.id}>{document.filename}</option>)}</select> : <p className="text-sm text-slate-400">Chưa có PDF — upload ở trang <Link to="/documents" className="text-cyan-300 underline">Tài liệu</Link>.</p>)}
+          <div className="mt-4 flex justify-end gap-2">
+            <button onClick={() => setShow(false)} className="rounded-xl px-4 py-2 text-sm font-bold text-slate-400">Hủy</button>
+            <button onClick={() => void create()} disabled={creating || (tab === 'paste' ? !text.trim() : tab === 'url' ? !url.trim() : !docId)} className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-200 disabled:opacity-50">{creating ? 'Đang xử lý…' : 'Tạo bài đọc'}</button>
+          </div>
+        </div>
+      </div>}
+    </div>
+  )
 }

@@ -8,6 +8,9 @@ import trafilatura
 MAX_CONTENT_CHARS = 100_000
 FETCH_TIMEOUT = 15.0
 USER_AGENT = "Mozilla/5.0 FlashcardsReader/1.0"
+TIMESTAMP_ONLY_LINE = re.compile(
+    r"(?m)^[ \t]*(?:\*{1,2}|_{1,2})?\s*(?:\d{1,2}:)?\d{1,2}:\d{2}(?:[.,]\d{1,3})?\s*(?:\*{1,2}|_{1,2})?[ \t]*(?:\n|$)"
+)
 
 
 class ExtractionError(Exception):
@@ -16,6 +19,9 @@ class ExtractionError(Exception):
 
 def normalize_text(text: str) -> str:
     text = text.replace("\r\n", "\n").replace("\r", "\n")
+    # Video transcripts often put a timestamp on its own line (for example
+    # "00:06" or "**00:06**"). It is navigation metadata, not article text.
+    text = TIMESTAMP_ONLY_LINE.sub("", text)
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
     return text[:MAX_CONTENT_CHARS]
 

@@ -13,6 +13,9 @@ const DocumentListPage = lazy(() => import('./pages/DocumentListPage'))
 const DocumentDetailPage = lazy(() => import('./pages/DocumentDetailPage'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
 const AccountPage = lazy(() => import('./pages/AccountPage'))
+const ReaderListPage = lazy(() => import('./pages/ReaderListPage'))
+const ReaderPage = lazy(() => import('./pages/ReaderPage'))
+const GamesPage = lazy(() => import('./pages/GamesPage'))
 
 function PageFallback() {
   return (
@@ -45,6 +48,9 @@ export default function App() {
             <Route path="/stats" element={<RequireAuth><StatsPage /></RequireAuth>} />
             <Route path="/documents" element={<RequireAuth><DocumentListPage /></RequireAuth>} />
             <Route path="/documents/:id" element={<RequireAuth><DocumentDetailPage /></RequireAuth>} />
+            <Route path="/reader" element={<RequireAuth><ReaderListPage /></RequireAuth>} />
+            <Route path="/reader/:id" element={<RequireAuth><ReaderPage /></RequireAuth>} />
+            <Route path="/games" element={<RequireAuth><GamesPage /></RequireAuth>} />
             <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

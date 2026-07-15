@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
@@ -11,7 +11,7 @@ from app.models.review import Review
 from app.models.review_log import ReviewLog
 from app.models.user import User
 from app.routers.cards import get_owned_card
-from app.schemas.review import ReviewOut, ReviewSubmit, StatsOut
+from app.schemas.review import HeatmapDay, ReviewOut, ReviewSubmit, StatsOut
 from app.services.security import get_current_user
 from app.services.sm2 import compute_sm2
 
@@ -28,6 +28,15 @@ def get_due_cards(db: Session = Depends(get_db), user: User = Depends(get_curren
         .filter(Deck.user_id == user.id, Review.due_date <= today)
         .all()
     )
+
+
+@router.get("/heatmap", response_model=list[HeatmapDay])
+def get_heatmap(days: int = Query(default=365, ge=7, le=730), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    since = datetime.combine(date.today() - timedelta(days=days - 1), datetime.min.time())
+    rows = (db.query(func.date(ReviewLog.reviewed_at), func.count(ReviewLog.id))
+              .filter(ReviewLog.user_id == user.id, ReviewLog.reviewed_at >= since)
+              .group_by(func.date(ReviewLog.reviewed_at)).order_by(func.date(ReviewLog.reviewed_at)).all())
+    return [HeatmapDay(date=str(day), count=int(count)) for day, count in rows]
 
 
 @router.post("/{card_id}", response_model=ReviewOut)
@@ -97,6 +106,7 @@ def get_stats(db: Session = Depends(get_db), user: User = Depends(get_current_us
                 func.sum(case(((Review.due_date <= today) & (Review.repetitions == 0), 1), else_=0)),
                 0,
             ),
+            func.coalesce(func.sum(case((Review.repetitions >= 3, 1), else_=0)), 0),
         )
         .select_from(Review)
         .join(Card, Review.card_id == Card.id)
@@ -104,7 +114,7 @@ def get_stats(db: Session = Depends(get_db), user: User = Depends(get_current_us
         .filter(Deck.user_id == user.id)
         .one()
     )
-    total_cards, due_today, new_cards = (int(totals[0]), int(totals[1]), int(totals[2]))
+    total_cards, due_today, new_cards, mastered_cards = (int(value) for value in totals)
 
     since = datetime.combine(today - timedelta(days=365), datetime.min.time())
     day_rows = (
@@ -145,6 +155,10 @@ def get_stats(db: Session = Depends(get_db), user: User = Depends(get_current_us
         for i in range(1, 8)
     }
 
+    source_rows = (db.query(ReviewLog.rating_source, func.count(ReviewLog.id))
+                     .filter(ReviewLog.user_id == user.id).group_by(ReviewLog.rating_source).all())
+    reviews_by_source = {str(source): int(count) for source, count in source_rows}
+
     return StatsOut(
         streak=streak,
         total_cards=total_cards,
@@ -152,4 +166,7 @@ def get_stats(db: Session = Depends(get_db), user: User = Depends(get_current_us
         due_today=due_today,
         new_cards=new_cards,
         due_upcoming=due_upcoming,
+        mastered_cards=mastered_cards,
+        total_reviews=sum(reviews_by_source.values()),
+        reviews_by_source=reviews_by_source,
     )

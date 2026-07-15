@@ -12,3 +12,4 @@ dist/
 backend/data/
 extracted_anki/
 backend/.pytest_tmp/
+backend/data/dictionaries/

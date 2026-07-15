@@ -49,7 +49,7 @@ export interface Review {
 export interface ReviewSubmission {
   quality: number
   auto_quality?: number | null
-  rating_source?: 'manual' | 'auto'
+  rating_source?: 'manual' | 'auto' | 'game_sentence' | 'game_cloze' | 'game_match'
   response_time_ms?: number | null
   flip_count?: number | null
   audio_play_count?: number | null
@@ -65,6 +65,46 @@ export interface Stats {
   due_today: number
   new_cards: number
   due_upcoming: Record<string, number>
+  mastered_cards: number
+  total_reviews: number
+  reviews_by_source: Record<string, number>
+}
+
+export type GameMode = 'sentence' | 'cloze' | 'match'
+
+export interface HeatmapDay {
+  date: string
+  count: number
+}
+
+export interface ArticleListItem {
+  id: string
+  title: string
+  source_type: 'paste' | 'url' | 'pdf' | 'rss'
+  source_url: string | null
+  word_count: number
+  has_summary: boolean
+  created_at: string
+}
+
+export interface Article extends ArticleListItem {
+  content: string
+  document_id: string | null
+  summary: string | null
+}
+
+export interface DictionaryResult {
+  word: string
+  matched_word: string
+  pronunciation: string | null
+  content: string
+}
+
+export interface EnDictResult {
+  word: string
+  phonetic: string | null
+  audioUrl: string | null
+  meanings: { partOfSpeech: string; definitions: string[] }[]
 }
 
 export interface Document {

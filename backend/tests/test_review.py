@@ -135,3 +135,18 @@ def test_stats_streak_from_logs(client, db):
     db.commit()
 
     assert client.get("/api/review/stats").json()["streak"] == 3
+
+
+def test_heatmap_and_extended_stats(client, db):
+    from app.models.user import User
+
+    user = db.query(User).filter(User.email == "usera@test.com").one()
+    db.add(ReviewLog(user_id=user.id, card_id=None, quality=5, rating_source="game_cloze"))
+    db.commit()
+
+    heatmap = client.get("/api/review/heatmap")
+    assert heatmap.status_code == 200
+    assert sum(day["count"] for day in heatmap.json()) == 1
+    stats = client.get("/api/review/stats").json()
+    assert stats["total_reviews"] == 1
+    assert stats["reviews_by_source"] == {"game_cloze": 1}

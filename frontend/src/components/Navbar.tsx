@@ -4,7 +4,9 @@ import { useAuth } from '../auth/AuthContext'
 const NAV_ITEMS = [
   { to: '/', label: 'Bộ thẻ', icon: 'deck', soon: false },
   { to: '/documents', label: 'Tài liệu', icon: 'document', soon: true },
+  { to: '/reader', label: 'Đọc', icon: 'book', soon: false },
   { to: '/review', label: 'Ôn tập', icon: 'review', soon: false },
+  { to: '/games', label: 'Games', icon: 'games', soon: false },
   { to: '/stats', label: 'Thống kê', icon: 'stats', soon: false },
 ] as const
 
@@ -46,6 +48,21 @@ function NavIcon({ name, className = '' }: { name: NavIconName; className?: stri
           <path d="M18.5 5.5v5h-5" />
           <path d="M18.2 10.5A6.5 6.5 0 0 0 12 5.5" />
           <path d="M9.5 12.2 11.2 14l3.5-4" />
+        </svg>
+      )
+    case 'book':
+      return (
+        <svg {...common}>
+          <path d="M4.5 5.5A2.5 2.5 0 0 1 7 3h11v16H7a2.5 2.5 0 0 0-2.5 2.5Z" />
+          <path d="M7 3v16" />
+          <path d="M10 7h5M10 10h5" />
+        </svg>
+      )
+    case 'games':
+      return (
+        <svg {...common}>
+          <path d="M7.5 9h9a3.5 3.5 0 0 1 3.3 4.7l-1.1 3.1a2 2 0 0 1-3.1.9L13 16H11l-2.6 1.7a2 2 0 0 1-3.1-.9l-1.1-3.1A3.5 3.5 0 0 1 7.5 9Z" />
+          <path d="M8 13h3M9.5 11.5v3M15.5 12.5h.01M17.5 14h.01" />
         </svg>
       )
     case 'stats':
@@ -154,7 +171,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="grid min-w-0 grid-cols-4 items-center gap-1 rounded-2xl border border-white/[0.07] bg-black/20 p-1 shadow-inner shadow-black/30 sm:flex sm:flex-1 sm:justify-center">
+          <div className="grid min-w-0 grid-cols-3 items-center gap-1 rounded-2xl border border-white/[0.07] bg-black/20 p-1 shadow-inner shadow-black/30 sm:flex sm:flex-1 sm:justify-center">
           {NAV_ITEMS.map(({ to, label, icon, soon }) => {
             const active = isRouteActive(pathname, to)
             return (

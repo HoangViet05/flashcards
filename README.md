@@ -128,6 +128,26 @@ Most flashcard apps are either **too simple** (just flip cards) or **too bloated
       </ul>
     </td>
   </tr>
+  <tr>
+    <td>
+      <h4>📖 Tech Reader &amp; Dictionary</h4>
+      <ul>
+        <li>Create a reading item from pasted text, a web URL, or an uploaded PDF</li>
+        <li>Click any English word for EN-EN and offline EN-VI lookups</li>
+        <li>Save vocabulary, pronunciation, definition and sentence context directly to a deck</li>
+        <li>Read articles aloud with browser text-to-speech and adjustable speed</li>
+      </ul>
+    </td>
+    <td>
+      <h4>🎮 Practice Games &amp; Heatmap</h4>
+      <ul>
+        <li>Sentence Builder, Dictation Cloze and Concept Match games</li>
+        <li>Each outcome updates the same SM-2 review schedule as regular study</li>
+        <li>GitHub-style 12-month activity heatmap</li>
+        <li>Mastered-card count and review-source breakdown</li>
+      </ul>
+    </td>
+  </tr>
 </table>
 
 ### 🔮 Coming Soon

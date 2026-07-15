@@ -1,11 +1,15 @@
-import { getStats } from '../api/review'
+import { getHeatmap, getStats } from '../api/review'
 import { useAuth } from '../auth/AuthContext'
+import StudyHeatmap from '../components/StudyHeatmap'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 
 export default function StatsPage() {
   const { user } = useAuth()
-  const statsQuery = useCachedQuery(user ? `stats:${user.id}` : null, getStats)
-  const stats = statsQuery.data
+  const statsQuery = useCachedQuery(user ? `statsv2:${user.id}` : null, async () => {
+    const [stats, heatmap] = await Promise.all([getStats(), getHeatmap()])
+    return { stats, heatmap }
+  })
+  const stats = statsQuery.data?.stats
 
   if (!stats) return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-12" aria-label="Đang tải thống kê">
@@ -27,6 +31,8 @@ export default function StatsPage() {
     { label: 'Ôn hôm nay', value: stats.total_reviewed_today, icon: '✅', color: 'from-emerald-500/20 to-teal-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
     { label: 'Cần ôn ngay', value: stats.due_today, icon: '⏰', color: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/30', text: 'text-cyan-400' },
     { label: 'Từ mới chờ học', value: stats.new_cards, icon: '✨', color: 'from-amber-500/20 to-yellow-500/10', border: 'border-amber-500/30', text: 'text-amber-400' },
+    { label: 'Đã thuộc', value: stats.mastered_cards, icon: '🏆', color: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/30', text: 'text-cyan-300' },
+    { label: 'Tổng lượt ôn', value: stats.total_reviews, icon: '📚', color: 'from-pink-500/20 to-violet-500/10', border: 'border-pink-500/30', text: 'text-pink-300' },
   ]
 
   return (
@@ -84,6 +90,13 @@ export default function StatsPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="mb-10 space-y-3">
+        <StudyHeatmap data={statsQuery.data?.heatmap ?? []} />
+        <p className="text-center text-xs text-slate-500" title="Đã thuộc = ôn đúng ít nhất 3 lần liên tiếp">
+          🃏 Flip {stats.reviews_by_source.manual ?? 0} · 🧩 {stats.reviews_by_source.game_sentence ?? 0} · 🎧 {stats.reviews_by_source.game_cloze ?? 0} · 🔗 {stats.reviews_by_source.game_match ?? 0}
+        </p>
       </div>
 
       {/* Upcoming chart */}

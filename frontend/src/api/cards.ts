@@ -34,8 +34,11 @@ export const createCard = (deckId: string, data: {
   front_text: string
   back_text: string
   example_sentence?: string
+  pronunciation?: string
+  definition?: string
   image_url?: string
   audio_url?: string
+  example_audio_url?: string
 }) => client.post<Card>(`/decks/${deckId}/cards`, data).then(r => r.data)
 
 export const updateCard = (id: string, data: Partial<Card>) =>

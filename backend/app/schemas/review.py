@@ -42,3 +42,11 @@ class StatsOut(BaseModel):
     due_today: int
     new_cards: int
     due_upcoming: dict[str, int]
+    mastered_cards: int = 0
+    total_reviews: int = 0
+    reviews_by_source: dict[str, int] = {}
+
+
+class HeatmapDay(BaseModel):
+    date: str
+    count: int

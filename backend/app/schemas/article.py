@@ -40,3 +40,17 @@ class ArticleOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class ArticleHighlightCreate(BaseModel):
+    word: str
+    meaning: str | None = None
+
+
+class ArticleHighlightOut(BaseModel):
+    id: str
+    word: str
+    meaning: str | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

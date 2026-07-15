@@ -93,6 +93,13 @@ export interface Article extends ArticleListItem {
   summary: string | null
 }
 
+export interface ArticleHighlight {
+  id: string
+  word: string
+  meaning: string | null
+  created_at: string
+}
+
 export interface DictionaryResult {
   word: string
   matched_word: string

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getArticle } from '../api/articles'
+import { deleteArticleHighlight, getArticle, getArticleHighlights, saveArticleHighlight } from '../api/articles'
+import { lookupViDictionary } from '../api/dictionary'
 import WordPopup from '../components/reader/WordPopup'
-import type { Article } from '../types'
+import type { Article, ArticleHighlight } from '../types'
 import { stripTranscriptTimestamps } from '../utils/readerText'
 
 const sentenceParts = (text: string) => text.match(/[^.!?]+[.!?]+["')\]]*|[^.!?]+$/g) ?? [text]
@@ -61,21 +62,47 @@ export function extractSentence(paragraph: string, charIndex: number): string {
 
 const cleanToken = (token: string) => token.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, '')
 
+const shortVietnameseMeaning = (content: string) => (
+  content.split('\n').find(line => line.trim().startsWith('-'))?.replace(/^\s*-\s*/, '')
+  ?? content.split('\n').find(line => line.trim() && !line.trim().startsWith('*') && !line.trim().startsWith('='))?.trim()
+  ?? 'Chưa có nghĩa Việt'
+)
+
+function HighlightPanel({ highlights, onRemove }: { highlights: ArticleHighlight[]; onRemove: (word: string) => void }) {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-amber-300/[.16] bg-slate-950/80 shadow-[0_18px_45px_rgba(0,0,0,.22)] backdrop-blur-xl">
+      <div className="flex items-center justify-between border-b border-white/[.07] px-4 py-3">
+        <div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-300/20 bg-amber-300/10 text-sm text-amber-200">✦</span><div><p className="text-[10px] font-black uppercase tracking-[.14em] text-amber-200/85">Từ cần nhớ</p><p className="text-xs font-bold text-slate-200">Đánh dấu trong bài</p></div></div>
+        <span className="rounded-full bg-white/[.07] px-2 py-0.5 text-xs font-bold text-slate-400">{highlights.length}</span>
+      </div>
+      {highlights.length
+        ? <div className="max-h-[min(55dvh,32rem)] divide-y divide-white/[.06] overflow-y-auto px-2 py-2">{highlights.map(highlight => <div key={highlight.id} className="group flex gap-2 rounded-xl px-2 py-2.5 transition hover:bg-white/[.04]"><span className="mt-1.5 h-2 w-2 shrink-0 rounded-sm bg-amber-300/70" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-extrabold text-amber-100">{highlight.word}</p><p className="mt-0.5 text-xs leading-4 text-slate-400">{highlight.meaning ?? 'Đang tra nghĩa Việt…'}</p></div><button onClick={() => onRemove(highlight.word)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-600 opacity-100 transition hover:bg-rose-400/10 hover:text-rose-300 sm:opacity-0 sm:group-hover:opacity-100" aria-label={`Bỏ đánh dấu ${highlight.word}`}>×</button></div>)}</div>
+        : <div className="px-4 py-5"><p className="text-sm font-semibold text-slate-300">Chưa có từ nào</p><p className="mt-1 text-xs leading-5 text-slate-500">Nháy đúp vào một từ trong bài để đánh dấu và lưu nghĩa Việt ngắn gọn ở đây.</p></div>}
+    </section>
+  )
+}
+
 export default function ReaderPage() {
   const { id } = useParams<{ id: string }>()
   const [article, setArticle] = useState<Article | null>(null)
+  const [highlights, setHighlights] = useState<ArticleHighlight[]>([])
   const [picked, setPicked] = useState<{ word: string; sentence: string } | null>(null)
   const [rate, setRate] = useState(1)
   const [tts, setTts] = useState({ playing: false, sentence: -1 })
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
   const [voiceURI, setVoiceURI] = useState(() => window.localStorage.getItem(VOICE_STORAGE_KEY) ?? '')
   const speechRun = useRef(0)
+  const wordClickTimer = useRef<ReturnType<typeof window.setTimeout> | null>(null)
 
   useEffect(() => {
-    if (id) void getArticle(id).then(setArticle)
+    if (id) {
+      void getArticle(id).then(setArticle)
+      void getArticleHighlights(id).then(setHighlights).catch(() => setHighlights([]))
+    }
     return () => {
       speechRun.current += 1
       window.speechSynthesis.cancel()
+      if (wordClickTimer.current) window.clearTimeout(wordClickTimer.current)
     }
   }, [id])
 
@@ -156,6 +183,41 @@ export default function ReaderPage() {
     else window.localStorage.removeItem(VOICE_STORAGE_KEY)
   }
 
+  const openWordPopup = (word: string, sentence: string) => {
+    if (wordClickTimer.current) window.clearTimeout(wordClickTimer.current)
+    wordClickTimer.current = window.setTimeout(() => {
+      setPicked({ word, sentence })
+      wordClickTimer.current = null
+    }, 180)
+  }
+
+  const removeHighlight = (word: string) => {
+    if (!article) return
+    const previous = highlights
+    setHighlights(current => current.filter(highlight => highlight.word !== word))
+    void deleteArticleHighlight(article.id, word).catch(() => setHighlights(previous))
+  }
+
+  const toggleHighlight = (word: string) => {
+    if (!article) return
+    if (wordClickTimer.current) {
+      window.clearTimeout(wordClickTimer.current)
+      wordClickTimer.current = null
+    }
+    const existing = highlights.find(highlight => highlight.word === word)
+    if (existing) {
+      removeHighlight(word)
+      return
+    }
+
+    const temporary: ArticleHighlight = { id: `pending-${word}`, word, meaning: null, created_at: new Date().toISOString() }
+    setHighlights(current => [temporary, ...current])
+    void lookupViDictionary(word)
+      .then(result => saveArticleHighlight(article.id, word, result ? shortVietnameseMeaning(result.content) : 'Chưa có nghĩa Việt'))
+      .then(saved => setHighlights(current => current.map(highlight => highlight.id === temporary.id ? saved : highlight)))
+      .catch(() => setHighlights(current => current.filter(highlight => highlight.id !== temporary.id)))
+  }
+
   if (!article) return <div className="mx-auto max-w-3xl px-4 py-8"><div className="h-64 animate-pulse rounded-2xl bg-white/[.05]" /></div>
 
   let sentenceIndex = -1
@@ -168,6 +230,10 @@ export default function ReaderPage() {
           {article.word_count} từ {article.source_url && <>· <a href={article.source_url} target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline">nguồn</a></>}
         </p>
       </header>
+
+      <aside className="fixed left-6 top-36 z-10 hidden w-80 min-[1800px]:block">
+        <HighlightPanel highlights={highlights} onRemove={removeHighlight} />
+      </aside>
 
       <div className="grid items-start gap-6 lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-8">
         <aside className="z-10 lg:sticky lg:top-24">
@@ -195,6 +261,9 @@ export default function ReaderPage() {
             </div>
             <p className="mt-3 rounded-xl bg-white/[.035] px-2.5 py-2 text-[11px] leading-4 text-slate-500">{tts.playing ? `Đang đọc câu ${tts.sentence + 1}/${sentences.length}` : 'Chọn một từ trong bài để tra nghĩa.'}</p>
           </section>
+          <div className="mt-4 min-[1800px]:hidden">
+            <HighlightPanel highlights={highlights} onRemove={removeHighlight} />
+          </div>
         </aside>
 
         <article className="min-w-0 max-w-3xl space-y-4 text-[17px] leading-8 text-slate-200">
@@ -207,9 +276,11 @@ export default function ReaderPage() {
                   <span key={childIndex} className={tts.sentence === current ? 'rounded bg-cyan-400/15' : undefined}>
                     {sentence.split(/(\s+)/).map((token, tokenIndex) => {
                       const word = cleanToken(token)
+                      const normalizedWord = word.toLowerCase()
+                      const isHighlighted = highlights.some(highlight => highlight.word === normalizedWord)
                       return !word || /^\s+$/.test(token)
                         ? token
-                        : <span key={tokenIndex} onClick={() => setPicked({ word: word.toLowerCase(), sentence: sentence.trim() })} className="cursor-pointer rounded-sm transition hover:bg-cyan-400/20">{token}</span>
+                        : <span key={tokenIndex} onClick={() => openWordPopup(normalizedWord, sentence.trim())} onDoubleClick={event => { event.preventDefault(); toggleHighlight(normalizedWord) }} className={`cursor-pointer rounded-sm transition hover:bg-cyan-400/20 ${isHighlighted ? 'bg-amber-300/20 px-0.5 font-semibold text-amber-100 shadow-[inset_0_-2px_0_rgba(252,211,77,.72)] hover:bg-amber-300/30' : ''}`}>{token}</span>
                     })}
                     {' '}
                   </span>

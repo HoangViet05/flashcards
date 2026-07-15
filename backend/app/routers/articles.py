@@ -3,9 +3,10 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.article import Article
+from app.models.article_highlight import ArticleHighlight
 from app.models.document import Document
 from app.models.user import User
-from app.schemas.article import ArticleCreate, ArticleListItem, ArticleOut
+from app.schemas.article import ArticleCreate, ArticleHighlightCreate, ArticleHighlightOut, ArticleListItem, ArticleOut
 from app.services.article_extractor import (
     ExtractionError, count_words, extract_from_html, extract_from_pdf_source, fetch_url, normalize_text,
 )
@@ -63,6 +64,59 @@ def list_articles(db: Session = Depends(get_db), user: User = Depends(get_curren
 @router.get("/{article_id}", response_model=ArticleOut)
 def get_article(article_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return get_owned_article(article_id, db, user)
+
+
+@router.get("/{article_id}/highlights", response_model=list[ArticleHighlightOut])
+def list_highlights(article_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    article = get_owned_article(article_id, db, user)
+    return (
+        db.query(ArticleHighlight)
+        .filter(ArticleHighlight.article_id == article.id)
+        .order_by(ArticleHighlight.created_at.desc())
+        .all()
+    )
+
+
+@router.post("/{article_id}/highlights", response_model=ArticleHighlightOut)
+def save_highlight(
+    article_id: str,
+    body: ArticleHighlightCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    article = get_owned_article(article_id, db, user)
+    word = body.word.strip().lower()
+    if not word or len(word) > 100:
+        raise HTTPException(status_code=422, detail="Từ cần đánh dấu không hợp lệ")
+
+    highlight = (
+        db.query(ArticleHighlight)
+        .filter(ArticleHighlight.article_id == article.id, ArticleHighlight.word == word)
+        .first()
+    )
+    if highlight:
+        highlight.meaning = body.meaning
+    else:
+        highlight = ArticleHighlight(article_id=article.id, word=word, meaning=body.meaning)
+        db.add(highlight)
+    db.commit()
+    db.refresh(highlight)
+    return highlight
+
+
+@router.delete("/{article_id}/highlights/{word}")
+def delete_highlight(article_id: str, word: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    article = get_owned_article(article_id, db, user)
+    highlight = (
+        db.query(ArticleHighlight)
+        .filter(ArticleHighlight.article_id == article.id, ArticleHighlight.word == word.strip().lower())
+        .first()
+    )
+    if not highlight:
+        raise HTTPException(status_code=404, detail="Không tìm thấy từ đã đánh dấu")
+    db.delete(highlight)
+    db.commit()
+    return {"status": "success"}
 
 
 @router.delete("/{article_id}")

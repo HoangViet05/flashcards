@@ -30,3 +30,16 @@ def test_article_url_and_user_scope(client, user_b_client):
     assert user_b_client.get(f"/api/articles/{created.json()['id']}").status_code == 404
     with patch("app.routers.articles.fetch_url", side_effect=ExtractionError("broken")):
         assert client.post("/api/articles", json={"url": "https://bad.example"}).status_code == 422
+
+
+def test_article_highlights_are_saved_per_article(client, user_b_client):
+    article = client.post("/api/articles", json=PASTE_BODY).json()
+    url = f"/api/articles/{article['id']}/highlights"
+    saved = client.post(url, json={"word": "Containers", "meaning": "vật chứa"})
+    assert saved.status_code == 200
+    assert saved.json()["word"] == "containers"
+    assert saved.json()["meaning"] == "vật chứa"
+    assert client.get(url).json()[0]["word"] == "containers"
+    assert user_b_client.get(url).status_code == 404
+    assert client.delete(f"{url}/containers").status_code == 200
+    assert client.get(url).json() == []

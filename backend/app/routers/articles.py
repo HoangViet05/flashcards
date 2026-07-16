@@ -210,7 +210,6 @@ def delete_translation_worker(worker_id: str, db: Session = Depends(get_db), use
 
 @router.post("/local-translation/claim", response_model=WorkerClaimOut, responses={204: {"description": "Không có bài đang chờ"}})
 def claim_translation_job(
-    response: Response,
     worker: TranslationWorker = Depends(_get_local_worker),
     db: Session = Depends(get_db),
 ):
@@ -230,8 +229,9 @@ def claim_translation_job(
     worker.last_seen_at = now
     if not job:
         db.commit()
-        response.status_code = status.HTTP_204_NO_CONTENT
-        return None
+        # Return a Response object so FastAPI does not validate None against
+        # WorkerClaimOut and turn a normal empty queue into HTTP 500.
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     job.status = "processing"
     job.worker_id = worker.id

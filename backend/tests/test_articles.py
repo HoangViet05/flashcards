@@ -81,3 +81,5 @@ def test_local_translation_worker_claims_only_its_users_jobs(client, user_b_clie
     all_queued = client.post("/api/articles/translation-jobs/untranslated")
     assert all_queued.status_code == 200
     assert all_queued.json()["queued_count"] == 0
+    empty_claim = client.post("/api/articles/local-translation/claim", headers={"X-Translation-Worker-Token": token})
+    assert empty_claim.status_code == 204

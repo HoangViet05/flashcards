@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { deleteArticleHighlight, getArticle, getArticleHighlights, saveArticleHighlight } from '../api/articles'
+import { deleteArticleHighlight, getArticle, getArticleHighlights, getArticleTranslation, saveArticleHighlight } from '../api/articles'
 import { lookupViDictionary } from '../api/dictionary'
 import WordPopup from '../components/reader/WordPopup'
-import type { Article, ArticleHighlight } from '../types'
+import type { Article, ArticleHighlight, ArticleTranslation } from '../types'
 import { stripTranscriptTimestamps } from '../utils/readerText'
 
 const sentenceParts = (text: string) => text.match(/[^.!?]+[.!?]+["')\]]*|[^.!?]+$/g) ?? [text]
 
 const VOICE_STORAGE_KEY = 'reader-speech-voice'
 const SPEECH_CHUNK_LENGTH = 360
+type ReaderLanguage = 'original' | 'bilingual' | 'translated'
 
 type SpeechChunk = {
   text: string
@@ -85,6 +86,8 @@ function HighlightPanel({ highlights, onRemove }: { highlights: ArticleHighlight
 export default function ReaderPage() {
   const { id } = useParams<{ id: string }>()
   const [article, setArticle] = useState<Article | null>(null)
+  const [translation, setTranslation] = useState<ArticleTranslation | null>(null)
+  const [readerLanguage, setReaderLanguage] = useState<ReaderLanguage>('original')
   const [highlights, setHighlights] = useState<ArticleHighlight[]>([])
   const [picked, setPicked] = useState<{ word: string; sentence: string } | null>(null)
   const [rate, setRate] = useState(1)
@@ -98,6 +101,7 @@ export default function ReaderPage() {
     if (id) {
       void getArticle(id).then(setArticle)
       void getArticleHighlights(id).then(setHighlights).catch(() => setHighlights([]))
+      void getArticleTranslation(id).then(setTranslation).catch(() => setTranslation(null))
     }
     return () => {
       speechRun.current += 1
@@ -113,6 +117,11 @@ export default function ReaderPage() {
     [paragraphs],
   )
   const chunks = useMemo(() => makeSpeechChunks(sentences), [sentences])
+  const hasTranslation = translation?.status === 'completed' && Boolean(translation.translated_content)
+  const translatedParagraphs = useMemo(
+    () => (translation?.translated_content ?? '').split(/\n\n+/).map(value => value.trim()).filter(Boolean),
+    [translation],
+  )
   const availableVoices = useMemo(() => {
     const englishVoices = voices.filter(voice => /^en(?:-|_)/i.test(voice.lang))
     return englishVoices.length ? englishVoices : voices
@@ -251,6 +260,20 @@ export default function ReaderPage() {
                 {[.75, 1, 1.25].map(value => <button key={value} onClick={() => setRate(value)} className={`rounded-lg px-1 py-2 text-xs font-bold transition ${rate === value ? 'bg-white/[.12] text-white shadow-sm' : 'text-slate-500 hover:bg-white/[.05] hover:text-slate-300'}`}>{value}x</button>)}
               </div>
             </div>
+            {hasTranslation && <div className="mt-3 border-t border-white/[.07] pt-3">
+              <div className="mb-2 flex items-center justify-between px-1">
+                <p className="text-[10px] font-black uppercase tracking-[.12em] text-emerald-300/85">Bản dịch</p>
+                <span className="rounded-full bg-emerald-400/10 px-1.5 py-0.5 text-[9px] font-bold text-emerald-300">Sẵn sàng</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1 rounded-xl bg-black/20 p-1">
+                {([
+                  ['original', 'Anh'],
+                  ['bilingual', 'Anh–Việt'],
+                  ['translated', 'Việt'],
+                ] as const).map(([value, label]) => <button key={value} onClick={() => setReaderLanguage(value)} className={`rounded-lg px-1 py-2 text-[10px] font-bold transition ${readerLanguage === value ? 'bg-emerald-400/15 text-emerald-100 shadow-sm' : 'text-slate-500 hover:bg-white/[.05] hover:text-slate-300'}`}>{label}</button>)}
+              </div>
+              <p className="mt-1.5 px-1 text-[10px] leading-4 text-slate-600">Chọn Anh–Việt để đối chiếu từng đoạn.</p>
+            </div>}
             <div className="mt-3 border-t border-white/[.07] pt-3">
               <label htmlFor="reader-voice" className="mb-2 block px-1 text-[10px] font-black uppercase tracking-[.12em] text-slate-500">Giọng đọc</label>
               <select id="reader-voice" value={selectedVoice?.voiceURI ?? ''} onChange={event => selectVoice(event.target.value)} className="w-full truncate rounded-xl border border-white/10 bg-black/20 px-2.5 py-2 text-xs font-medium text-slate-200 outline-none transition focus:border-cyan-300/50" title="Giọng đọc có sẵn trên thiết bị">
@@ -267,7 +290,9 @@ export default function ReaderPage() {
         </aside>
 
         <article className="min-w-0 max-w-3xl space-y-4 text-[17px] leading-8 text-slate-200">
-          {paragraphs.map((paragraph, paragraphIndex) => (
+          {readerLanguage === 'translated' ? translatedParagraphs.map((paragraph, paragraphIndex) => (
+            <p key={paragraphIndex} className="rounded-xl border border-emerald-300/[.08] bg-emerald-400/[.035] px-4 py-3 text-slate-100">{paragraph}</p>
+          )) : readerLanguage === 'original' && paragraphs.map((paragraph, paragraphIndex) => (
             <p key={paragraphIndex}>
               {sentenceParts(paragraph).map((sentence, childIndex) => {
                 sentenceIndex += 1
@@ -287,6 +312,12 @@ export default function ReaderPage() {
                 )
               })}
             </p>
+          ))}
+          {readerLanguage === 'bilingual' && translation?.segments?.map((segment, index) => (
+            <section key={`${segment.source}-${index}`} className="rounded-xl border border-emerald-300/[.10] bg-emerald-400/[.035] px-4 py-3 text-[15px] leading-7">
+              <p className="text-slate-300">{segment.source}</p>
+              <p className="mt-2 border-t border-emerald-300/[.10] pt-2 font-medium text-emerald-100">{segment.translated}</p>
+            </section>
           ))}
         </article>
       </div>

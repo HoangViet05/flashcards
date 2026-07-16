@@ -9,7 +9,7 @@ Worker này chỉ tạo kết nối HTTPS đi ra Render; không mở port vào l
 3. Copy `.env.example` thành `.env`, dán hai dòng `API_BASE_URL` và `WORKER_TOKEN` vừa copy.
 4. Bấm đúp `start_worker.bat`. Dòng `Công tắc dịch đang BẬT` nghĩa là máy đã online.
 
-Lần đầu có bài, model `vinai/vinai-translate-en2vi` sẽ tải về và nạp vào GPU. Worker cố ý từ chối chạy CPU để bạn không vô tình làm chậm máy khi không có CUDA.
+Lần đầu có bài, model `vinai/vinai-translate-en2vi-v2` sẽ tải về và nạp vào GPU. Worker cố ý từ chối chạy CPU để bạn không vô tình làm chậm máy khi không có CUDA.
 
 ## Cách dùng hằng ngày
 

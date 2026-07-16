@@ -20,7 +20,7 @@ load_dotenv(ROOT / ".env")
 
 API_BASE_URL = os.getenv("API_BASE_URL", "").rstrip("/")
 WORKER_TOKEN = os.getenv("WORKER_TOKEN", "")
-MODEL_ID = os.getenv("MODEL_ID", "vinai/vinai-translate-en2vi")
+MODEL_ID = os.getenv("MODEL_ID", "vinai/vinai-translate-en2vi-v2")
 POLL_SECONDS = max(2, int(os.getenv("POLL_SECONDS", "6")))
 BATCH_SIZE = max(1, int(os.getenv("BATCH_SIZE", "4")))
 MAX_INPUT_TOKENS = max(128, int(os.getenv("MAX_INPUT_TOKENS", "384")))
@@ -66,7 +66,9 @@ class Translator:
         self.torch = torch
         self.device = "cuda"
         log.info("Đang tải model %s lên GPU… (chỉ xảy ra khi có bài đầu tiên)", MODEL_ID)
-        self.tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+        # VinAI Translate is mBART based. Both the input language and the
+        # decoder's first language token are required for stable output.
+        self.tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, src_lang="en_XX")
         self.model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_ID, torch_dtype=torch.float16)
         self.model.to(self.device).eval()
         self._loaded = True
@@ -88,8 +90,10 @@ class Translator:
             with self.torch.inference_mode():
                 output = self.model.generate(
                     **encoded,
-                    num_beams=4,
+                    decoder_start_token_id=self.tokenizer.lang_code_to_id["vi_VN"],
+                    num_beams=5,
                     max_new_tokens=MAX_INPUT_TOKENS,
+                    no_repeat_ngram_size=3,
                     early_stopping=True,
                 )
             translated_segments.extend(self.tokenizer.batch_decode(output, skip_special_tokens=True))
@@ -100,6 +104,10 @@ class Translator:
         ]
         if not segments:
             raise RuntimeError("Model không trả về bản dịch")
+        for item in segments:
+            # Refuse mBART's known repetition failure mode instead of saving it.
+            if re.search(r"\b(\w+)(?:\s+\1){5,}\b", item["translated"], flags=re.IGNORECASE):
+                raise RuntimeError("Model sinh bản dịch lặp bất thường; bài này chưa được lưu")
         return "\n\n".join(item["translated"] for item in segments), segments
 
 

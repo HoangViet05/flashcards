@@ -100,12 +100,12 @@ export default function ReaderListPage() {
     }
   }
 
-  const queueOne = async (id: string) => {
+  const queueOne = async (id: string, force = false) => {
     setQueuingArticle(id)
     try {
-      await queueArticleTranslation(id)
+      await queueArticleTranslation(id, force)
       await articlesQuery.refresh()
-      toast('Đã đưa bài vào hàng dịch local.', 'success')
+      toast(force ? 'Đã yêu cầu dịch lại bài này.' : 'Đã đưa bài vào hàng dịch local.', 'success')
     } catch (error: any) {
       toast(error?.response?.data?.detail ?? 'Không thể đưa bài vào hàng dịch', 'error')
     } finally {
@@ -164,7 +164,7 @@ export default function ReaderListPage() {
             return <div key={article.id} className="group relative rounded-2xl border border-white/[.07] bg-white/[.03] p-4 hover:border-cyan-300/20">
               <Link to={`/reader/${article.id}`} className="block pr-20"><h3 className="line-clamp-2 font-bold text-slate-100">{article.title}</h3><p className="mt-2 text-xs text-slate-500">{BADGES[article.source_type]} · {article.word_count} từ · {new Date(article.created_at).toLocaleDateString('vi-VN')}</p>{translation && <span className={`mt-3 inline-flex rounded-full border px-2 py-1 text-[11px] font-bold ${translation.className}`}>{translation.text}</span>}</Link>
               <div className="absolute right-3 top-3 flex gap-1 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
-                {article.translation_status !== 'completed' && <button onClick={event => { event.preventDefault(); void queueOne(article.id) }} disabled={queuingArticle === article.id} className="rounded-lg px-2 py-1 text-xs text-violet-200 hover:bg-violet-500/10 disabled:opacity-50">{queuingArticle === article.id ? '…' : 'Dịch'}</button>}
+                <button onClick={event => { event.preventDefault(); void queueOne(article.id, article.translation_status === 'completed') }} disabled={queuingArticle === article.id} className="rounded-lg px-2 py-1 text-xs text-violet-200 hover:bg-violet-500/10 disabled:opacity-50">{queuingArticle === article.id ? '…' : article.translation_status === 'completed' ? 'Dịch lại' : 'Dịch'}</button>
                 <button onClick={() => remove(article.id, article.title)} className="rounded-lg px-2 py-1 text-xs text-rose-300 hover:bg-rose-500/10">Xóa</button>
               </div>
             </div>

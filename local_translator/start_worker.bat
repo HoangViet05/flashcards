@@ -6,10 +6,10 @@ if not exist .env (
   exit /b 1
 )
 if not exist .venv\Scripts\python.exe (
-  echo Chua cai dat worker. Hay chay install_worker.bat mot lan truoc.
+  echo Chua tim thay .venv cua worker. Hay chay lai install_worker.bat sau khi cap nhat script.
   pause
   exit /b 1
 )
 call .venv\Scripts\activate.bat
-python worker.py
+.venv\Scripts\python.exe worker.py
 pause

@@ -1,0 +1,9 @@
+# Copy this file to .env, then paste the values from Tech Reader > Kết nối máy dịch.
+API_BASE_URL=https://your-render-service.onrender.com/api
+WORKER_TOKEN=paste-the-one-time-token-here
+
+# Model optimized for English -> Vietnamese. It is downloaded once on first translation.
+MODEL_ID=vinai/vinai-translate-en2vi
+POLL_SECONDS=6
+BATCH_SIZE=4
+MAX_INPUT_TOKENS=384

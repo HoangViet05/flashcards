@@ -4,7 +4,7 @@ Worker này chỉ tạo kết nối HTTPS đi ra Render; không mở port vào l
 
 ## Cài một lần
 
-1. Chạy `install_worker.bat`.
+1. Chạy `install_worker.bat`. Script cài PyTorch CUDA 12.6 cho RTX 4060; kết quả kiểm tra phải bắt đầu bằng `True`.
 2. Vào **Tech Reader** trên website, bấm **Kết nối máy dịch**, rồi copy cấu hình được hiển thị.
 3. Copy `.env.example` thành `.env`, dán hai dòng `API_BASE_URL` và `WORKER_TOKEN` vừa copy.
 4. Bấm đúp `start_worker.bat`. Dòng `Công tắc dịch đang BẬT` nghĩa là máy đã online.

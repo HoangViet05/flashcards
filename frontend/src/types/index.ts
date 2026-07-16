@@ -84,6 +84,7 @@ export interface ArticleListItem {
   source_url: string | null
   word_count: number
   has_summary: boolean
+  translation_status: TranslationStatus | null
   created_at: string
 }
 
@@ -91,6 +92,30 @@ export interface Article extends ArticleListItem {
   content: string
   document_id: string | null
   summary: string | null
+}
+
+export type TranslationStatus = 'queued' | 'processing' | 'completed' | 'failed'
+
+export interface ArticleTranslation {
+  id: string
+  article_id: string
+  status: TranslationStatus
+  translated_content: string | null
+  segments: { source: string; translated: string }[] | null
+  error_message: string | null
+  requested_at: string
+  completed_at: string | null
+}
+
+export interface LocalTranslationWorker {
+  id: string
+  name: string
+  created_at: string
+  last_seen_at: string | null
+}
+
+export interface CreatedTranslationWorker extends LocalTranslationWorker {
+  token: string
 }
 
 export interface ArticleHighlight {

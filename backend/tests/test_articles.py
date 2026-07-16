@@ -43,3 +43,41 @@ def test_article_highlights_are_saved_per_article(client, user_b_client):
     assert user_b_client.get(url).status_code == 404
     assert client.delete(f"{url}/containers").status_code == 200
     assert client.get(url).json() == []
+
+
+def test_local_translation_worker_claims_only_its_users_jobs(client, user_b_client):
+    article = client.post("/api/articles", json=PASTE_BODY).json()
+    queued = client.post(f"/api/articles/{article['id']}/translation-jobs", json={})
+    assert queued.status_code == 200
+    assert queued.json()["status"] == "queued"
+    assert client.get("/api/articles").json()[0]["translation_status"] == "queued"
+
+    paired = client.post("/api/articles/translation-workers", json={"name": "Laptop RTX"})
+    assert paired.status_code == 201
+    token = paired.json()["token"]
+    assert client.get("/api/articles/translation-workers/status").status_code == 200
+    assert client.post("/api/articles/local-translation/claim").status_code == 401
+
+    claimed = client.post("/api/articles/local-translation/claim", headers={"X-Translation-Worker-Token": token})
+    assert claimed.status_code == 200, claimed.text
+    job = claimed.json()
+    assert job["article_id"] == article["id"]
+    assert job["content"] == PASTE_BODY["text"]
+
+    completed = client.post(
+        f"/api/articles/local-translation/{job['id']}/complete",
+        headers={"X-Translation-Worker-Token": token},
+        json={
+            "translated_content": "Docker rất tuyệt. Nó vận chuyển các container.",
+            "segments": [{"source": PASTE_BODY["text"], "translated": "Docker rất tuyệt. Nó vận chuyển các container."}],
+        },
+    )
+    assert completed.status_code == 200, completed.text
+    translation = client.get(f"/api/articles/{article['id']}/translation")
+    assert translation.status_code == 200
+    assert translation.json()["status"] == "completed"
+    assert user_b_client.get(f"/api/articles/{article['id']}/translation").status_code == 404
+
+    all_queued = client.post("/api/articles/translation-jobs/untranslated")
+    assert all_queued.status_code == 200
+    assert all_queued.json()["queued_count"] == 0

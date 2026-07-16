@@ -1,12 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.article import Article
 from app.models.article_highlight import ArticleHighlight
+from app.models.article_translation import ArticleTranslation
 from app.models.document import Document
+from app.models.translation_worker import TranslationWorker
 from app.models.user import User
-from app.schemas.article import ArticleCreate, ArticleHighlightCreate, ArticleHighlightOut, ArticleListItem, ArticleOut
+from app.schemas.article import (
+    ArticleCreate, ArticleHighlightCreate, ArticleHighlightOut, ArticleListItem, ArticleOut,
+    ArticleTranslationOut, LocalWorkerCreate, LocalWorkerCreated, LocalWorkerOut, TranslationQueueResult,
+    TranslationRequest, WorkerClaimOut, WorkerComplete, WorkerFailure,
+)
 from app.services.article_extractor import (
     ExtractionError, count_words, extract_from_html, extract_from_pdf_source, fetch_url, normalize_text,
 )
@@ -24,6 +33,52 @@ def get_owned_article(article_id: str, db: Session, user: User) -> Article:
 
 def _default_title(text: str) -> str:
     return " ".join(text.split()[:8])[:500] or "Bài đọc"
+
+
+def _translation_status(article_id: str, db: Session) -> str | None:
+    row = db.query(ArticleTranslation.status).filter(ArticleTranslation.article_id == article_id).first()
+    return row[0] if row else None
+
+
+def _queue_translation(article: Article, db: Session, force: bool = False) -> tuple[ArticleTranslation, bool]:
+    """Queue one article unless it is already completed or being worked on."""
+    now = datetime.utcnow()
+    job = db.query(ArticleTranslation).filter(ArticleTranslation.article_id == article.id).first()
+    if job is None:
+        job = ArticleTranslation(article_id=article.id, user_id=article.user_id, status="queued", requested_at=now)
+        db.add(job)
+        return job, True
+    if job.status in {"queued", "processing"} and not force:
+        return job, False
+    if job.status == "completed" and not force:
+        return job, False
+
+    job.status = "queued"
+    job.worker_id = None
+    job.translated_content = None
+    job.segments = None
+    job.error_message = None
+    job.requested_at = now
+    job.started_at = None
+    job.completed_at = None
+    job.lease_expires_at = None
+    return job, True
+
+
+def _get_local_worker(
+    x_translation_worker_token: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+) -> TranslationWorker:
+    if not x_translation_worker_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Thiếu mã kết nối worker")
+    worker = (
+        db.query(TranslationWorker)
+        .filter(TranslationWorker.token_hash == TranslationWorker.hash_token(x_translation_worker_token.strip()))
+        .first()
+    )
+    if not worker:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Mã kết nối worker không hợp lệ")
+    return worker
 
 
 @router.post("", response_model=ArticleOut)
@@ -54,16 +109,186 @@ def create_article(body: ArticleCreate, db: Session = Depends(get_db), user: Use
     return article
 
 
+@router.post("/translation-jobs/untranslated", response_model=TranslationQueueResult)
+def queue_all_untranslated_articles(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Queue every article without a finished Vietnamese translation for the paired local worker."""
+    articles = db.query(Article).filter(Article.user_id == user.id).all()
+    queued_count = 0
+    already_pending_count = 0
+    for article in articles:
+        job, queued = _queue_translation(article, db)
+        if queued:
+            queued_count += 1
+        elif job.status in {"queued", "processing"}:
+            already_pending_count += 1
+    db.commit()
+    return TranslationQueueResult(queued_count=queued_count, already_pending_count=already_pending_count)
+
+
+@router.post("/{article_id}/translation-jobs", response_model=ArticleTranslationOut)
+def queue_article_translation(
+    article_id: str,
+    body: TranslationRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    article = get_owned_article(article_id, db, user)
+    job, _ = _queue_translation(article, db, force=body.force)
+    db.commit()
+    db.refresh(job)
+    return job
+
+
 @router.get("", response_model=list[ArticleListItem])
 def list_articles(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     rows = db.query(Article).filter(Article.user_id == user.id).order_by(Article.created_at.desc()).all()
+    statuses = {
+        row.article_id: row.status
+        for row in db.query(ArticleTranslation.article_id, ArticleTranslation.status).filter(ArticleTranslation.user_id == user.id)
+    }
     return [ArticleListItem(id=a.id, title=a.title, source_type=a.source_type, source_url=a.source_url,
-                            word_count=a.word_count, has_summary=a.summary is not None, created_at=a.created_at) for a in rows]
+                            word_count=a.word_count, has_summary=a.summary is not None,
+                            translation_status=statuses.get(a.id), created_at=a.created_at) for a in rows]
 
 
 @router.get("/{article_id}", response_model=ArticleOut)
 def get_article(article_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return get_owned_article(article_id, db, user)
+    article = get_owned_article(article_id, db, user)
+    result = ArticleOut.model_validate(article)
+    result.translation_status = _translation_status(article.id, db)
+    return result
+
+
+@router.get("/{article_id}/translation", response_model=ArticleTranslationOut)
+def get_article_translation(article_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    article = get_owned_article(article_id, db, user)
+    translation = db.query(ArticleTranslation).filter(ArticleTranslation.article_id == article.id).first()
+    if not translation:
+        raise HTTPException(status_code=404, detail="Bài đọc chưa có bản dịch")
+    return translation
+
+
+@router.post("/translation-workers", response_model=LocalWorkerCreated, status_code=status.HTTP_201_CREATED)
+def create_translation_worker(
+    body: LocalWorkerCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    token = TranslationWorker.new_token()
+    worker = TranslationWorker(user_id=user.id, name=body.name.strip(), token_hash=TranslationWorker.hash_token(token))
+    db.add(worker)
+    db.commit()
+    db.refresh(worker)
+    return LocalWorkerCreated(
+        id=worker.id,
+        name=worker.name,
+        created_at=worker.created_at,
+        last_seen_at=worker.last_seen_at,
+        token=token,
+    )
+
+
+@router.get("/translation-workers/status", response_model=list[LocalWorkerOut])
+def list_translation_workers(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return (
+        db.query(TranslationWorker)
+        .filter(TranslationWorker.user_id == user.id)
+        .order_by(TranslationWorker.created_at.desc())
+        .all()
+    )
+
+
+@router.delete("/translation-workers/{worker_id}")
+def delete_translation_worker(worker_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    worker = db.query(TranslationWorker).filter(TranslationWorker.id == worker_id, TranslationWorker.user_id == user.id).first()
+    if not worker:
+        raise HTTPException(status_code=404, detail="Không tìm thấy worker local")
+    db.delete(worker)
+    db.commit()
+    return {"status": "success"}
+
+
+@router.post("/local-translation/claim", response_model=WorkerClaimOut, responses={204: {"description": "Không có bài đang chờ"}})
+def claim_translation_job(
+    response: Response,
+    worker: TranslationWorker = Depends(_get_local_worker),
+    db: Session = Depends(get_db),
+):
+    now = datetime.utcnow()
+    job = (
+        db.query(ArticleTranslation)
+        .filter(
+            ArticleTranslation.user_id == worker.user_id,
+            or_(
+                ArticleTranslation.status == "queued",
+                (ArticleTranslation.status == "processing") & (ArticleTranslation.lease_expires_at < now),
+            ),
+        )
+        .order_by(ArticleTranslation.requested_at.asc())
+        .first()
+    )
+    worker.last_seen_at = now
+    if not job:
+        db.commit()
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return None
+
+    job.status = "processing"
+    job.worker_id = worker.id
+    job.started_at = now
+    job.lease_expires_at = now + timedelta(minutes=20)
+    job.attempt_count += 1
+    db.commit()
+    article = db.query(Article).filter(Article.id == job.article_id).first()
+    return WorkerClaimOut(id=job.id, article_id=article.id, title=article.title, content=article.content)
+
+
+@router.post("/local-translation/{job_id}/complete")
+def complete_translation_job(
+    job_id: str,
+    body: WorkerComplete,
+    worker: TranslationWorker = Depends(_get_local_worker),
+    db: Session = Depends(get_db),
+):
+    job = (
+        db.query(ArticleTranslation)
+        .filter(ArticleTranslation.id == job_id, ArticleTranslation.user_id == worker.user_id, ArticleTranslation.worker_id == worker.id)
+        .first()
+    )
+    if not job or job.status != "processing":
+        raise HTTPException(status_code=404, detail="Không tìm thấy job đang được worker xử lý")
+    now = datetime.utcnow()
+    job.status = "completed"
+    job.translated_content = body.translated_content.strip()
+    job.segments = [segment.model_dump() for segment in body.segments]
+    job.error_message = None
+    job.completed_at = now
+    job.lease_expires_at = None
+    worker.last_seen_at = now
+    db.commit()
+    return {"status": "success"}
+
+
+@router.post("/local-translation/{job_id}/fail")
+def fail_translation_job(
+    job_id: str,
+    body: WorkerFailure,
+    worker: TranslationWorker = Depends(_get_local_worker),
+    db: Session = Depends(get_db),
+):
+    job = (
+        db.query(ArticleTranslation)
+        .filter(ArticleTranslation.id == job_id, ArticleTranslation.user_id == worker.user_id, ArticleTranslation.worker_id == worker.id)
+        .first()
+    )
+    if not job or job.status != "processing":
+        raise HTTPException(status_code=404, detail="Không tìm thấy job đang được worker xử lý")
+    job.status = "failed"
+    job.error_message = body.error_message.strip()
+    job.lease_expires_at = None
+    worker.last_seen_at = datetime.utcnow()
+    db.commit()
+    return {"status": "success"}
 
 
 @router.get("/{article_id}/highlights", response_model=list[ArticleHighlightOut])

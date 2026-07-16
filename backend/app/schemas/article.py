@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 
 class ArticleCreate(BaseModel):
@@ -23,6 +23,7 @@ class ArticleListItem(BaseModel):
     source_url: str | None
     word_count: int
     has_summary: bool = False
+    translation_status: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -38,6 +39,7 @@ class ArticleOut(BaseModel):
     summary: str | None
     word_count: int
     created_at: datetime
+    translation_status: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -54,3 +56,63 @@ class ArticleHighlightOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class TranslationRequest(BaseModel):
+    force: bool = False
+
+
+class TranslationSegment(BaseModel):
+    source: str = Field(min_length=1, max_length=5000)
+    translated: str = Field(min_length=1, max_length=5000)
+
+
+class ArticleTranslationOut(BaseModel):
+    id: str
+    article_id: str
+    status: str
+    translated_content: str | None
+    segments: list[TranslationSegment] | None
+    error_message: str | None
+    requested_at: datetime
+    completed_at: datetime | None
+
+    model_config = {"from_attributes": True}
+
+
+class TranslationQueueResult(BaseModel):
+    queued_count: int
+    already_pending_count: int
+
+
+class LocalWorkerCreate(BaseModel):
+    name: str = Field(default="Máy dịch local", min_length=1, max_length=100)
+
+
+class LocalWorkerOut(BaseModel):
+    id: str
+    name: str
+    created_at: datetime
+    last_seen_at: datetime | None
+
+    model_config = {"from_attributes": True}
+
+
+class LocalWorkerCreated(LocalWorkerOut):
+    token: str
+
+
+class WorkerClaimOut(BaseModel):
+    id: str
+    article_id: str
+    title: str
+    content: str
+
+
+class WorkerComplete(BaseModel):
+    translated_content: str = Field(min_length=1, max_length=2_000_000)
+    segments: list[TranslationSegment] = Field(min_length=1, max_length=5000)
+
+
+class WorkerFailure(BaseModel):
+    error_message: str = Field(min_length=1, max_length=2000)

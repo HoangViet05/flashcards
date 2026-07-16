@@ -1,4 +1,6 @@
 .env
+local_translator/.env
+local_translator/.venv/
 __pycache__/
 *.pyc
 *.pyo

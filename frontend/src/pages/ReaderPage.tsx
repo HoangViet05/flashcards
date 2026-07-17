@@ -156,6 +156,103 @@ function HighlightPanel({ highlights, onRemove, onAddAll, adding }: {
   )
 }
 
+function VoicePicker({
+  voices,
+  selectedVoice,
+  onSelect,
+}: {
+  voices: SpeechSynthesisVoice[]
+  selectedVoice?: SpeechSynthesisVoice
+  onSelect: (voiceURI: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [])
+
+  const chooseVoice = (voiceURI: string) => {
+    onSelect(voiceURI)
+    setOpen(false)
+  }
+
+  const selectedName = selectedVoice?.name ?? 'Mặc định của trình duyệt'
+  const selectedLanguage = selectedVoice?.lang ?? 'Tự động chọn'
+
+  return (
+    <div className="relative">
+      <div className="mb-2 flex items-center justify-between px-1">
+        <label className="text-[10px] font-black uppercase tracking-[.12em] text-slate-500">Giọng đọc</label>
+        {voices.length > 0 && <span className="text-[10px] font-bold text-cyan-300/75">{voices.length} giọng</span>}
+      </div>
+      <button
+        type="button"
+        onClick={() => setOpen(value => !value)}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        className={`flex w-full items-center gap-2 rounded-xl border px-2.5 py-2.5 text-left transition focus:outline-none focus:ring-2 focus:ring-cyan-300/35 ${
+          open ? 'border-cyan-300/50 bg-cyan-400/[.09] shadow-[0_0_0_3px_rgba(34,211,238,.06)]' : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[.045]'
+        }`}
+        title="Chọn giọng đọc có sẵn trên thiết bị"
+      >
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-400/10 text-cyan-200" aria-hidden="true">◖</span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-xs font-bold text-slate-100">{selectedName}</span>
+          <span className="mt-0.5 block text-[10px] font-medium text-slate-500">{selectedLanguage}</span>
+        </span>
+        <svg viewBox="0 0 24 24" className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180 text-cyan-200' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 z-30 mt-2 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-cyan-300/20 bg-[#0b1020]/[.98] p-1.5 shadow-[0_24px_56px_rgba(0,0,0,.55)] backdrop-blur-2xl">
+          <div className="flex items-center justify-between px-2.5 pb-2 pt-1.5">
+            <p className="text-[10px] font-black uppercase tracking-[.13em] text-slate-500">Chọn giọng đọc</p>
+            <span className="text-[10px] font-medium text-slate-600">Trên thiết bị này</span>
+          </div>
+          <div role="listbox" aria-label="Danh sách giọng đọc" className="max-h-64 space-y-1 overflow-y-auto pr-0.5">
+            <button
+              type="button"
+              role="option"
+              aria-selected={!selectedVoice}
+              onClick={() => chooseVoice('')}
+              className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition ${!selectedVoice ? 'bg-cyan-400/[.13] text-cyan-50' : 'text-slate-300 hover:bg-white/[.06]'}`}
+            >
+              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-xs ${!selectedVoice ? 'border-cyan-300/30 bg-cyan-400/10 text-cyan-200' : 'border-white/10 bg-white/[.04] text-slate-500'}`}>A</span>
+              <span className="min-w-0 flex-1"><span className="block text-xs font-bold">Mặc định của trình duyệt</span><span className="mt-0.5 block text-[10px] text-slate-500">Tự động chọn giọng phù hợp</span></span>
+              {!selectedVoice && <span className="text-cyan-200" aria-label="Đang chọn">✓</span>}
+            </button>
+            {voices.map(voice => {
+              const isSelected = selectedVoice?.voiceURI === voice.voiceURI
+              return (
+                <button
+                  key={voice.voiceURI}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => chooseVoice(voice.voiceURI)}
+                  className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition ${isSelected ? 'bg-cyan-400/[.13] text-cyan-50' : 'text-slate-300 hover:bg-white/[.06]'}`}
+                >
+                  <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-xs ${isSelected ? 'border-cyan-300/30 bg-cyan-400/10 text-cyan-200' : 'border-white/10 bg-white/[.04] text-slate-500'}`} aria-hidden="true">◖</span>
+                  <span className="min-w-0 flex-1"><span className="block truncate text-xs font-bold">{voice.name}</span><span className="mt-0.5 block text-[10px] font-medium text-slate-500">{voice.lang}</span></span>
+                  {isSelected && <span className="text-cyan-200" aria-label="Đang chọn">✓</span>}
+                </button>
+              )
+            })}
+          </div>
+          <p className="border-t border-white/[.06] px-2.5 pb-1 pt-2 text-[10px] leading-4 text-slate-600">Danh sách giọng do trình duyệt và thiết bị của bạn cung cấp.</p>
+        </div>
+      )}
+      {!voices.length && <p className="mt-1.5 px-1 text-[10px] leading-4 text-slate-600">Đang tải các giọng có sẵn…</p>}
+    </div>
+  )
+}
+
 export default function ReaderPage() {
   const { id } = useParams<{ id: string }>()
   const { toast } = useNotification()
@@ -369,12 +466,7 @@ export default function ReaderPage() {
               <p className="mt-1.5 px-1 text-[10px] leading-4 text-slate-600">Rê chuột biểu tượng cuối câu để xem bản dịch.</p>
             </div>}
             <div className="mt-3 border-t border-white/[.07] pt-3">
-              <label htmlFor="reader-voice" className="mb-2 block px-1 text-[10px] font-black uppercase tracking-[.12em] text-slate-500">Giọng đọc</label>
-              <select id="reader-voice" value={selectedVoice?.voiceURI ?? ''} onChange={event => selectVoice(event.target.value)} className="w-full truncate rounded-xl border border-white/10 bg-black/20 px-2.5 py-2 text-xs font-medium text-slate-200 outline-none transition focus:border-cyan-300/50" title="Giọng đọc có sẵn trên thiết bị">
-                <option value="">Mặc định của trình duyệt</option>
-                {availableVoices.map(voice => <option key={voice.voiceURI} value={voice.voiceURI}>{voice.name} ({voice.lang})</option>)}
-              </select>
-              <p className="mt-1.5 px-1 text-[10px] leading-4 text-slate-600">{voices.length ? 'Danh sách giọng do thiết bị của bạn cung cấp.' : 'Đang tải các giọng có sẵn…'}</p>
+              <VoicePicker voices={availableVoices} selectedVoice={selectedVoice} onSelect={selectVoice} />
             </div>
             <p className="mt-3 rounded-xl bg-white/[.035] px-2.5 py-2 text-[11px] leading-4 text-slate-500">{tts.playing ? `Đang đọc câu ${tts.sentence + 1}/${sentences.length}` : 'Chọn một từ trong bài để tra nghĩa.'}</p>
           </section>

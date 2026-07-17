@@ -1,9 +1,10 @@
 import { getHeatmap, getStats } from '../api/review'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import StudyHeatmap from '../components/StudyHeatmap'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 
-export default function StatsPage() {
+export function LearningStats() {
   const { user } = useAuth()
   const statsQuery = useCachedQuery(user ? `statsv2:${user.id}` : null, async () => {
     const [stats, heatmap] = await Promise.all([getStats(), getHeatmap()])
@@ -141,4 +142,9 @@ export default function StatsPage() {
       </div>
     </div>
   )
+}
+
+// Keep bookmarks to the former Statistics page working after moving it into Account.
+export default function StatsPage() {
+  return <Navigate to="/account" replace />
 }

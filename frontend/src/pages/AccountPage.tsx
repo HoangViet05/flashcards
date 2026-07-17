@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { LearningStats } from './StatsPage'
 
 export default function AccountPage() {
   const { user, loading, logout } = useAuth()
@@ -26,6 +27,10 @@ export default function AccountPage() {
             Đăng xuất
           </button>
         </div>
+      </section>
+
+      <section className="mt-8 sm:mt-10" aria-label="Thống kê học tập">
+        <LearningStats />
       </section>
     </main>
   )

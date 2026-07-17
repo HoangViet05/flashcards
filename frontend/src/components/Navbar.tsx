@@ -7,7 +7,6 @@ const NAV_ITEMS = [
   { to: '/reader', label: 'Đọc', icon: 'book', soon: false },
   { to: '/review', label: 'Ôn tập', icon: 'review', soon: false },
   { to: '/games', label: 'Games', icon: 'games', soon: false },
-  { to: '/stats', label: 'Thống kê', icon: 'stats', soon: false },
 ] as const
 
 type NavIconName = (typeof NAV_ITEMS)[number]['icon'] | 'mail' | 'login' | 'logout'
@@ -63,15 +62,6 @@ function NavIcon({ name, className = '' }: { name: NavIconName; className?: stri
         <svg {...common}>
           <path d="M7.5 9h9a3.5 3.5 0 0 1 3.3 4.7l-1.1 3.1a2 2 0 0 1-3.1.9L13 16H11l-2.6 1.7a2 2 0 0 1-3.1-.9l-1.1-3.1A3.5 3.5 0 0 1 7.5 9Z" />
           <path d="M8 13h3M9.5 11.5v3M15.5 12.5h.01M17.5 14h.01" />
-        </svg>
-      )
-    case 'stats':
-      return (
-        <svg {...common}>
-          <path d="M5 20V10" />
-          <path d="M12 20V4" />
-          <path d="M19 20v-7" />
-          <path d="M3.5 20.5h17" />
         </svg>
       )
     case 'mail':

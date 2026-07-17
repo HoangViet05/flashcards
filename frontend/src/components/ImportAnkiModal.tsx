@@ -10,6 +10,7 @@ interface Props {
 export default function ImportAnkiModal({ open, onClose, onImported }: Props) {
   const [dragging, setDragging] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [result, setResult] = useState<AnkiImportResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -21,9 +22,11 @@ export default function ImportAnkiModal({ open, onClose, onImported }: Props) {
       setError('Vui lòng chọn file .apkg xuất từ Anki.')
       return
     }
-    setBusy(true); setError(null); setResult(null)
+    setBusy(true); setUploadProgress(0); setError(null); setResult(null)
     try {
-      const res = await importApkg(file)
+      const res = await importApkg(file, event => {
+        if (event.total) setUploadProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)))
+      })
       setResult(res)
       onImported()
     } catch (err: any) {
@@ -34,7 +37,7 @@ export default function ImportAnkiModal({ open, onClose, onImported }: Props) {
     }
   }
 
-  const close = () => { setResult(null); setError(null); onClose() }
+  const close = () => { setResult(null); setError(null); setUploadProgress(0); onClose() }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -50,9 +53,35 @@ export default function ImportAnkiModal({ open, onClose, onImported }: Props) {
         </p>
 
         {busy ? (
-          <div className="flex flex-col items-center gap-4 py-10 relative z-10">
-            <div className="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin" />
-            <p className="text-cyan-200 font-medium">Đang nhập... file lớn có thể mất một phút</p>
+          <div className="py-8 relative z-10">
+            <div className="flex items-center justify-between text-sm mb-2">
+              <span className="font-semibold text-cyan-100">1. Tải file .apkg lên</span>
+              <span className="font-bold text-cyan-300">{uploadProgress}%</span>
+            </div>
+            <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-400 transition-[width] duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+
+            <div className={`mt-5 flex items-center gap-3 ${uploadProgress < 100 ? 'text-gray-500' : 'text-cyan-100'}`}>
+              {uploadProgress < 100 ? (
+                <span className="w-5 h-5 rounded-full border-2 border-current/40" />
+              ) : (
+                <span className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-[11px] text-emerald-300">✓</span>
+              )}
+              <span className="text-sm font-medium">2. Đọc và phân tích các thẻ Anki</span>
+            </div>
+            <div className={`mt-4 flex items-center gap-3 ${uploadProgress < 100 ? 'text-gray-500' : 'text-cyan-200'}`}>
+              {uploadProgress < 100 ? (
+                <span className="w-5 h-5 rounded-full border-2 border-current/40" />
+              ) : (
+                <span className="w-5 h-5 border-2 border-cyan-500/30 border-t-cyan-300 rounded-full animate-spin" />
+              )}
+              <span className="text-sm font-medium">3. Lưu từ vựng và dữ liệu đa phương tiện vào thư viện</span>
+            </div>
+            <p className="text-gray-400 text-sm mt-6">{uploadProgress < 100 ? 'Đang tải file lên…' : 'Đang xử lý trên máy chủ… file lớn có thể mất một phút.'}</p>
           </div>
         ) : result ? (
           <div className="relative z-10 flex flex-col gap-3">

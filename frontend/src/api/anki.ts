@@ -1,3 +1,4 @@
+import type { AxiosProgressEvent } from 'axios'
 import client from './client'
 
 export interface AnkiLibrarySource {
@@ -31,11 +32,14 @@ export interface AnkiImportResult {
   warnings: string[]
 }
 
-export const importApkg = (file: File) => {
+export const importApkg = (
+  file: File,
+  onUploadProgress?: (progressEvent: AxiosProgressEvent) => void,
+) => {
   const form = new FormData()
   form.append('file', file)
   return client
-    .post<AnkiImportResult>('/anki/import', form, { timeout: 0 })
+    .post<AnkiImportResult>('/anki/import', form, { timeout: 0, onUploadProgress })
     .then(r => r.data)
 }
 

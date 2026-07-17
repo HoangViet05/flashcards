@@ -32,6 +32,10 @@ export interface AnkiImportResult {
   warnings: string[]
 }
 
+export interface AnkiLibraryDeleteResult {
+  entries_deleted: number
+}
+
 export const importApkg = (
   file: File,
   onUploadProgress?: (progressEvent: AxiosProgressEvent) => void,
@@ -45,3 +49,6 @@ export const importApkg = (
 
 export const getAnkiLibrary = (search = '') =>
   client.get<AnkiLibrary>('/anki/library', { params: search ? { search } : undefined }).then(r => r.data)
+
+export const deleteAnkiLibrary = () =>
+  client.delete<AnkiLibraryDeleteResult>('/anki/library').then(r => r.data)

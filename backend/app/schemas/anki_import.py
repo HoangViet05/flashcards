@@ -8,6 +8,10 @@ class AnkiImportOut(BaseModel):
     warnings: list[str]
 
 
+class AnkiLibraryDeleteOut(BaseModel):
+    entries_deleted: int
+
+
 class AnkiLibrarySourceOut(BaseModel):
     name: str
     entry_count: int

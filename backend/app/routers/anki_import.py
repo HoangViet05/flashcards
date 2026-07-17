@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
 from app.models.anki_entry import AnkiEntry
-from app.schemas.anki_import import AnkiImportOut, AnkiLibraryEntryOut, AnkiLibraryOut, AnkiLibrarySourceOut
+from app.schemas.anki_import import AnkiImportOut, AnkiLibraryDeleteOut, AnkiLibraryEntryOut, AnkiLibraryOut, AnkiLibrarySourceOut
 from app.services.security import get_current_user
 from app.services import anki_importer
 from app.services.anki_importer import ApkgFormatError, import_apkg
@@ -69,3 +69,17 @@ def import_anki_package(
         entries_skipped=summary.entries_skipped,
         warnings=summary.warnings,
     )
+
+
+@router.delete("/library", response_model=AnkiLibraryDeleteOut)
+def delete_anki_library(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    entries_deleted = (
+        db.query(AnkiEntry)
+        .filter(AnkiEntry.user_id == user.id)
+        .delete(synchronize_session=False)
+    )
+    db.commit()
+    return AnkiLibraryDeleteOut(entries_deleted=entries_deleted)

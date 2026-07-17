@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
-import { getAnkiLibrary, type AnkiLibrary } from '../api/anki'
+import { deleteAnkiLibrary, getAnkiLibrary, type AnkiLibrary } from '../api/anki'
+import { useNotification } from './NotificationProvider'
 
 interface Props {
   open: boolean
   onClose: () => void
+  onDeleted: () => void | Promise<void>
 }
 
-export default function AnkiLibraryModal({ open, onClose }: Props) {
+export default function AnkiLibraryModal({ open, onClose, onDeleted }: Props) {
   const [library, setLibrary] = useState<AnkiLibrary | null>(null)
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const { confirm, toast } = useNotification()
 
   const load = async (value = '') => {
     setLoading(true)
@@ -24,6 +28,30 @@ export default function AnkiLibraryModal({ open, onClose }: Props) {
     if (open) void load()
   }, [open])
 
+  const handleDeleteAll = () => {
+    if (!library?.total || deleting) return
+    confirm({
+      title: 'Xóa toàn bộ thư viện Anki?',
+      message: `Bạn sắp xóa ${library.total} từ nguồn Anki. Các flashcard đã tạo để học sẽ được giữ nguyên. Hành động này không thể hoàn tác.`,
+      confirmText: 'Xóa toàn bộ',
+      variant: 'danger',
+      onConfirm: async () => {
+        setDeleting(true)
+        try {
+          const result = await deleteAnkiLibrary()
+          setLibrary({ total: 0, sources: [], entries: [] })
+          setSearch('')
+          await onDeleted()
+          toast(`Đã xóa ${result.entries_deleted} từ khỏi thư viện Anki`, 'success')
+        } catch (error) {
+          toast('Không thể xóa thư viện Anki. Vui lòng thử lại.', 'error')
+        } finally {
+          setDeleting(false)
+        }
+      },
+    })
+  }
+
   if (!open) return null
 
   return (
@@ -33,7 +61,10 @@ export default function AnkiLibraryModal({ open, onClose }: Props) {
         <header className="border-b border-white/[.08] px-5 py-5 sm:px-7">
           <div className="flex items-start justify-between gap-4">
             <div><p className="text-[10px] font-black uppercase tracking-[.16em] text-cyan-300">Nguồn tạo thẻ</p><h2 className="mt-1 text-2xl font-black text-white">Thư viện Anki</h2><p className="mt-1 text-sm text-slate-400">{library ? `${library.total} từ đã sẵn sàng để dùng khi lưu từ trong bài đọc.` : 'Đang tải thư viện…'}</p></div>
-            <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-white/[.08] hover:text-white" aria-label="Đóng">✕</button>
+            <div className="flex items-center gap-1">
+              {library && library.total > 0 && <button onClick={handleDeleteAll} disabled={deleting} className="rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-xs font-bold text-red-200 hover:bg-red-500/20 disabled:cursor-wait disabled:opacity-60">{deleting ? 'Đang xóa…' : 'Xóa toàn bộ'}</button>}
+              <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-white/[.08] hover:text-white" aria-label="Đóng">✕</button>
+            </div>
           </div>
           <form onSubmit={event => { event.preventDefault(); void load(search) }} className="mt-4 flex gap-2"><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Tìm từ trong thư viện…" className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300/50" /><button className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 text-sm font-bold text-cyan-100 hover:bg-cyan-400/15">Tìm</button></form>
         </header>

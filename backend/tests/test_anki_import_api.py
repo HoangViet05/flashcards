@@ -39,6 +39,25 @@ def test_anki_library_search_and_user_scope(client, user_b_client, db):
     assert user_b_client.get("/api/anki/library").json()["total"] == 0
 
 
+def test_delete_anki_library_only_deletes_current_user_entries(client, user_b_client, db):
+    from app.models.anki_entry import AnkiEntry
+    from app.models.user import User
+
+    user_a = db.query(User).filter(User.email == "usera@test.com").one()
+    user_b = db.query(User).filter(User.email == "userb@test.com").one()
+    db.add_all([
+        AnkiEntry(user_id=user_a.id, normalized_word="apple", front_text="apple", back_text="tÃ¡o", fingerprint="delete-a"),
+        AnkiEntry(user_id=user_b.id, normalized_word="banana", front_text="banana", back_text="chuá»‘i", fingerprint="delete-b"),
+    ])
+    db.commit()
+
+    response = client.delete("/api/anki/library")
+    assert response.status_code == 200
+    assert response.json() == {"entries_deleted": 1}
+    assert client.get("/api/anki/library").json()["total"] == 0
+    assert user_b_client.get("/api/anki/library").json()["total"] == 1
+
+
 def test_import_endpoint_rejects_wrong_extension(client):
     resp = client.post("/api/anki/import", files={"file": ("notes.txt", b"hi", "text/plain")})
     assert resp.status_code == 400

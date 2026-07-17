@@ -421,7 +421,11 @@ export default function HomePage() {
         onClose={() => setShowImport(false)}
         onImported={() => { void decksQuery.refresh(); void ankiLibraryQuery.refresh() }}
       />
-      <AnkiLibraryModal open={showAnkiLibrary} onClose={() => setShowAnkiLibrary(false)} />
+      <AnkiLibraryModal
+        open={showAnkiLibrary}
+        onClose={() => setShowAnkiLibrary(false)}
+        onDeleted={() => ankiLibraryQuery.refresh()}
+      />
 
       {/* Create form modal */}
       {showForm && (

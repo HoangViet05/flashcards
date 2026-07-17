@@ -21,6 +21,9 @@ class Article(Base):
     document_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("documents.id", ondelete="SET NULL"), nullable=True
     )
+    deck_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("decks.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     word_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

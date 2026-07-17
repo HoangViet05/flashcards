@@ -45,6 +45,43 @@ def test_article_highlights_are_saved_per_article(client, user_b_client):
     assert client.get(url).json() == []
 
 
+def test_article_deck_and_bulk_highlights_prefer_anki_data(client, db):
+    from app.models.anki_entry import AnkiEntry
+    from app.models.user import User
+
+    article = client.post("/api/articles", json=PASTE_BODY).json()
+    assert article["deck_id"]
+    url = f"/api/articles/{article['id']}/highlights"
+    assert client.post(url, json={"word": "Docker", "meaning": "Docker thủ công"}).status_code == 200
+    user = db.query(User).filter(User.email == "usera@test.com").one()
+    db.add(AnkiEntry(
+        user_id=user.id,
+        normalized_word="docker",
+        front_text="Docker",
+        back_text="Docker từ Anki",
+        definition="A platform for containers.",
+        example_sentence="Docker ships containers.",
+        audio_url="/media/docker.mp3",
+        fingerprint="docker-test-entry",
+    ))
+    db.commit()
+
+    saved = client.post(f"/api/articles/{article['id']}/highlights/to-deck")
+    assert saved.status_code == 200, saved.text
+    assert saved.json() == {
+        "deck_id": article["deck_id"], "cards_created": 1, "cards_skipped": 0, "anki_matches": 1,
+    }
+    cards = client.get(f"/api/decks/{article['deck_id']}/cards").json()
+    assert len(cards) == 1
+    assert cards[0]["back_text"] == "Docker từ Anki"
+    assert cards[0]["audio_url"] == "/media/docker.mp3"
+
+    repeated = client.post(f"/api/articles/{article['id']}/highlights/to-deck")
+    assert repeated.status_code == 200
+    assert repeated.json()["cards_created"] == 0
+    assert repeated.json()["cards_skipped"] == 1
+
+
 def test_local_translation_worker_claims_only_its_users_jobs(client, user_b_client):
     article = client.post("/api/articles", json=PASTE_BODY).json()
     queued = client.post(f"/api/articles/{article['id']}/translation-jobs", json={})

@@ -8,14 +8,18 @@ from app.database import get_db
 from app.models.article import Article
 from app.models.article_highlight import ArticleHighlight
 from app.models.article_translation import ArticleTranslation
+from app.models.deck import Deck
 from app.models.document import Document
 from app.models.translation_worker import TranslationWorker
 from app.models.user import User
 from app.schemas.article import (
-    ArticleCreate, ArticleHighlightCreate, ArticleHighlightOut, ArticleListItem, ArticleOut,
+    ArticleCardCreate, ArticleCreate, ArticleHighlightCreate, ArticleHighlightOut, ArticleListItem, ArticleOut,
+    HighlightCardsResult,
     ArticleTranslationOut, LocalWorkerCreate, LocalWorkerCreated, LocalWorkerOut, TranslationQueueResult,
     TranslationRequest, WorkerClaimOut, WorkerComplete, WorkerFailure,
 )
+from app.schemas.card import CardOut
+from app.services.article_cards import create_article_card, ensure_article_deck, first_sentence_containing
 from app.services.article_extractor import (
     ExtractionError, count_words, extract_from_html, extract_from_pdf_source, fetch_url, normalize_text,
 )
@@ -103,6 +107,10 @@ def create_article(body: ArticleCreate, db: Session = Depends(get_db), user: Use
     except ExtractionError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     article.word_count = count_words(article.content)
+    deck = Deck(user_id=user.id, name=article.title, description="Từ vựng lưu từ bài đọc này")
+    db.add(deck)
+    db.flush()
+    article.deck_id = deck.id
     db.add(article)
     db.commit()
     db.refresh(article)
@@ -327,6 +335,62 @@ def save_highlight(
     db.commit()
     db.refresh(highlight)
     return highlight
+
+
+@router.post("/{article_id}/cards", response_model=CardOut)
+def save_article_card(
+    article_id: str,
+    body: ArticleCardCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    article = get_owned_article(article_id, db, user)
+    result = create_article_card(article, user, db, **body.model_dump())
+    if result.duplicate:
+        raise HTTPException(status_code=400, detail="Từ này đã có trong bộ thẻ của bài đọc")
+    db.commit()
+    db.refresh(result.card)
+    return result.card
+
+
+@router.post("/{article_id}/highlights/to-deck", response_model=HighlightCardsResult)
+def save_highlights_to_article_deck(
+    article_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    article = get_owned_article(article_id, db, user)
+    highlights = (
+        db.query(ArticleHighlight)
+        .filter(ArticleHighlight.article_id == article.id)
+        .order_by(ArticleHighlight.created_at.asc())
+        .all()
+    )
+    deck = ensure_article_deck(article, db)
+    cards_created = 0
+    cards_skipped = 0
+    anki_matches = 0
+    for highlight in highlights:
+        result = create_article_card(
+            article,
+            user,
+            db,
+            word=highlight.word,
+            back_text=highlight.meaning or "Chưa có nghĩa Việt",
+            example_sentence=first_sentence_containing(article, highlight.word),
+        )
+        if result.duplicate:
+            cards_skipped += 1
+        else:
+            cards_created += 1
+            anki_matches += int(result.used_anki)
+    db.commit()
+    return HighlightCardsResult(
+        deck_id=deck.id,
+        cards_created=cards_created,
+        cards_skipped=cards_skipped,
+        anki_matches=anki_matches,
+    )
 
 
 @router.delete("/{article_id}/highlights/{word}")

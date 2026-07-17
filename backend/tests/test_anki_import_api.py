@@ -10,8 +10,8 @@ def test_import_endpoint_success(client, tmp_path, monkeypatch):
         resp = client.post("/api/anki/import", files={"file": ("deck.apkg", f, "application/octet-stream")})
     assert resp.status_code == 200
     data = resp.json()
-    assert data["decks_created"] == 1
-    assert data["cards_created"] == 1
+    assert data["entries_imported"] == 1
+    assert data["entries_skipped"] == 0
 
 
 def test_import_endpoint_rejects_wrong_extension(client):

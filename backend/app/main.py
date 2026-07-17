@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.config import get_settings
-from app.database import Base, engine, ensure_card_columns, ensure_owner_columns, ensure_review_columns
+from app.database import Base, engine, ensure_article_columns, ensure_card_columns, ensure_owner_columns, ensure_review_columns
 from app.routers import articles, cards, decks, dictionary, documents, games, review
 from app.routers import ai
 from app.routers import anki_import
@@ -15,6 +15,7 @@ Base.metadata.create_all(bind=engine)
 ensure_card_columns(engine)
 ensure_review_columns(engine)
 ensure_owner_columns(engine)
+ensure_article_columns(engine)
 
 MEDIA_DIR = settings.media_dir
 MEDIA_DIR.mkdir(parents=True, exist_ok=True)

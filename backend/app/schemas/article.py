@@ -36,6 +36,7 @@ class ArticleOut(BaseModel):
     content: str
     source_url: str | None
     document_id: str | None
+    deck_id: str | None
     summary: str | None
     word_count: int
     created_at: datetime
@@ -56,6 +57,24 @@ class ArticleHighlightOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class ArticleCardCreate(BaseModel):
+    word: str = Field(min_length=1, max_length=500)
+    back_text: str = Field(min_length=1)
+    example_sentence: str | None = None
+    pronunciation: str | None = None
+    definition: str | None = None
+    image_url: str | None = None
+    audio_url: str | None = None
+    example_audio_url: str | None = None
+
+
+class HighlightCardsResult(BaseModel):
+    deck_id: str
+    cards_created: int
+    cards_skipped: int
+    anki_matches: int
 
 
 class TranslationRequest(BaseModel):

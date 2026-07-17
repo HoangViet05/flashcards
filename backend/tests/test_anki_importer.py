@@ -54,9 +54,7 @@ def make_apkg(
 
 
 def test_import_apkg_creates_deck_cards_reviews(db, tmp_path):
-    from app.models.card import Card
-    from app.models.deck import Deck
-    from app.models.review import Review
+    from app.models.anki_entry import AnkiEntry
 
     apkg = make_apkg(
         tmp_path / "deck.apkg",
@@ -68,17 +66,14 @@ def test_import_apkg_creates_deck_cards_reviews(db, tmp_path):
     user_id = _owner(db)
     summary = import_apkg(apkg, db, user_id, media_dest=tmp_path / "media")
 
-    assert summary.decks_created == 1
-    assert summary.cards_created == 2
-    deck = db.query(Deck).filter(Deck.name == "English · Basics").one()
-    assert deck.user_id == user_id
-    cards = db.query(Card).filter(Card.deck_id == deck.id).all()
-    assert {c.front_text for c in cards} == {"hello", "cat"}
-    hello = next(c for c in cards if c.front_text == "hello")
+    assert summary.entries_imported == 2
+    entries = db.query(AnkiEntry).filter(AnkiEntry.user_id == user_id).all()
+    assert {entry.front_text for entry in entries} == {"hello", "cat"}
+    hello = next(entry for entry in entries if entry.front_text == "hello")
     assert hello.audio_url == "/media/hi.mp3"
     assert hello.image_url == "/media/hi.jpg"
     assert (tmp_path / "media" / "hi.mp3").read_bytes() == b"MP3DATA"
-    assert db.query(Review).count() == 2
+    assert db.query(AnkiEntry).count() == 2
 
 
 def test_import_apkg_idempotent_by_deck_name(db, tmp_path):
@@ -86,9 +81,8 @@ def test_import_apkg_idempotent_by_deck_name(db, tmp_path):
     user_id = _owner(db)
     import_apkg(apkg, db, user_id, media_dest=tmp_path / "media")
     summary2 = import_apkg(apkg, db, user_id, media_dest=tmp_path / "media")
-    assert summary2.decks_created == 0
-    assert summary2.decks_skipped == 1
-    assert summary2.cards_created == 0
+    assert summary2.entries_imported == 0
+    assert summary2.entries_skipped == 1
 
 
 def test_import_apkg_media_name_collision(db, tmp_path):
@@ -101,8 +95,8 @@ def test_import_apkg_media_name_collision(db, tmp_path):
     import_apkg(apkg1, db, user_id, media_dest=media_dest)
     import_apkg(apkg2, db, user_id, media_dest=media_dest)
 
-    from app.models.card import Card
-    two = db.query(Card).filter(Card.front_text == "two").one()
+    from app.models.anki_entry import AnkiEntry
+    two = db.query(AnkiEntry).filter(AnkiEntry.front_text == "two").one()
     assert two.audio_url != "/media/a.mp3"
     assert two.audio_url.startswith("/media/")
     renamed = two.audio_url.removeprefix("/media/")
@@ -132,7 +126,7 @@ def test_import_apkg_prefers_anki21(db, tmp_path):
             zf.writestr("collection.anki21", zr.read("collection.anki21"))
         zf.writestr("media", "{}")
     summary = import_apkg(combined, db, _owner(db), media_dest=tmp_path / "media")
-    assert summary.cards_created == 1
+    assert summary.entries_imported == 1
 
 
 def test_import_same_deck_name_is_scoped_per_owner(db, tmp_path):
@@ -143,8 +137,8 @@ def test_import_same_deck_name_is_scoped_per_owner(db, tmp_path):
     first = import_apkg(apkg, db, user_a, media_dest=tmp_path / "media")
     second = import_apkg(apkg, db, user_b, media_dest=tmp_path / "media")
 
-    assert first.decks_created == 1
-    assert second.decks_created == 1
+    assert first.entries_imported == 1
+    assert second.entries_imported == 1
 
 
 def test_generic_maps_named_fields():

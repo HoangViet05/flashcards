@@ -7,16 +7,14 @@ import sqlite3
 import tempfile
 import zipfile
 from dataclasses import dataclass, field
-from datetime import date
 from pathlib import Path
 from typing import Callable
 
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.models.card import Card
-from app.models.deck import Deck
-from app.models.review import Review
+from app.models.anki_entry import AnkiEntry
+from app.services.article_cards import normalize_word
 from app.services.storage import storage_enabled, upload_public_file
 from app.services.anki_parser import (
     SOUND_RE,
@@ -43,10 +41,8 @@ NEW_FORMAT_MSG = (
 
 @dataclass
 class ImportSummary:
-    decks_created: int = 0
-    cards_created: int = 0
-    decks_skipped: int = 0
-    cards_skipped: int = 0
+    entries_imported: int = 0
+    entries_skipped: int = 0
     warnings: list[str] = field(default_factory=list)
 
 
@@ -232,12 +228,7 @@ def import_collection(
         rows = notes_by_deck[did]
         anki_name = deck_names.get(did, f"Deck {did}")
         model_name = model_name_by_mid.get(rows[0][0], "")
-        deck_name = _deck_display_name(anki_name, model_name)
-        if db.query(Deck).filter(Deck.name == deck_name, Deck.user_id == user_id).first():
-            summary.decks_skipped += 1
-            continue
-
-        mapped: list[dict] = []
+        mapped: list[tuple[dict, str]] = []
         for mid, flds in rows:
             m_name = model_name_by_mid.get(mid, "")
             values = flds.split("\x1f")
@@ -246,31 +237,24 @@ def import_collection(
             else:
                 note = map_generic_note(field_names_by_mid.get(mid, []), values)
             if note is None:
-                summary.cards_skipped += 1
+                summary.entries_skipped += 1
                 continue
-            mapped.append(note)
+            mapped.append((note, m_name))
         if not mapped:
-            _warn(summary, f"Bỏ qua deck rỗng: {deck_name}")
+            _warn(summary, f"Bỏ qua deck rỗng: {anki_name}")
             continue
-
-        m = BOOK_MODEL_RE.fullmatch(model_name)
-        description = (
-            f"4000 Essential English Words – Book {m.group(1)} · {len(mapped)} từ kèm hình ảnh & phát âm"
-            if m else f"Nhập từ Anki · {len(mapped)} thẻ"
-        )
-        deck = Deck(name=deck_name, description=description, user_id=user_id)
-        db.add(deck)
-        db.flush()
-
-        seen_front: set[str] = set()
-        for n in sorted(mapped, key=lambda x: x["order"]):
-            key = n["keyword"].casefold()
-            if key in seen_front:
-                summary.cards_skipped += 1
+        for n, source_model in sorted(mapped, key=lambda item: item[0]["order"]):
+            fingerprint_source = json.dumps({"deck": anki_name, "model": source_model, "note": n}, ensure_ascii=False, sort_keys=True)
+            fingerprint = hashlib.sha256(fingerprint_source.encode("utf-8")).hexdigest()
+            exists = db.query(AnkiEntry.id).filter(
+                AnkiEntry.user_id == user_id, AnkiEntry.fingerprint == fingerprint
+            ).first()
+            if exists:
+                summary.entries_skipped += 1
                 continue
-            seen_front.add(key)
-            card = Card(
-                deck_id=deck.id,
+            db.add(AnkiEntry(
+                user_id=user_id,
+                normalized_word=normalize_word(n["keyword"]),
                 front_text=n["keyword"],
                 back_text=n["viet"],
                 pronunciation=n["pronunciation"],
@@ -279,12 +263,11 @@ def import_collection(
                 image_url=store.url_for(n["image"], summary),
                 audio_url=store.url_for(n["word_sound"], summary),
                 example_audio_url=store.url_for(n["example_sound"], summary),
-            )
-            db.add(card)
-            db.flush()
-            db.add(Review(card_id=card.id, due_date=date.today()))
-            summary.cards_created += 1
-        summary.decks_created += 1
+                source_deck=anki_name,
+                source_model=source_model or None,
+                fingerprint=fingerprint,
+            ))
+            summary.entries_imported += 1
 
     db.commit()
     return summary

@@ -36,9 +36,7 @@ def import_anki_package(
         tmp_path.unlink(missing_ok=True)
 
     return AnkiImportOut(
-        decks_created=summary.decks_created,
-        cards_created=summary.cards_created,
-        decks_skipped=summary.decks_skipped,
-        cards_skipped=summary.cards_skipped,
+        entries_imported=summary.entries_imported,
+        entries_skipped=summary.entries_skipped,
         warnings=summary.warnings,
     )

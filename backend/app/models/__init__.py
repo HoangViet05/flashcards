@@ -9,3 +9,4 @@ from app.models.review import Review  # noqa: F401
 from app.models.review_log import ReviewLog  # noqa: F401
 from app.models.user import User  # noqa: F401
 from app.models.translation_worker import TranslationWorker  # noqa: F401
+from app.models.anki_entry import AnkiEntry  # noqa: F401

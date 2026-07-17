@@ -65,6 +65,10 @@ REVIEW_EXTRA_COLUMNS = {
 
 OWNER_COLUMN_TABLES = ("decks", "documents")
 
+ARTICLE_EXTRA_COLUMNS = {
+    "deck_id": "VARCHAR(36)",
+}
+
 
 def ensure_card_columns(engine_) -> None:
     """Lightweight migration: add new nullable Card columns to existing DBs."""
@@ -104,4 +108,17 @@ def ensure_owner_columns(engine_) -> None:
             existing = {column["name"] for column in inspector.get_columns(table)}
             if "user_id" not in existing:
                 conn.execute(text(f'ALTER TABLE {table} ADD COLUMN "user_id" VARCHAR(36)'))
+        conn.commit()
+
+
+def ensure_article_columns(engine_) -> None:
+    """Add the article-to-deck link for databases created before reader decks."""
+    inspector = inspect(engine_)
+    if not inspector.has_table("articles"):
+        return
+    existing = {column["name"] for column in inspector.get_columns("articles")}
+    with engine_.connect() as conn:
+        for name, ddl in ARTICLE_EXTRA_COLUMNS.items():
+            if name not in existing:
+                conn.execute(text(f'ALTER TABLE articles ADD COLUMN "{name}" {ddl}'))
         conn.commit()

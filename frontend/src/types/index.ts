@@ -91,6 +91,7 @@ export interface ArticleListItem {
 export interface Article extends ArticleListItem {
   content: string
   document_id: string | null
+  deck_id: string | null
   summary: string | null
 }
 
@@ -123,6 +124,13 @@ export interface ArticleHighlight {
   word: string
   meaning: string | null
   created_at: string
+}
+
+export interface ArticleHighlightCardsResult {
+  deck_id: string
+  cards_created: number
+  cards_skipped: number
+  anki_matches: number
 }
 
 export interface DictionaryResult {

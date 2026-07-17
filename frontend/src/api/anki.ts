@@ -1,10 +1,8 @@
 import client from './client'
 
 export interface AnkiImportResult {
-  decks_created: number
-  cards_created: number
-  decks_skipped: number
-  cards_skipped: number
+  entries_imported: number
+  entries_skipped: number
   warnings: string[]
 }
 

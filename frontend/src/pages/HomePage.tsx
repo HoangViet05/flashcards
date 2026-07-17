@@ -313,7 +313,7 @@ export default function HomePage() {
             onClick={() => setShowImport(true)}
             className="btn-secondary px-5 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 border border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/10 transition-all"
           >
-            📥 Nhập từ Anki
+            📥 Nhập dữ liệu Anki
           </button>
           <button
             onClick={() => setShowForm(f => !f)}

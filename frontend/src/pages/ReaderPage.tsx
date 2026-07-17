@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { deleteArticleHighlight, getArticle, getArticleHighlights, getArticleTranslation, saveArticleHighlight } from '../api/articles'
+import { addArticleHighlightsToDeck, deleteArticleHighlight, getArticle, getArticleHighlights, getArticleTranslation, saveArticleHighlight } from '../api/articles'
 import { lookupViDictionary } from '../api/dictionary'
 import WordPopup from '../components/reader/WordPopup'
+import { useNotification } from '../components/NotificationProvider'
 import type { Article, ArticleHighlight, ArticleTranslation } from '../types'
 import { stripTranscriptTimestamps } from '../utils/readerText'
 
@@ -136,7 +137,12 @@ const shortVietnameseMeaning = (content: string) => (
   ?? 'Chưa có nghĩa Việt'
 )
 
-function HighlightPanel({ highlights, onRemove }: { highlights: ArticleHighlight[]; onRemove: (word: string) => void }) {
+function HighlightPanel({ highlights, onRemove, onAddAll, adding }: {
+  highlights: ArticleHighlight[]
+  onRemove: (word: string) => void
+  onAddAll: () => void
+  adding: boolean
+}) {
   return (
     <section className="overflow-hidden rounded-2xl border border-amber-300/[.16] bg-slate-950/80 shadow-[0_18px_45px_rgba(0,0,0,.22)] backdrop-blur-xl">
       <div className="flex items-center justify-between border-b border-white/[.07] px-4 py-3">
@@ -144,7 +150,7 @@ function HighlightPanel({ highlights, onRemove }: { highlights: ArticleHighlight
         <span className="rounded-full bg-white/[.07] px-2 py-0.5 text-xs font-bold text-slate-400">{highlights.length}</span>
       </div>
       {highlights.length
-        ? <div className="max-h-[min(55dvh,32rem)] divide-y divide-white/[.06] overflow-y-auto px-2 py-2">{highlights.map(highlight => <div key={highlight.id} className="group flex gap-2 rounded-xl px-2 py-2.5 transition hover:bg-white/[.04]"><span className="mt-1.5 h-2 w-2 shrink-0 rounded-sm bg-amber-300/70" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-extrabold text-amber-100">{highlight.word}</p><p className="mt-0.5 text-xs leading-4 text-slate-400">{highlight.meaning ?? 'Đang tra nghĩa Việt…'}</p></div><button onClick={() => onRemove(highlight.word)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-600 opacity-100 transition hover:bg-rose-400/10 hover:text-rose-300 sm:opacity-0 sm:group-hover:opacity-100" aria-label={`Bỏ đánh dấu ${highlight.word}`}>×</button></div>)}</div>
+        ? <><div className="px-3 pt-3"><button onClick={onAddAll} disabled={adding} className="w-full rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs font-bold text-amber-100 transition hover:bg-amber-300/15 disabled:cursor-not-allowed disabled:opacity-50">{adding ? 'Đang thêm…' : `＋ Thêm ${highlights.length} từ vào bộ thẻ`}</button></div><div className="max-h-[min(55dvh,32rem)] divide-y divide-white/[.06] overflow-y-auto px-2 py-2">{highlights.map(highlight => <div key={highlight.id} className="group flex gap-2 rounded-xl px-2 py-2.5 transition hover:bg-white/[.04]"><span className="mt-1.5 h-2 w-2 shrink-0 rounded-sm bg-amber-300/70" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-extrabold text-amber-100">{highlight.word}</p><p className="mt-0.5 text-xs leading-4 text-slate-400">{highlight.meaning ?? 'Đang tra nghĩa Việt…'}</p></div><button onClick={() => onRemove(highlight.word)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-600 opacity-100 transition hover:bg-rose-400/10 hover:text-rose-300 sm:opacity-0 sm:group-hover:opacity-100" aria-label={`Bỏ đánh dấu ${highlight.word}`}>×</button></div>)}</div></>
         : <div className="px-4 py-5"><p className="text-sm font-semibold text-slate-300">Chưa có từ nào</p><p className="mt-1 text-xs leading-5 text-slate-500">Nháy đúp vào một từ trong bài để đánh dấu và lưu nghĩa Việt ngắn gọn ở đây.</p></div>}
     </section>
   )
@@ -152,10 +158,12 @@ function HighlightPanel({ highlights, onRemove }: { highlights: ArticleHighlight
 
 export default function ReaderPage() {
   const { id } = useParams<{ id: string }>()
+  const { toast } = useNotification()
   const [article, setArticle] = useState<Article | null>(null)
   const [translation, setTranslation] = useState<ArticleTranslation | null>(null)
   const [readerLanguage, setReaderLanguage] = useState<ReaderLanguage>('original')
   const [highlights, setHighlights] = useState<ArticleHighlight[]>([])
+  const [addingHighlights, setAddingHighlights] = useState(false)
   const [picked, setPicked] = useState<{ word: string; sentence: string } | null>(null)
   const [rate, setRate] = useState(1)
   const [tts, setTts] = useState({ playing: false, sentence: -1 })
@@ -299,6 +307,20 @@ export default function ReaderPage() {
       .catch(() => setHighlights(current => current.filter(highlight => highlight.id !== temporary.id)))
   }
 
+  const addAllHighlights = async () => {
+    if (!article || !highlights.length) return
+    setAddingHighlights(true)
+    try {
+      const result = await addArticleHighlightsToDeck(article.id)
+      const details = result.anki_matches ? `, ${result.anki_matches} từ dùng dữ liệu Anki` : ''
+      toast(`Đã thêm ${result.cards_created} thẻ${result.cards_skipped ? `, bỏ qua ${result.cards_skipped} thẻ đã có` : ''}${details}`, 'success')
+    } catch (error: any) {
+      toast(error?.response?.data?.detail ?? 'Không thể thêm từ vào bộ thẻ', 'error')
+    } finally {
+      setAddingHighlights(false)
+    }
+  }
+
   if (!article) return <div className="mx-auto max-w-3xl px-4 py-8"><div className="h-64 animate-pulse rounded-2xl bg-white/[.05]" /></div>
 
   let sentenceIndex = -1
@@ -313,7 +335,7 @@ export default function ReaderPage() {
       </header>
 
       <aside className="fixed left-6 top-36 z-10 hidden w-80 min-[1800px]:block">
-        <HighlightPanel highlights={highlights} onRemove={removeHighlight} />
+        <HighlightPanel highlights={highlights} onRemove={removeHighlight} onAddAll={addAllHighlights} adding={addingHighlights} />
       </aside>
 
       <div className="grid items-start gap-6 lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-8">
@@ -357,7 +379,7 @@ export default function ReaderPage() {
             <p className="mt-3 rounded-xl bg-white/[.035] px-2.5 py-2 text-[11px] leading-4 text-slate-500">{tts.playing ? `Đang đọc câu ${tts.sentence + 1}/${sentences.length}` : 'Chọn một từ trong bài để tra nghĩa.'}</p>
           </section>
           <div className="mt-4 min-[1800px]:hidden">
-            <HighlightPanel highlights={highlights} onRemove={removeHighlight} />
+            <HighlightPanel highlights={highlights} onRemove={removeHighlight} onAddAll={addAllHighlights} adding={addingHighlights} />
           </div>
         </aside>
 
@@ -401,7 +423,7 @@ export default function ReaderPage() {
           ))}
         </article>
       </div>
-      {picked && <WordPopup word={picked.word} sentence={picked.sentence} onClose={() => setPicked(null)} />}
+      {picked && <WordPopup word={picked.word} sentence={picked.sentence} articleId={article.id} onClose={() => setPicked(null)} />}
     </div>
   )
 }

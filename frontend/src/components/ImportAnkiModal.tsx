@@ -43,11 +43,10 @@ export default function ImportAnkiModal({ open, onClose, onImported }: Props) {
         <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
         <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-3 relative z-10">
           <span className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-lg">📥</span>
-          Nhập bộ thẻ từ Anki
+          Nhập dữ liệu từ Anki
         </h3>
         <p className="text-gray-400 text-sm mb-6 relative z-10">
-          Tải bộ thẻ (.apkg) từ <span className="text-cyan-300">ankiweb.net/shared</span> rồi thả vào đây.
-          Bộ 4000 Essential Words các Book khác được hỗ trợ đầy đủ; deck khác sẽ được chuyển đổi tốt nhất có thể.
+          Tải bộ thẻ (.apkg) từ <span className="text-cyan-300">ankiweb.net/shared</span> rồi thả vào đây. Dữ liệu này sẽ được dùng tự động khi bạn lưu từ trong bài đọc, bao gồm cả âm thanh, hình ảnh và ví dụ.
         </p>
 
         {busy ? (
@@ -60,8 +59,7 @@ export default function ImportAnkiModal({ open, onClose, onImported }: Props) {
             <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/30 p-5 text-emerald-200">
               <p className="font-bold text-lg mb-2">✅ Nhập xong!</p>
               <ul className="text-sm space-y-1">
-                <li>Bộ thẻ mới: <b>{result.decks_created}</b>{result.decks_skipped > 0 && ` (bỏ qua ${result.decks_skipped} đã có)`}</li>
-                <li>Thẻ mới: <b>{result.cards_created}</b>{result.cards_skipped > 0 && ` (bỏ qua ${result.cards_skipped})`}</li>
+                <li>Dữ liệu từ đã nhập: <b>{result.entries_imported}</b>{result.entries_skipped > 0 && ` (bỏ qua ${result.entries_skipped} đã có)`}</li>
               </ul>
               {result.warnings.length > 0 && (
                 <ul className="text-xs text-amber-300 mt-3 space-y-0.5">

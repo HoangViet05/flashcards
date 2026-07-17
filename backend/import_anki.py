@@ -51,8 +51,7 @@ def main() -> None:
     finally:
         db.close()
 
-    print(f"Decks mới: {summary.decks_created} (bỏ qua {summary.decks_skipped})")
-    print(f"Cards mới: {summary.cards_created} (bỏ qua {summary.cards_skipped})")
+    print(f"Dữ liệu từ mới: {summary.entries_imported} (bỏ qua {summary.entries_skipped})")
     for w in summary.warnings:
         print(f"[!] {w}")
 

@@ -1,13 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createCard } from '../../api/cards'
-import { getDecks } from '../../api/decks'
+import { createArticleCard } from '../../api/articles'
 import { lookupEnDictionary, lookupViDictionary } from '../../api/dictionary'
-import type { Deck, DictionaryResult, EnDictResult } from '../../types'
+import type { DictionaryResult, EnDictResult } from '../../types'
 import { useNotification } from '../NotificationProvider'
 
-interface Props { word: string; sentence: string; onClose: () => void }
-
-const LAST_DECK_KEY = 'reader.lastDeckId'
+interface Props { word: string; sentence: string; articleId: string; onClose: () => void }
 
 function primaryDefinition(content: string) {
   return content.split('\n').find(line => line.trim().startsWith('-'))?.replace(/^\s*-\s*/, '') ?? content.slice(0, 120)
@@ -30,12 +27,10 @@ function VietnameseDefinition({ content }: { content: string }) {
   )
 }
 
-export default function WordPopup({ word, sentence, onClose }: Props) {
+export default function WordPopup({ word, sentence, articleId, onClose }: Props) {
   const { toast } = useNotification()
   const [vi, setVi] = useState<DictionaryResult | null | 'loading'>('loading')
   const [en, setEn] = useState<EnDictResult | null | 'loading'>('loading')
-  const [decks, setDecks] = useState<Deck[]>([])
-  const [deckId, setDeckId] = useState(() => window.localStorage.getItem(LAST_DECK_KEY) ?? '')
   const [backText, setBackText] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -47,10 +42,6 @@ export default function WordPopup({ word, sentence, onClose }: Props) {
       if (result) setBackText(primaryDefinition(result.content))
     })
     void lookupEnDictionary(word).then(setEn)
-    void getDecks().then(result => {
-      setDecks(result)
-      if (!result.some(deck => deck.id === window.localStorage.getItem(LAST_DECK_KEY))) setDeckId(result[0]?.id ?? '')
-    })
   }, [word])
 
   const ipa = useMemo(
@@ -70,19 +61,18 @@ export default function WordPopup({ word, sentence, onClose }: Props) {
   }
 
   const save = async () => {
-    if (!deckId || !backText.trim()) return
+    if (!backText.trim()) return
     setSaving(true)
     try {
-      await createCard(deckId, {
-        front_text: word,
+      await createArticleCard(articleId, {
+        word,
         back_text: backText.trim(),
         example_sentence: sentence,
         pronunciation: ipa ?? undefined,
         definition: en !== 'loading' ? en?.meanings[0]?.definitions[0] : undefined,
         audio_url: en !== 'loading' ? en?.audioUrl ?? undefined : undefined,
       })
-      window.localStorage.setItem(LAST_DECK_KEY, deckId)
-      toast(`Đã lưu “${word}” vào bộ thẻ`, 'success')
+      toast(`Đã lưu “${word}” vào bộ thẻ của bài đọc`, 'success')
       onClose()
     } catch (error: any) {
       toast(error?.response?.data?.detail ?? 'Không lưu được thẻ', 'error')
@@ -135,13 +125,10 @@ export default function WordPopup({ word, sentence, onClose }: Props) {
         </div>
 
         <footer className="shrink-0 border-t border-white/[.08] bg-slate-950/70 px-4 py-3 backdrop-blur">
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-[.12em] text-slate-500">Lưu thành thẻ</p>
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[.12em] text-slate-500">Lưu vào bộ thẻ của bài đọc</p>
           <div className="space-y-2">
-            <select value={deckId} onChange={event => setDeckId(event.target.value)} className="w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300/50">
-              {decks.map(deck => <option key={deck.id} value={deck.id}>{deck.name}</option>)}
-            </select>
             <input value={backText} onChange={event => setBackText(event.target.value)} placeholder="Nghĩa trên mặt sau" className="w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none placeholder:text-slate-500 transition focus:border-cyan-300/50" />
-            <button onClick={() => void save()} disabled={saving || !deckId || !backText.trim()} className="w-full rounded-xl border border-emerald-300/25 bg-emerald-400/10 py-2.5 text-sm font-bold text-emerald-200 transition hover:bg-emerald-400/15 disabled:cursor-not-allowed disabled:opacity-40">{saving ? 'Đang lưu…' : 'Lưu vào bộ thẻ'}</button>
+            <button onClick={() => void save()} disabled={saving || !backText.trim()} className="w-full rounded-xl border border-emerald-300/25 bg-emerald-400/10 py-2.5 text-sm font-bold text-emerald-200 transition hover:bg-emerald-400/15 disabled:cursor-not-allowed disabled:opacity-40">{saving ? 'Đang lưu…' : 'Lưu vào bộ thẻ'}</button>
           </div>
         </footer>
       </div>

@@ -8,8 +8,10 @@ import { useAuth } from '../auth/AuthContext'
 import { useNotification } from '../components/NotificationProvider'
 import DeckCard from '../components/DeckCard'
 import ImportAnkiModal from '../components/ImportAnkiModal'
+import AnkiLibraryModal from '../components/AnkiLibraryModal'
 import RobotAnimation from '../components/RobotAnimation'
 import { useCachedQuery } from '../hooks/useCachedQuery'
+import { getAnkiLibrary } from '../api/anki'
 
 // Tính năng AI tạm hoãn — bật lại khi phát hành các tính năng AI
 const AI_ENABLED = false
@@ -109,10 +111,13 @@ export default function HomePage() {
   })
   const decks = decksQuery.data?.decks ?? []
   const dueReviews = decksQuery.data?.due ?? []
+  const ankiLibraryQuery = useCachedQuery(user ? `anki-library:${user.id}` : null, getAnkiLibrary)
+  const ankiTotal = ankiLibraryQuery.data?.total ?? 0
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [showImport, setShowImport] = useState(false)
+  const [showAnkiLibrary, setShowAnkiLibrary] = useState(false)
 
   const [aiTopic, setAiTopic] = useState('')
   const [aiCount, setAiCount] = useState(5)
@@ -306,7 +311,10 @@ export default function HomePage() {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
         <div className="min-w-0">
           <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 tracking-tight">Bộ thẻ của bạn</h1>
-          {decks.length > 0 && <p className="text-gray-500 text-sm mt-1.5 font-medium">{decks.length} bộ thẻ đang theo dõi</p>}
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm font-medium text-gray-500">
+            {decks.length > 0 && <span>{decks.length} bộ thẻ đang theo dõi</span>}
+            {ankiTotal > 0 && <button onClick={() => setShowAnkiLibrary(true)} className="rounded-full border border-cyan-300/20 bg-cyan-400/[.07] px-2 py-0.5 text-xs font-bold text-cyan-200 hover:bg-cyan-400/[.12]">Thư viện Anki · {ankiTotal} từ</button>}
+          </div>
         </div>
         <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:flex sm:items-center gap-3 w-full sm:w-auto">
           <button
@@ -314,6 +322,12 @@ export default function HomePage() {
             className="btn-secondary px-5 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 border border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/10 transition-all"
           >
             📥 Nhập dữ liệu Anki
+          </button>
+          <button
+            onClick={() => setShowAnkiLibrary(true)}
+            className="btn-secondary px-5 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 border border-cyan-500/20 text-slate-200 hover:bg-white/[.05] transition-all"
+          >
+            📚 Thư viện Anki{ankiTotal > 0 ? ` (${ankiTotal})` : ''}
           </button>
           <button
             onClick={() => setShowForm(f => !f)}
@@ -405,8 +419,9 @@ export default function HomePage() {
       <ImportAnkiModal
         open={showImport}
         onClose={() => setShowImport(false)}
-        onImported={() => { void decksQuery.refresh() }}
+        onImported={() => { void decksQuery.refresh(); void ankiLibraryQuery.refresh() }}
       />
+      <AnkiLibraryModal open={showAnkiLibrary} onClose={() => setShowAnkiLibrary(false)} />
 
       {/* Create form modal */}
       {showForm && (

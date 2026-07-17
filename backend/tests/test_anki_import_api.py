@@ -13,6 +13,31 @@ def test_import_endpoint_success(client, tmp_path, monkeypatch):
     assert data["entries_imported"] == 1
     assert data["entries_skipped"] == 0
 
+    library = client.get("/api/anki/library")
+    assert library.status_code == 200
+    assert library.json()["total"] == 1
+    assert library.json()["sources"] == [{"name": "API Deck", "entry_count": 1}]
+    assert library.json()["entries"][0]["front_text"] == "hello"
+
+
+def test_anki_library_search_and_user_scope(client, user_b_client, db):
+    from app.models.anki_entry import AnkiEntry
+    from app.models.user import User
+
+    user = db.query(User).filter(User.email == "usera@test.com").one()
+    db.add(AnkiEntry(
+        user_id=user.id,
+        normalized_word="library",
+        front_text="library",
+        back_text="thư viện",
+        source_deck="My Anki deck",
+        fingerprint="anki-library-scope-test",
+    ))
+    db.commit()
+    assert client.get("/api/anki/library", params={"search": "libr"}).json()["total"] == 1
+    assert client.get("/api/anki/library", params={"search": "missing"}).json()["entries"] == []
+    assert user_b_client.get("/api/anki/library").json()["total"] == 0
+
 
 def test_import_endpoint_rejects_wrong_extension(client):
     resp = client.post("/api/anki/import", files={"file": ("notes.txt", b"hi", "text/plain")})

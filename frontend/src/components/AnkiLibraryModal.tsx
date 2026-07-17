@@ -43,8 +43,13 @@ export default function AnkiLibraryModal({ open, onClose, onDeleted }: Props) {
           setSearch('')
           await onDeleted()
           toast(`Đã xóa ${result.entries_deleted} từ khỏi thư viện Anki`, 'success')
-        } catch (error) {
-          toast('Không thể xóa thư viện Anki. Vui lòng thử lại.', 'error')
+        } catch (error: any) {
+          const status = error.response?.status
+          if (status === 404 || status === 405) {
+            toast('Backend chưa cập nhật tính năng xóa. Hãy khởi động lại backend rồi thử lại.', 'error')
+          } else {
+            toast(error.response?.data?.detail || 'Không thể xóa thư viện Anki. Vui lòng thử lại.', 'error')
+          }
         } finally {
           setDeleting(false)
         }

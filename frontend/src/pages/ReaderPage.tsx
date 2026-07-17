@@ -8,6 +8,73 @@ import { stripTranscriptTimestamps } from '../utils/readerText'
 
 const sentenceParts = (text: string) => text.match(/[^.!?]+[.!?]+["')\]]*|[^.!?]+$/g) ?? [text]
 
+type SentenceTranslation = {
+  source: string
+  translated: string | null
+}
+
+const normalizedSentence = (sentence: string) => sentence.replace(/\s+/g, ' ').trim().toLowerCase()
+
+const splitSentences = (text: string) => sentenceParts(text).map(sentence => sentence.trim()).filter(Boolean)
+
+/**
+ * Older translations are stored one paragraph at a time. Split equal-sized
+ * source/target sentence lists so they can still be used without re-translating.
+ */
+function makeSentenceTranslations(sourceSentences: string[], translation: ArticleTranslation | null): SentenceTranslation[] {
+  const matches = new Map<string, string[]>()
+  const addMatch = (source: string, translated: string) => {
+    const key = normalizedSentence(source)
+    const values = matches.get(key) ?? []
+    values.push(translated)
+    matches.set(key, values)
+  }
+
+  for (const segment of translation?.segments ?? []) {
+    const sources = splitSentences(segment.source)
+    const translated = splitSentences(segment.translated)
+    if (sources.length === translated.length) {
+      sources.forEach((source, index) => addMatch(source, translated[index]))
+    } else if (sources.length === 1) {
+      addMatch(sources[0], segment.translated.trim())
+    }
+  }
+
+  // Fallback for translations created before segments were returned by the worker.
+  if (!matches.size) {
+    const translated = splitSentences(translation?.translated_content ?? '')
+    if (sourceSentences.length === translated.length) {
+      sourceSentences.forEach((source, index) => addMatch(source, translated[index]))
+    }
+  }
+
+  return sourceSentences.map(source => ({
+    source,
+    translated: matches.get(normalizedSentence(source))?.shift() ?? null,
+  }))
+}
+
+function TranslationHint({ translated }: { translated: string | null }) {
+  if (!translated) return null
+  return (
+    <span className="group relative ml-1 inline-flex align-baseline">
+      <button
+        type="button"
+        className="inline-flex h-5 w-5 translate-y-0.5 items-center justify-center rounded-full border border-emerald-300/25 bg-emerald-400/10 text-emerald-200 transition hover:border-emerald-200/50 hover:bg-emerald-400/20 focus:outline-none focus:ring-2 focus:ring-emerald-300/60"
+        aria-label="Xem bản dịch của câu này"
+      >
+        <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M9.09 9a3 3 0 1 1 5.83 1c-.83.55-1.42 1.03-1.42 2.25v.5" />
+          <circle cx="12" cy="12" r="9" />
+        </svg>
+      </button>
+      <span role="tooltip" className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-max max-w-xs -translate-x-1/2 rounded-lg border border-emerald-300/20 bg-slate-950 px-3 py-2 text-left text-xs font-medium leading-5 text-emerald-50 opacity-0 shadow-xl transition duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+        {translated}
+      </span>
+    </span>
+  )
+}
+
 const VOICE_STORAGE_KEY = 'reader-speech-voice'
 const SPEECH_CHUNK_LENGTH = 360
 type ReaderLanguage = 'original' | 'bilingual' | 'translated'
@@ -118,6 +185,11 @@ export default function ReaderPage() {
   )
   const chunks = useMemo(() => makeSpeechChunks(sentences), [sentences])
   const hasTranslation = translation?.status === 'completed' && Boolean(translation.translated_content)
+  const sentenceTranslations = useMemo(
+    () => makeSentenceTranslations(sentences, translation),
+    [sentences, translation],
+  )
+  const hasCompleteSentenceTranslation = sentenceTranslations.length > 0 && sentenceTranslations.every(sentence => sentence.translated)
   const translatedParagraphs = useMemo(
     () => (translation?.translated_content ?? '').split(/\n\n+/).map(value => value.trim()).filter(Boolean),
     [translation],
@@ -272,7 +344,7 @@ export default function ReaderPage() {
                   ['translated', 'Việt'],
                 ] as const).map(([value, label]) => <button key={value} onClick={() => setReaderLanguage(value)} className={`rounded-lg px-1 py-2 text-[10px] font-bold transition ${readerLanguage === value ? 'bg-emerald-400/15 text-emerald-100 shadow-sm' : 'text-slate-500 hover:bg-white/[.05] hover:text-slate-300'}`}>{label}</button>)}
               </div>
-              <p className="mt-1.5 px-1 text-[10px] leading-4 text-slate-600">Chọn Anh–Việt để đối chiếu từng đoạn.</p>
+              <p className="mt-1.5 px-1 text-[10px] leading-4 text-slate-600">Rê chuột biểu tượng cuối câu để xem bản dịch.</p>
             </div>}
             <div className="mt-3 border-t border-white/[.07] pt-3">
               <label htmlFor="reader-voice" className="mb-2 block px-1 text-[10px] font-black uppercase tracking-[.12em] text-slate-500">Giọng đọc</label>
@@ -290,9 +362,10 @@ export default function ReaderPage() {
         </aside>
 
         <article className="min-w-0 max-w-3xl space-y-4 text-[17px] leading-8 text-slate-200">
-          {readerLanguage === 'translated' ? translatedParagraphs.map((paragraph, paragraphIndex) => (
-            <p key={paragraphIndex} className="rounded-xl border border-emerald-300/[.08] bg-emerald-400/[.035] px-4 py-3 text-slate-100">{paragraph}</p>
-          )) : readerLanguage === 'original' && paragraphs.map((paragraph, paragraphIndex) => (
+          {readerLanguage === 'translated' && (hasCompleteSentenceTranslation ? sentenceTranslations : translatedParagraphs.map(translated => ({ translated }))).map((sentence, index) => (
+            <p key={index} className="rounded-xl border border-emerald-300/[.08] bg-emerald-400/[.035] px-4 py-3 text-slate-100">{sentence.translated}</p>
+          ))}
+          {readerLanguage === 'original' && paragraphs.map((paragraph, paragraphIndex) => (
             <p key={paragraphIndex}>
               {sentenceParts(paragraph).map((sentence, childIndex) => {
                 sentenceIndex += 1
@@ -307,13 +380,20 @@ export default function ReaderPage() {
                         ? token
                         : <span key={tokenIndex} onClick={() => openWordPopup(normalizedWord, sentence.trim())} onDoubleClick={event => { event.preventDefault(); toggleHighlight(normalizedWord) }} className={`cursor-pointer rounded-sm transition hover:bg-cyan-400/20 ${isHighlighted ? 'bg-amber-300/20 px-0.5 font-semibold text-amber-100 shadow-[inset_0_-2px_0_rgba(252,211,77,.72)] hover:bg-amber-300/30' : ''}`}>{token}</span>
                     })}
+                    <TranslationHint translated={sentenceTranslations[current]?.translated ?? null} />
                     {' '}
                   </span>
                 )
               })}
             </p>
           ))}
-          {readerLanguage === 'bilingual' && translation?.segments?.map((segment, index) => (
+          {readerLanguage === 'bilingual' && hasCompleteSentenceTranslation && sentenceTranslations.map((sentence, index) => (
+            <section key={`${sentence.source}-${index}`} className="rounded-xl border border-emerald-300/[.10] bg-emerald-400/[.035] px-4 py-3 text-[15px] leading-7">
+              <p className="text-slate-300">{sentence.source}</p>
+              <p className="mt-2 border-t border-emerald-300/[.10] pt-2 font-medium text-emerald-100">{sentence.translated}</p>
+            </section>
+          ))}
+          {readerLanguage === 'bilingual' && !hasCompleteSentenceTranslation && translation?.segments?.map((segment, index) => (
             <section key={`${segment.source}-${index}`} className="rounded-xl border border-emerald-300/[.10] bg-emerald-400/[.035] px-4 py-3 text-[15px] leading-7">
               <p className="text-slate-300">{segment.source}</p>
               <p className="mt-2 border-t border-emerald-300/[.10] pt-2 font-medium text-emerald-100">{segment.translated}</p>

@@ -1,4 +1,5 @@
 import { getHeatmap, getStats } from '../api/review'
+import { getShadowingStats } from '../api/shadowing'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import StudyHeatmap from '../components/StudyHeatmap'
@@ -11,6 +12,8 @@ export function LearningStats() {
     return { stats, heatmap }
   })
   const stats = statsQuery.data?.stats
+  const shadowQuery = useCachedQuery(user ? `shadowstats:${user.id}` : null, getShadowingStats)
+  const shadow = shadowQuery.data
 
   if (!stats) return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-12" aria-label="Đang tải thống kê">
@@ -99,6 +102,14 @@ export function LearningStats() {
           🃏 Flip {stats.reviews_by_source.manual ?? 0} · 🧩 {stats.reviews_by_source.game_sentence ?? 0} · 🎧 {stats.reviews_by_source.game_cloze ?? 0} · 🔗 {stats.reviews_by_source.game_match ?? 0}
         </p>
       </div>
+
+      {shadow && shadow.total_attempts > 0 && (
+        <div className="mb-10 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5">
+          <h2 className="mb-2 text-lg font-black text-white">🎤 Luyện nói (shadowing)</h2>
+          <p className="text-sm text-slate-400">Tổng cộng <span className="font-bold text-slate-200">{shadow.total_attempts}</span> lượt · 7 ngày qua <span className="font-bold text-slate-200">{shadow.attempts_7d}</span> lượt{shadow.avg_score_7d !== null && <> · điểm trung bình <span className="font-bold text-emerald-300">{Math.round(shadow.avg_score_7d)}%</span></>}</p>
+          <div className="mt-3 flex items-end gap-1.5">{shadow.by_day.map(day => <div key={day.date} className="flex flex-1 flex-col items-center gap-1" title={`${day.date}: ${day.count} lượt`}><div className="w-full rounded-t bg-cyan-400/40" style={{ height: `${Math.min(day.count * 8, 48) || 2}px` }} /><span className="text-[9px] text-slate-600">{day.date.slice(8)}</span></div>)}</div>
+        </div>
+      )}
 
       {/* Upcoming chart */}
       <div className="relative rounded-[2rem] p-[1px] animate-fade-in-up overflow-hidden" style={{ animationDelay: '360ms' }}>

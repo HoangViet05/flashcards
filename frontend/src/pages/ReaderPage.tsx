@@ -5,9 +5,7 @@ import { lookupViDictionary } from '../api/dictionary'
 import WordPopup from '../components/reader/WordPopup'
 import { useNotification } from '../components/NotificationProvider'
 import type { Article, ArticleHighlight, ArticleTranslation } from '../types'
-import { stripTranscriptTimestamps } from '../utils/readerText'
-
-const sentenceParts = (text: string) => text.match(/[^.!?]+[.!?]+["')\]]*|[^.!?]+$/g) ?? [text]
+import { sentenceParts, splitSentences, stripTranscriptTimestamps } from '../utils/readerText'
 
 type SentenceTranslation = {
   source: string
@@ -16,7 +14,6 @@ type SentenceTranslation = {
 
 const normalizedSentence = (sentence: string) => sentence.replace(/\s+/g, ' ').trim().toLowerCase()
 
-const splitSentences = (text: string) => sentenceParts(text).map(sentence => sentence.trim()).filter(Boolean)
 
 /**
  * Older translations are stored one paragraph at a time. Split equal-sized
@@ -468,6 +465,7 @@ export default function ReaderPage() {
             <div className="mt-3 border-t border-white/[.07] pt-3">
               <VoicePicker voices={availableVoices} selectedVoice={selectedVoice} onSelect={selectVoice} />
             </div>
+            <Link to={`/shadowing?article=${id}`} className="mt-3 block rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-3 py-2 text-center text-xs font-bold text-cyan-200 hover:bg-cyan-400/20">🎤 Shadow</Link>
             <p className="mt-3 rounded-xl bg-white/[.035] px-2.5 py-2 text-[11px] leading-4 text-slate-500">{tts.playing ? `Đang đọc câu ${tts.sentence + 1}/${sentences.length}` : 'Chọn một từ trong bài để tra nghĩa.'}</p>
           </section>
           <div className="mt-4 min-[1800px]:hidden">

@@ -49,7 +49,7 @@ export interface Review {
 export interface ReviewSubmission {
   quality: number
   auto_quality?: number | null
-  rating_source?: 'manual' | 'auto' | 'game_sentence' | 'game_cloze' | 'game_match'
+  rating_source?: 'manual' | 'auto' | 'game_sentence' | 'game_cloze' | 'game_match' | 'shadowing'
   response_time_ms?: number | null
   flip_count?: number | null
   audio_play_count?: number | null
@@ -162,3 +162,15 @@ export interface User {
   name: string | null
   created_at: string
 }
+
+export interface ShadowSegment { start: number; end: number; text: string }
+export interface ShadowVideoListItem { id: string; youtube_id: string; title: string; duration_s: number | null; segment_count: number; created_at: string }
+export interface ShadowVideo extends ShadowVideoListItem { segments: ShadowSegment[] }
+export interface ShadowVideoCreateInput { youtube_id: string; title: string; duration_s: number | null; segments: ShadowSegment[] }
+export type ShadowWordStatus = 'correct' | 'missed' | 'substituted' | 'skipped'
+export interface ShadowWordResult { word: string; status: ShadowWordStatus }
+export interface ShadowScore { transcript: string; score: number; words: ShadowWordResult[]; no_speech: boolean }
+export interface ShadowCard { id: string; front_text: string; example_sentence: string; example_audio_url: string; pronunciation: string | null }
+export interface ShadowAttemptInput { source_type: 'card' | 'article' | 'youtube'; card_id: string | null; article_id: string | null; video_id: string | null; segment_index: number | null; target_text: string; transcript: string; score: number; word_results: ShadowWordResult[] }
+export interface ShadowingDayStat { date: string; count: number; avg_score: number | null }
+export interface ShadowingStats { total_attempts: number; attempts_7d: number; avg_score_7d: number | null; by_day: ShadowingDayStat[] }

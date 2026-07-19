@@ -4,7 +4,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.config import get_settings
 from app.database import Base, engine, ensure_article_columns, ensure_card_columns, ensure_owner_columns, ensure_review_columns
-from app.routers import articles, cards, decks, dictionary, documents, games, review
+from app.routers import articles, cards, decks, dictionary, documents, games, review, shadowing
 from app.routers import ai
 from app.routers import anki_import
 from app.routers import auth
@@ -43,6 +43,7 @@ app.include_router(auth.router)
 app.include_router(articles.router)
 app.include_router(dictionary.router)
 app.include_router(games.router)
+app.include_router(shadowing.router)
 
 app.mount("/media", StaticFiles(directory=MEDIA_DIR), name="media")
 

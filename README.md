@@ -148,6 +148,18 @@ Most flashcard apps are either **too simple** (just flip cards) or **too bloated
       </ul>
     </td>
   </tr>
+  <tr>
+    <td>
+      <h4>🎤 Shadowing — luyện nói theo audio</h4>
+      <ul>
+        <li>Nghe câu, nói lại, Whisper local chấm điểm từng từ</li>
+        <li>3 nguồn: flashcard, bài đọc Reader và YouTube có phụ đề</li>
+        <li>Worker <code>local_shadowing/</code> chạy trên máy; audio không rời máy</li>
+        <li>Điểm tốt được tính vào lịch ôn SM-2</li>
+      </ul>
+    </td>
+    <td></td>
+  </tr>
 </table>
 
 ### 🔮 Coming Soon
@@ -199,6 +211,7 @@ flashcards/
 │   └── data/media/           # Card images & audio (gitignored, ~120MB)
 │
 ├── extracted_anki/           # Raw Anki collection + media (gitignored)
+├── local_shadowing/          # Local Whisper scoring + YouTube subtitle worker (port 8788)
 ├── docs/                     # Documentation
 │   └── AI_ROADMAP.md         # Detailed AI integration roadmap
 ├── start.bat                 # One-click launcher (Windows)

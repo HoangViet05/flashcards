@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import type { MouseEvent } from 'react'
+import { Link } from 'react-router-dom'
 import type { Card, ReviewSubmission, StudyVariant } from '../types'
 import { resolveAssetUrl } from '../api/config'
 
@@ -430,6 +431,7 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
                       "{card.example_sentence}"
                     </p>
                     {card.example_audio_url && <AudioButton src={card.example_audio_url} small onPlay={() => setAudioPlayCount(value => value + 1)} />}
+                    {card.example_audio_url && <Link to={`/shadowing?card=${card.id}`} onClick={event => event.stopPropagation()} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-sm shrink-0" title="Luyện shadowing câu này">🎤</Link>}
                   </div>
                 )}
               </div>

@@ -16,6 +16,7 @@ const AccountPage = lazy(() => import('./pages/AccountPage'))
 const ReaderListPage = lazy(() => import('./pages/ReaderListPage'))
 const ReaderPage = lazy(() => import('./pages/ReaderPage'))
 const GamesPage = lazy(() => import('./pages/GamesPage'))
+const ShadowingPage = lazy(() => import('./pages/ShadowingPage'))
 
 function PageFallback() {
   return (
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/reader" element={<RequireAuth><ReaderListPage /></RequireAuth>} />
             <Route path="/reader/:id" element={<RequireAuth><ReaderPage /></RequireAuth>} />
             <Route path="/games" element={<RequireAuth><GamesPage /></RequireAuth>} />
+            <Route path="/shadowing" element={<RequireAuth><ShadowingPage /></RequireAuth>} />
             <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

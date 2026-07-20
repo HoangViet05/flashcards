@@ -40,9 +40,29 @@ def _load() -> None:
         _model, _device = WhisperModel(MODEL_NAME, device="cpu", compute_type="int8"), "cpu"
 
 
+def _load_cpu() -> None:
+    """Reload on CPU when CUDA libraries fail lazily during transcription."""
+    global _model, _device
+    from faster_whisper import WhisperModel
+
+    _model = WhisperModel(MODEL_NAME, device="cpu", compute_type="int8")
+    _device = "cpu"
+
+
+def _decode(audio_path: str) -> str:
+    segments, _info = _model.transcribe(audio_path, language="en", vad_filter=True, beam_size=5)
+    return " ".join(segment.text.strip() for segment in segments).strip()
+
+
 def transcribe(audio_path: str) -> str:
     with _lock:
         if _model is None:
             _load()
-    segments, _info = _model.transcribe(audio_path, language="en", vad_filter=True, beam_size=5)
-    return " ".join(segment.text.strip() for segment in segments).strip()
+        try:
+            return _decode(audio_path)
+        except Exception as exc:
+            if _device != "cuda":
+                raise
+            log.warning("CUDA lỗi khi chấm điểm (%s) — chuyển sang CPU int8", exc)
+            _load_cpu()
+            return _decode(audio_path)

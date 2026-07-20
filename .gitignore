@@ -1,6 +1,7 @@
 .env
 local_translator/.env
 local_translator/.venv/
+local_shadowing/.venv/
 __pycache__/
 *.pyc
 *.pyo

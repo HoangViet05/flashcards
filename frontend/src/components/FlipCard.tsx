@@ -385,6 +385,7 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
             }}
           >
             <div className="absolute top-0 right-0 w-48 h-48 bg-violet-500/10 rounded-full blur-[50px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
+            {card.source_type === 'anki_library' && <span title={card.source_name ? `Nguồn: ${card.source_name}` : 'Dữ liệu từ thư viện Anki'} className="absolute left-5 top-5 rounded-full border border-cyan-300/25 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-cyan-100">Thư viện Anki</span>}
             
             <p className="max-w-full break-words text-3xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 text-center tracking-tight drop-shadow-sm">{card.front_text}</p>
             {card.pronunciation && (
@@ -412,6 +413,7 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
             }}
           >
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-[50px] pointer-events-none translate-y-1/2 -translate-x-1/2" />
+            {card.source_type === 'anki_library' && <span title={card.source_name ? `Nguồn: ${card.source_name}` : 'Dữ liệu từ thư viện Anki'} className="absolute left-5 top-5 rounded-full border border-cyan-300/25 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-cyan-100">Thư viện Anki</span>}
             <div className={`relative z-10 w-full max-w-2xl flex ${imageUrl ? 'flex-col md:flex-row' : 'flex-col'} items-center justify-center gap-7`}>
               {imageUrl && (
                 <img

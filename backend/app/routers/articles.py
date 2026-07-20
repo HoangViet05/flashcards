@@ -19,7 +19,7 @@ from app.schemas.article import (
     TranslationRequest, WorkerClaimOut, WorkerComplete, WorkerFailure,
 )
 from app.schemas.card import CardOut
-from app.services.article_cards import create_article_card, ensure_article_deck, first_sentence_containing
+from app.services.article_cards import create_article_card, ensure_article_deck, find_anki_entries, first_sentence_containing, normalize_word
 from app.services.article_extractor import (
     ExtractionError, count_words, extract_from_html, extract_from_pdf_source, fetch_url, normalize_text,
 )
@@ -33,6 +33,21 @@ def get_owned_article(article_id: str, db: Session, user: User) -> Article:
     if not article:
         raise HTTPException(status_code=404, detail="Không tìm thấy bài đọc")
     return article
+
+
+def serialize_highlights(highlights: list[ArticleHighlight], user: User, db: Session) -> list[ArticleHighlightOut]:
+    anki_entries = find_anki_entries([highlight.word for highlight in highlights], user.id, db)
+    return [
+        ArticleHighlightOut(
+            id=highlight.id,
+            word=highlight.word,
+            meaning=highlight.meaning,
+            created_at=highlight.created_at,
+            anki_match=(entry := anki_entries.get(normalize_word(highlight.word))) is not None,
+            anki_source_deck=entry.source_deck if entry else None,
+        )
+        for highlight in highlights
+    ]
 
 
 def _default_title(text: str) -> str:
@@ -302,12 +317,13 @@ def fail_translation_job(
 @router.get("/{article_id}/highlights", response_model=list[ArticleHighlightOut])
 def list_highlights(article_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     article = get_owned_article(article_id, db, user)
-    return (
+    highlights = (
         db.query(ArticleHighlight)
         .filter(ArticleHighlight.article_id == article.id)
         .order_by(ArticleHighlight.created_at.desc())
         .all()
     )
+    return serialize_highlights(highlights, user, db)
 
 
 @router.post("/{article_id}/highlights", response_model=ArticleHighlightOut)
@@ -334,7 +350,7 @@ def save_highlight(
         db.add(highlight)
     db.commit()
     db.refresh(highlight)
-    return highlight
+    return serialize_highlights([highlight], user, db)[0]
 
 
 @router.post("/{article_id}/cards", response_model=CardOut)

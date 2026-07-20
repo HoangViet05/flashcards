@@ -573,9 +573,12 @@ export default function DeckDetailPage() {
                       {i + 1}
                     </div>
                     {!isEditing && (
-                      <p className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 text-2xl tracking-tight drop-shadow-sm group-hover:scale-105 origin-left group-hover:from-cyan-300 group-hover:to-violet-300 transition-all truncate pb-1">
-                        {card.front_text}
-                      </p>
+                      <div className="min-w-0">
+                        <p className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 text-2xl tracking-tight drop-shadow-sm group-hover:scale-105 origin-left group-hover:from-cyan-300 group-hover:to-violet-300 transition-all truncate pb-1">
+                          {card.front_text}
+                        </p>
+                        {card.source_type === 'anki_library' && <span title={card.source_name ? `Nguồn: ${card.source_name}` : 'Dữ liệu từ thư viện Anki'} className="mt-1 inline-flex rounded-md border border-cyan-300/25 bg-cyan-400/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-cyan-200">Thư viện Anki</span>}
+                      </div>
                     )}
                   </div>
 

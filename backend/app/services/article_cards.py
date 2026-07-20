@@ -49,6 +49,30 @@ def find_anki_entry(word: str, user_id: str, db: Session) -> AnkiEntry | None:
     return max(entries, key=lambda entry: (_entry_richness(entry), entry.imported_at), default=None)
 
 
+def find_anki_entries(words: list[str], user_id: str, db: Session) -> dict[str, AnkiEntry]:
+    """Return the best imported Anki record for each normalized word."""
+    keys = {normalize_word(word) for word in words if normalize_word(word)}
+    if not keys:
+        return {}
+    matches: dict[str, AnkiEntry] = {}
+    # Chunk the IN query to stay below SQLite's parameter limit for long articles.
+    ordered_keys = sorted(keys)
+    for start in range(0, len(ordered_keys), 500):
+        entries = (
+            db.query(AnkiEntry)
+            .filter(
+                AnkiEntry.user_id == user_id,
+                AnkiEntry.normalized_word.in_(ordered_keys[start:start + 500]),
+            )
+            .all()
+        )
+        for entry in entries:
+            current = matches.get(entry.normalized_word)
+            if current is None or (_entry_richness(entry), entry.imported_at) > (_entry_richness(current), current.imported_at):
+                matches[entry.normalized_word] = entry
+    return matches
+
+
 def first_sentence_containing(article: Article, word: str) -> str | None:
     pattern = re.compile(rf"(?<![A-Za-z']){re.escape(word)}(?![A-Za-z'])", re.IGNORECASE)
     for sentence in re.split(r"(?<=[.!?])\s+", article.content):
@@ -91,13 +115,15 @@ def create_article_card(
         card = Card(
             deck_id=deck.id,
             front_text=anki.front_text,
-            back_text=anki.back_text,
+            back_text=back_text.strip() or anki.back_text,
             pronunciation=anki.pronunciation,
             definition=anki.definition,
             example_sentence=anki.example_sentence,
             image_url=anki.image_url,
             audio_url=anki.audio_url,
             example_audio_url=anki.example_audio_url,
+            source_type="anki_library",
+            source_name=anki.source_deck,
         )
     else:
         card = Card(
@@ -110,6 +136,7 @@ def create_article_card(
             image_url=image_url,
             audio_url=audio_url,
             example_audio_url=example_audio_url,
+            source_type="reader",
         )
     db.add(card)
     db.flush()

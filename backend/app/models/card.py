@@ -18,6 +18,8 @@ class Card(Base):
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     audio_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     example_audio_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    source_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    source_name: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

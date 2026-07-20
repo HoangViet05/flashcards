@@ -20,6 +20,8 @@ export interface Card {
   image_url: string | null
   audio_url: string | null
   example_audio_url: string | null
+  source_type: string | null
+  source_name: string | null
   created_at: string
   updated_at: string
   review: Review | null
@@ -124,6 +126,8 @@ export interface ArticleHighlight {
   word: string
   meaning: string | null
   created_at: string
+  anki_match: boolean
+  anki_source_deck: string | null
 }
 
 export interface ArticleHighlightCardsResult {

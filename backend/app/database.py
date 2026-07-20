@@ -50,6 +50,8 @@ CARD_EXTRA_COLUMNS = {
     "pronunciation": "VARCHAR(100)",
     "definition": "TEXT",
     "example_audio_url": "VARCHAR(500)",
+    "source_type": "VARCHAR(50)",
+    "source_name": "VARCHAR(500)",
 }
 
 REVIEW_EXTRA_COLUMNS = {

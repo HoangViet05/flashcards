@@ -36,6 +36,8 @@ class CardOut(BaseModel):
     image_url: str | None
     audio_url: str | None
     example_audio_url: str | None
+    source_type: str | None
+    source_name: str | None
     created_at: datetime
     updated_at: datetime
     review: ReviewOut | None = None

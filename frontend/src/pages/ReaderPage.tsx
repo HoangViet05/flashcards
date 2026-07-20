@@ -134,9 +134,52 @@ const shortVietnameseMeaning = (content: string) => (
   ?? 'Chưa có nghĩa Việt'
 )
 
-function HighlightPanel({ highlights, onRemove, onAddAll, adding }: {
+function HighlightItem({ highlight, onRemove, onUpdate }: {
+  highlight: ArticleHighlight
+  onRemove: (word: string) => void
+  onUpdate: (word: string, meaning: string) => Promise<void>
+}) {
+  const [editing, setEditing] = useState(false)
+  const [meaning, setMeaning] = useState(highlight.meaning ?? '')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => setMeaning(highlight.meaning ?? ''), [highlight.meaning])
+
+  const save = async () => {
+    if (!meaning.trim()) return
+    setSaving(true)
+    try {
+      await onUpdate(highlight.word, meaning.trim())
+      setEditing(false)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="group flex gap-2 rounded-xl px-2 py-2.5 transition hover:bg-white/[.04]">
+      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-sm bg-amber-300/70" />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <p className="truncate text-sm font-extrabold text-amber-100">{highlight.word}</p>
+          {highlight.anki_match && <span title={highlight.anki_source_deck ? `Nguồn: ${highlight.anki_source_deck}` : 'Có trong thư viện Anki'} className="rounded-md border border-cyan-300/25 bg-cyan-400/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-cyan-200">Anki</span>}
+        </div>
+        {editing ? (
+          <div className="mt-1.5 flex gap-1.5">
+            <input value={meaning} onChange={event => setMeaning(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void save(); if (event.key === 'Escape') { setMeaning(highlight.meaning ?? ''); setEditing(false) } }} autoFocus className="min-w-0 flex-1 rounded-lg border border-amber-300/30 bg-black/30 px-2 py-1 text-xs text-white outline-none focus:border-amber-200/70" aria-label={`Nghĩa tiếng Việt của ${highlight.word}`} />
+            <button onClick={() => void save()} disabled={saving || !meaning.trim()} className="rounded-lg bg-amber-300/15 px-2 text-xs font-bold text-amber-100 disabled:opacity-50">{saving ? '…' : 'Lưu'}</button>
+          </div>
+        ) : <div className="mt-0.5 flex items-start gap-1"><p className="min-w-0 flex-1 text-xs leading-4 text-slate-400">{highlight.meaning ?? 'Đang tra nghĩa Việt…'}</p><button onClick={() => setEditing(true)} className="shrink-0 rounded-md px-1 text-xs text-slate-500 opacity-100 transition hover:bg-amber-300/10 hover:text-amber-200 sm:opacity-0 sm:group-hover:opacity-100" aria-label={`Sửa nghĩa ${highlight.word}`}>✎</button></div>}
+      </div>
+      <button onClick={() => onRemove(highlight.word)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-600 opacity-100 transition hover:bg-rose-400/10 hover:text-rose-300 sm:opacity-0 sm:group-hover:opacity-100" aria-label={`Bỏ đánh dấu ${highlight.word}`}>×</button>
+    </div>
+  )
+}
+
+function HighlightPanel({ highlights, onRemove, onUpdate, onAddAll, adding }: {
   highlights: ArticleHighlight[]
   onRemove: (word: string) => void
+  onUpdate: (word: string, meaning: string) => Promise<void>
   onAddAll: () => void
   adding: boolean
 }) {
@@ -147,7 +190,7 @@ function HighlightPanel({ highlights, onRemove, onAddAll, adding }: {
         <span className="rounded-full bg-white/[.07] px-2 py-0.5 text-xs font-bold text-slate-400">{highlights.length}</span>
       </div>
       {highlights.length
-        ? <><div className="px-3 pt-3"><button onClick={onAddAll} disabled={adding} className="w-full rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs font-bold text-amber-100 transition hover:bg-amber-300/15 disabled:cursor-not-allowed disabled:opacity-50">{adding ? 'Đang thêm…' : `＋ Thêm ${highlights.length} từ vào bộ thẻ`}</button></div><div className="max-h-[min(55dvh,32rem)] divide-y divide-white/[.06] overflow-y-auto px-2 py-2">{highlights.map(highlight => <div key={highlight.id} className="group flex gap-2 rounded-xl px-2 py-2.5 transition hover:bg-white/[.04]"><span className="mt-1.5 h-2 w-2 shrink-0 rounded-sm bg-amber-300/70" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-extrabold text-amber-100">{highlight.word}</p><p className="mt-0.5 text-xs leading-4 text-slate-400">{highlight.meaning ?? 'Đang tra nghĩa Việt…'}</p></div><button onClick={() => onRemove(highlight.word)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-600 opacity-100 transition hover:bg-rose-400/10 hover:text-rose-300 sm:opacity-0 sm:group-hover:opacity-100" aria-label={`Bỏ đánh dấu ${highlight.word}`}>×</button></div>)}</div></>
+        ? <><div className="px-3 pt-3"><button onClick={onAddAll} disabled={adding} className="w-full rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs font-bold text-amber-100 transition hover:bg-amber-300/15 disabled:cursor-not-allowed disabled:opacity-50">{adding ? 'Đang thêm…' : `＋ Thêm ${highlights.length} từ vào bộ thẻ`}</button></div><div className="max-h-[min(55dvh,32rem)] divide-y divide-white/[.06] overflow-y-auto px-2 py-2">{highlights.map(highlight => <HighlightItem key={highlight.id} highlight={highlight} onRemove={onRemove} onUpdate={onUpdate} />)}</div></>
         : <div className="px-4 py-5"><p className="text-sm font-semibold text-slate-300">Chưa có từ nào</p><p className="mt-1 text-xs leading-5 text-slate-500">Nháy đúp vào một từ trong bài để đánh dấu và lưu nghĩa Việt ngắn gọn ở đây.</p></div>}
     </section>
   )
@@ -393,12 +436,23 @@ export default function ReaderPage() {
       return
     }
 
-    const temporary: ArticleHighlight = { id: `pending-${word}`, word, meaning: null, created_at: new Date().toISOString() }
+    const temporary: ArticleHighlight = { id: `pending-${word}`, word, meaning: null, created_at: new Date().toISOString(), anki_match: false, anki_source_deck: null }
     setHighlights(current => [temporary, ...current])
     void lookupViDictionary(word)
       .then(result => saveArticleHighlight(article.id, word, result ? shortVietnameseMeaning(result.content) : 'Chưa có nghĩa Việt'))
       .then(saved => setHighlights(current => current.map(highlight => highlight.id === temporary.id ? saved : highlight)))
       .catch(() => setHighlights(current => current.filter(highlight => highlight.id !== temporary.id)))
+  }
+
+  const updateHighlightMeaning = async (word: string, meaning: string) => {
+    if (!article) return
+    try {
+      const saved = await saveArticleHighlight(article.id, word, meaning)
+      setHighlights(current => current.map(highlight => highlight.word === word ? saved : highlight))
+    } catch (error: any) {
+      toast(error?.response?.data?.detail ?? 'Không thể cập nhật nghĩa tiếng Việt', 'error')
+      throw error
+    }
   }
 
   const addAllHighlights = async () => {
@@ -429,7 +483,7 @@ export default function ReaderPage() {
       </header>
 
       <aside className="fixed left-6 top-36 z-10 hidden w-80 min-[1800px]:block">
-        <HighlightPanel highlights={highlights} onRemove={removeHighlight} onAddAll={addAllHighlights} adding={addingHighlights} />
+        <HighlightPanel highlights={highlights} onRemove={removeHighlight} onUpdate={updateHighlightMeaning} onAddAll={addAllHighlights} adding={addingHighlights} />
       </aside>
 
       <div className="grid items-start gap-6 lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-8">
@@ -469,7 +523,7 @@ export default function ReaderPage() {
             <p className="mt-3 rounded-xl bg-white/[.035] px-2.5 py-2 text-[11px] leading-4 text-slate-500">{tts.playing ? `Đang đọc câu ${tts.sentence + 1}/${sentences.length}` : 'Chọn một từ trong bài để tra nghĩa.'}</p>
           </section>
           <div className="mt-4 min-[1800px]:hidden">
-            <HighlightPanel highlights={highlights} onRemove={removeHighlight} onAddAll={addAllHighlights} adding={addingHighlights} />
+            <HighlightPanel highlights={highlights} onRemove={removeHighlight} onUpdate={updateHighlightMeaning} onAddAll={addAllHighlights} adding={addingHighlights} />
           </div>
         </aside>
 

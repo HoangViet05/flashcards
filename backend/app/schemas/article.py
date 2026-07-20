@@ -55,6 +55,8 @@ class ArticleHighlightOut(BaseModel):
     word: str
     meaning: str | None
     created_at: datetime
+    anki_match: bool = False
+    anki_source_deck: str | None = None
 
     model_config = {"from_attributes": True}
 

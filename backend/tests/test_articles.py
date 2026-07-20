@@ -39,10 +39,38 @@ def test_article_highlights_are_saved_per_article(client, user_b_client):
     assert saved.status_code == 200
     assert saved.json()["word"] == "containers"
     assert saved.json()["meaning"] == "vật chứa"
+    assert saved.json()["anki_match"] is False
     assert client.get(url).json()[0]["word"] == "containers"
     assert user_b_client.get(url).status_code == 404
     assert client.delete(f"{url}/containers").status_code == 200
     assert client.get(url).json() == []
+
+
+def test_article_highlights_report_anki_match_and_allow_meaning_update(client, db):
+    from app.models.anki_entry import AnkiEntry
+    from app.models.user import User
+
+    article = client.post("/api/articles", json=PASTE_BODY).json()
+    user = db.query(User).filter(User.email == "usera@test.com").one()
+    db.add(AnkiEntry(
+        user_id=user.id,
+        normalized_word="docker",
+        front_text="Docker",
+        back_text="Docker from Anki",
+        source_deck="Technical words",
+        fingerprint="docker-highlight-match",
+    ))
+    db.commit()
+
+    url = f"/api/articles/{article['id']}/highlights"
+    saved = client.post(url, json={"word": "Docker", "meaning": "Docker tool"})
+    assert saved.status_code == 200
+    assert saved.json()["anki_match"] is True
+    assert saved.json()["anki_source_deck"] == "Technical words"
+
+    updated = client.post(url, json={"word": "Docker", "meaning": "Updated meaning"})
+    assert updated.status_code == 200
+    assert updated.json()["meaning"] == "Updated meaning"
 
 
 def test_article_deck_and_bulk_highlights_prefer_anki_data(client, db):
@@ -73,8 +101,9 @@ def test_article_deck_and_bulk_highlights_prefer_anki_data(client, db):
     }
     cards = client.get(f"/api/decks/{article['deck_id']}/cards").json()
     assert len(cards) == 1
-    assert cards[0]["back_text"] == "Docker từ Anki"
+    assert cards[0]["back_text"] == "Docker thủ công"
     assert cards[0]["audio_url"] == "/media/docker.mp3"
+    assert cards[0]["source_type"] == "anki_library"
 
     repeated = client.post(f"/api/articles/{article['id']}/highlights/to-deck")
     assert repeated.status_code == 200

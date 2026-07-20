@@ -1,5 +1,5 @@
 import type { ShadowScore, ShadowWordStatus } from '../../types'
-const styles: Record<ShadowWordStatus, string> = { correct: 'text-emerald-300', missed: 'text-rose-300 underline decoration-rose-400/60', substituted: 'text-amber-300 underline decoration-amber-400/60', skipped: 'text-slate-500' }
+const styles: Record<ShadowWordStatus, string> = { correct: 'inline-block text-emerald-300', missed: 'inline-block text-rose-300 underline decoration-rose-400/60', substituted: 'inline-block text-amber-300 underline decoration-amber-400/60', skipped: 'inline-block text-slate-500' }
 export default function ScoreDisplay({ result }: { result: ShadowScore }) {
   if (result.no_speech) return <div className="rounded-2xl border border-amber-300/25 bg-amber-400/10 p-4 text-sm font-bold text-amber-200">Không nghe rõ giọng bạn — thử lại gần mic hơn nhé.</div>
   const tone = result.score >= 80 ? 'text-emerald-300' : result.score >= 60 ? 'text-amber-300' : 'text-rose-300'

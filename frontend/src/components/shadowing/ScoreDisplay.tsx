@@ -1,7 +1,30 @@
 import type { ShadowScore, ShadowWordStatus } from '../../types'
-const styles: Record<ShadowWordStatus, string> = { correct: 'inline-block text-emerald-300', missed: 'inline-block text-rose-300 underline decoration-rose-400/60', substituted: 'inline-block text-amber-300 underline decoration-amber-400/60', skipped: 'inline-block text-slate-500' }
+
+const styles: Record<ShadowWordStatus, string> = {
+  correct: 'inline-block text-emerald-300',
+  missed: 'inline-block text-rose-300 underline decoration-rose-400/60',
+  substituted: 'inline-block text-amber-300 underline decoration-amber-400/60',
+  skipped: 'inline-block text-slate-500',
+}
+
+const legend = [
+  ['text-emerald-300', 'Đúng'],
+  ['text-amber-300', 'Nói khác'],
+  ['text-rose-300', 'Thiếu'],
+  ['text-slate-500', 'Bỏ qua'],
+] as const
+
 export default function ScoreDisplay({ result }: { result: ShadowScore }) {
   if (result.no_speech) return <div className="rounded-2xl border border-amber-300/25 bg-amber-400/10 p-4 text-sm font-bold text-amber-200">Không nghe rõ giọng bạn — thử lại gần mic hơn nhé.</div>
+
   const tone = result.score >= 80 ? 'text-emerald-300' : result.score >= 60 ? 'text-amber-300' : 'text-rose-300'
-  return <div className="rounded-2xl border border-white/[.07] bg-white/[.03] p-4"><span className={`text-3xl font-black ${tone}`}>{result.score}%</span><p className="mb-2 text-lg leading-8">{result.words.map((word, index) => <span key={index} className={`${styles[word.status]} mr-1.5 font-semibold`}>{word.word}</span>)}</p><p className="text-xs text-slate-500">Whisper nghe thấy: <span className="italic text-slate-400">&quot;{result.transcript}&quot;</span></p></div>
+
+  return <div className="rounded-2xl border border-white/[.07] bg-white/[.03] p-4">
+    <span className={`text-3xl font-black ${tone}`}>{result.score}%</span>
+    <p className="mb-2 text-lg leading-8">{result.words.map((word, index) => <span key={index} className={`${styles[word.status]} mr-1.5 font-semibold`}>{word.word}</span>)}</p>
+    <div className="mb-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500" aria-label="Chú giải màu chấm điểm">
+      {legend.map(([color, label]) => <span key={label} className="flex items-center gap-1.5"><i className={`h-2 w-2 rounded-full bg-current ${color}`} />{label}</span>)}
+    </div>
+    <p className="text-xs text-slate-500">Whisper nghe thấy: <span className="italic text-slate-400">&quot;{result.transcript}&quot;</span></p>
+  </div>
 }

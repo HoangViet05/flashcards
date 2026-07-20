@@ -59,6 +59,26 @@ async def score(file: UploadFile = File(...), target_text: str = Form(...)):
     return {"transcript": transcript, **result, "no_speech": False}
 
 
+@app.post("/transcribe")
+async def transcribe(file: UploadFile = File(...)):
+    """Return a partial transcript while the browser is still recording."""
+    payload = await file.read()
+    if not payload:
+        raise HTTPException(422, "Audio recording is empty")
+    suffix = Path(file.filename or "recording.webm").suffix or ".webm"
+    temp = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
+    try:
+        temp.write(payload)
+        temp.close()
+        transcript = transcriber.transcribe(temp.name)
+    finally:
+        if not temp.closed:
+            temp.close()
+        if os.path.exists(temp.name):
+            os.unlink(temp.name)
+    return {"transcript": transcript}
+
+
 @app.get("/subtitles")
 def subtitles(url: str):
     try:

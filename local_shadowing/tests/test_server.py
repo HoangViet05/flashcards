@@ -23,6 +23,12 @@ def test_score_empty_and_file_validation(monkeypatch):
     assert client.post("/score", files={"file": ("recording.webm", b"", "audio/webm")}, data={"target_text": "Hello."}).status_code == 422
 
 
+def test_partial_transcript(monkeypatch):
+    monkeypatch.setattr(server.transcriber, "transcribe", lambda path: "speaking live")
+    response = client.post("/transcribe", files={"file": ("recording.webm", b"audio", "audio/webm")})
+    assert response.status_code == 200 and response.json() == {"transcript": "speaking live"}
+
+
 def test_subtitles_error_and_private_network(monkeypatch):
     monkeypatch.setattr(server, "fetch_subtitles", lambda url: (_ for _ in ()).throw(SubtitleError("Video không có phụ đề tiếng Anh")))
     assert client.get("/subtitles", params={"url": "https://youtu.be/x"}).status_code == 422

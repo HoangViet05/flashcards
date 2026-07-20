@@ -6,4 +6,5 @@ export interface WorkerHealth { status: string; model: string; model_loaded: boo
 export interface WorkerSubtitles { youtube_id: string; title: string; duration_s: number | null; segments: ShadowSegment[] }
 export const getWorkerHealth = () => worker.get<WorkerHealth>('/health', { timeout: 3000 }).then(response => response.data)
 export const scoreRecording = (blob: Blob, targetText: string) => { const form = new FormData(); form.append('file', blob, 'recording.webm'); form.append('target_text', targetText); return worker.post<ShadowScore>('/score', form, { timeout: 120000 }).then(response => response.data) }
+export const transcribeRecording = (blob: Blob) => { const form = new FormData(); form.append('file', blob, 'recording.webm'); return worker.post<{ transcript: string }>('/transcribe', form, { timeout: 120000 }).then(response => response.data) }
 export const fetchWorkerSubtitles = (url: string) => worker.get<WorkerSubtitles>('/subtitles', { params: { url }, timeout: 60000 }).then(response => response.data)

@@ -10,6 +10,7 @@ MODEL_NAME = os.getenv("WHISPER_MODEL", "small")
 _lock = threading.Lock()
 _model = None
 _device: str | None = None
+_dll_dir_handles = []
 
 
 def is_loaded() -> bool:
@@ -21,12 +22,17 @@ def get_device() -> str | None:
 
 
 def _add_cuda_dll_dirs() -> None:
+    """Expose pip-installed CUDA DLLs to CTranslate2 on Windows."""
+    path_entries = os.environ.get("PATH", "").split(os.pathsep)
     for module in ("nvidia.cublas", "nvidia.cudnn"):
         spec = importlib.util.find_spec(module)
         for location in list(spec.submodule_search_locations or []) if spec else []:
             directory = os.path.join(location, "bin")
             if os.path.isdir(directory):
-                os.add_dll_directory(directory)
+                if directory not in path_entries:
+                    path_entries.insert(0, directory)
+                _dll_dir_handles.append(os.add_dll_directory(directory))
+    os.environ["PATH"] = os.pathsep.join(path_entries)
 
 
 def _load() -> None:

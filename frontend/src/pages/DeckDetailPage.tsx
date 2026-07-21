@@ -363,56 +363,14 @@ export default function DeckDetailPage() {
           </div>
 
           <div className="flex flex-wrap gap-3 shrink-0 relative z-10 w-full sm:w-auto mt-2 sm:mt-0">
-            {(() => {
-              const clozeCards = cards.filter(c => c.example_sentence && c.example_sentence.toLowerCase().includes(c.front_text.toLowerCase()));
-              const reverseCards = cards.filter(c => c.back_text || c.image_url);
-              const typedMode = deck.due_count > 0 ? 'review' : deck.new_count > 0 ? 'learn' : 'practice';
-
-              return (
-                <>
-                  {deck.new_count > 0 && (
-                    <Link
-                      to={`/review?deckId=${deck.id}&mode=learn`}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(124,58,237,0.3)] transition-all hover:scale-[1.02]"
-                    >
-                      <span>✨</span> Học {deck.new_count} thẻ mới
-                    </Link>
-                  )}
-                  {deck.due_count > 0 && (
-                    <Link
-                      to={`/review?deckId=${deck.id}&mode=review`}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(6,182,212,0.1)] transition-all hover:scale-[1.02]"
-                    >
-                      <span>🧠</span> Ôn tập {deck.due_count} thẻ
-                    </Link>
-                  )}
-                  {total > 0 && (
-                    <Link
-                      to={`/review?deckId=${deck.id}&mode=practice`}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.08] text-white border border-white/10 px-5 py-2.5 rounded-xl text-sm font-bold shadow-inner transition-all hover:scale-[1.02]"
-                    >
-                      <span>🔄</span> Lướt thẻ
-                    </Link>
-                  )}
-                  {clozeCards.length > 0 && (
-                    <Link
-                      to={`/review?deckId=${deck.id}&mode=${typedMode}&type=cloze`}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(245,158,11,0.1)] transition-all hover:scale-[1.02]"
-                    >
-                      <span>___</span> Cloze
-                    </Link>
-                  )}
-                  {reverseCards.length > 0 && (
-                    <Link
-                      to={`/review?deckId=${deck.id}&mode=${typedMode}&type=reverse`}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-teal-600/20 hover:bg-teal-600/30 text-teal-300 border border-teal-500/30 px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(20,184,166,0.1)] transition-all hover:scale-[1.02]"
-                    >
-                      <span>EN</span> Đảo ngược
-                    </Link>
-                  )}
-                </>
-              );
-            })()}
+            {(deck.new_count > 0 || deck.due_count > 0) && (
+              <Link
+                to="/daily"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(124,58,237,0.3)] transition-all hover:scale-[1.02]"
+              >
+                <span>✨</span> Học hôm nay
+              </Link>
+            )}
             <button
               onClick={() => setShowForm(f => !f)}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 btn-primary px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:shadow-[0_0_25px_rgba(124,58,237,0.5)] hover:scale-[1.02] transition-all"

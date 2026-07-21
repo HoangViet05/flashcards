@@ -2,14 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { createArticle, createTranslationWorker, deleteArticle, getArticles, getTranslationWorkers, queueArticleTranslation, queueUntranslatedArticles } from '../api/articles'
 import { API_BASE_URL } from '../api/config'
-import { getDocuments } from '../api/documents'
 import { useAuth } from '../auth/AuthContext'
 import { useNotification } from '../components/NotificationProvider'
 import { useCachedQuery } from '../hooks/useCachedQuery'
-import type { Document, TranslationStatus } from '../types'
+import type { TranslationStatus } from '../types'
 import { stripTranscriptTimestamps } from '../utils/readerText'
 
-type Tab = 'paste' | 'url' | 'pdf'
+type Tab = 'paste' | 'url'
 const BADGES: Record<string, string> = { paste: '📋 Dán', url: '🔗 Web', pdf: '📄 PDF', rss: '📰 RSS' }
 const TRANSLATION_BADGES: Record<TranslationStatus, { text: string; className: string }> = {
   queued: { text: 'Chờ dịch local', className: 'border-amber-300/20 bg-amber-300/10 text-amber-200' },
@@ -33,8 +32,6 @@ export default function ReaderListPage() {
   const [title, setTitle] = useState('')
   const [text, setText] = useState('')
   const [url, setUrl] = useState('')
-  const [docId, setDocId] = useState('')
-  const [docs, setDocs] = useState<Document[] | null>(null)
   const [creating, setCreating] = useState(false)
   const [queuingAll, setQueuingAll] = useState(false)
   const [queuingArticle, setQueuingArticle] = useState<string | null>(null)
@@ -49,25 +46,17 @@ export default function ReaderListPage() {
     return () => window.clearInterval(timer)
   }, [articlesQuery.refresh, workersQuery.refresh])
 
-  const openPdf = () => {
-    setTab('pdf')
-    if (!docs) void getDocuments().then(setDocs).catch(() => toast('Không tải được tài liệu PDF', 'error'))
-  }
-
   const create = async () => {
     setCreating(true)
     try {
       const input = tab === 'paste'
         ? { title: title || undefined, text: stripTranscriptTimestamps(text) }
-        : tab === 'url'
-          ? { title: title || undefined, url }
-          : { title: title || undefined, document_id: docId }
+        : { title: title || undefined, url }
       const article = await createArticle(input)
       setShow(false)
       setTitle('')
       setText('')
       setUrl('')
-      setDocId('')
       await articlesQuery.refresh()
       navigate(`/reader/${article.id}`)
     } catch (error: any) {
@@ -174,7 +163,7 @@ export default function ReaderListPage() {
         <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl" onClick={event => event.stopPropagation()}>
           <h2 className="mb-4 text-lg font-black text-white">Bài đọc mới</h2>
           <div className="mb-4 flex gap-1 rounded-xl bg-black/30 p-1">
-            {([['paste', '📋 Dán text'], ['url', '🔗 URL'], ['pdf', '📄 PDF']] as [Tab, string][]).map(([value, label]) => <button key={value} onClick={() => value === 'pdf' ? openPdf() : setTab(value)} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${tab === value ? 'bg-white/10 text-white' : 'text-slate-400'}`}>{label}</button>)}
+            {([['paste', '📋 Dán text'], ['url', '🔗 URL']] as [Tab, string][]).map(([value, label]) => <button key={value} onClick={() => setTab(value)} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${tab === value ? 'bg-white/10 text-white' : 'text-slate-400'}`}>{label}</button>)}
           </div>
           <input value={title} onChange={event => setTitle(event.target.value)} placeholder="Tiêu đề (tùy chọn)" className="mb-3 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
           {tab === 'paste' && <>
@@ -182,10 +171,9 @@ export default function ReaderListPage() {
             <p className="mt-2 text-xs text-slate-500">Timestamp video dạng 00:00 sẽ tự được bỏ.</p>
           </>}
           {tab === 'url' && <input value={url} onChange={event => setUrl(event.target.value)} placeholder="https://example.com/..." className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500" />}
-          {tab === 'pdf' && (docs === null ? <p className="text-sm text-slate-400">Đang tải danh sách tài liệu…</p> : docs.length ? <select value={docId} onChange={event => setDocId(event.target.value)} className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"><option value="">— Chọn tài liệu —</option>{docs.map(document => <option key={document.id} value={document.id}>{document.filename}</option>)}</select> : <p className="text-sm text-slate-400">Chưa có PDF — upload ở trang <Link to="/documents" className="text-cyan-300 underline">Tài liệu</Link>.</p>)}
           <div className="mt-4 flex justify-end gap-2">
             <button onClick={() => setShow(false)} className="rounded-xl px-4 py-2 text-sm font-bold text-slate-400">Hủy</button>
-            <button onClick={() => void create()} disabled={creating || (tab === 'paste' ? !text.trim() : tab === 'url' ? !url.trim() : !docId)} className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-200 disabled:opacity-50">{creating ? 'Đang xử lý…' : 'Tạo bài đọc'}</button>
+            <button onClick={() => void create()} disabled={creating || (tab === 'paste' ? !text.trim() : !url.trim())} className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-200 disabled:opacity-50">{creating ? 'Đang xử lý…' : 'Tạo bài đọc'}</button>
           </div>
         </div>
       </div>}

@@ -3,9 +3,7 @@ import { useAuth } from '../auth/AuthContext'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Bộ thẻ', icon: 'deck', soon: false },
-  { to: '/documents', label: 'Tài liệu', icon: 'document', soon: true },
   { to: '/reader', label: 'Đọc', icon: 'book', soon: false },
-  { to: '/review', label: 'Ôn tập', icon: 'review', soon: false },
   { to: '/daily', label: 'Học hôm nay', icon: 'review', soon: false },
   { to: '/games', label: 'Games', icon: 'games', soon: false },
   { to: '/shadowing', label: 'Nói', icon: 'mic', soon: false },
@@ -32,14 +30,6 @@ function NavIcon({ name, className = '' }: { name: NavIconName; className?: stri
           <path d="M5 7.5h14" />
           <path d="M7 4.5h10a2 2 0 0 1 2 2v10.5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2Z" />
           <path d="M8 11h8M8 14.5h5" />
-        </svg>
-      )
-    case 'document':
-      return (
-        <svg {...common}>
-          <path d="M7 3.5h6l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z" />
-          <path d="M13 3.5v4h4" />
-          <path d="M8.5 12h7M8.5 15.5h5" />
         </svg>
       )
     case 'review':

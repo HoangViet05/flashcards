@@ -149,15 +149,6 @@ export interface EnDictResult {
   meanings: { partOfSpeech: string; definitions: string[] }[]
 }
 
-export interface Document {
-  id: string
-  filename: string
-  status: 'processing' | 'ready' | 'error'
-  page_count: number | null
-  created_at: string
-  updated_at: string
-}
-
 export interface User {
   id: string
   email: string

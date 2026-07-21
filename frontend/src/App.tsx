@@ -7,10 +7,7 @@ import Navbar from './components/Navbar'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
 const DeckDetailPage = lazy(() => import('./pages/DeckDetailPage'))
-const ReviewPage = lazy(() => import('./pages/ReviewPage'))
 const StatsPage = lazy(() => import('./pages/StatsPage'))
-const DocumentListPage = lazy(() => import('./pages/DocumentListPage'))
-const DocumentDetailPage = lazy(() => import('./pages/DocumentDetailPage'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
 const AccountPage = lazy(() => import('./pages/AccountPage'))
 const ReaderListPage = lazy(() => import('./pages/ReaderListPage'))
@@ -46,11 +43,8 @@ export default function App() {
             <Route path="/register" element={<AuthPage mode="register" />} />
             <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
             <Route path="/decks/:id" element={<RequireAuth><DeckDetailPage /></RequireAuth>} />
-            <Route path="/review" element={<RequireAuth><ReviewPage /></RequireAuth>} />
             <Route path="/daily" element={<RequireAuth><DailyPage /></RequireAuth>} />
             <Route path="/stats" element={<RequireAuth><StatsPage /></RequireAuth>} />
-            <Route path="/documents" element={<RequireAuth><DocumentListPage /></RequireAuth>} />
-            <Route path="/documents/:id" element={<RequireAuth><DocumentDetailPage /></RequireAuth>} />
             <Route path="/reader" element={<RequireAuth><ReaderListPage /></RequireAuth>} />
             <Route path="/reader/:id" element={<RequireAuth><ReaderPage /></RequireAuth>} />
             <Route path="/games" element={<RequireAuth><GamesPage /></RequireAuth>} />

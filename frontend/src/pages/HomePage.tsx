@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { getDecks, createDeck, deleteDeck } from '../api/decks'
-import { getDueCards } from '../api/review'
 import { createCard, getAllCards } from '../api/cards'
 import { generateAIBatchStream } from '../api/ai'
 import { useAuth } from '../auth/AuthContext'
@@ -106,12 +104,8 @@ function FlyingGlassCard({ data, onComplete }: { data: GlobalFlyingCardData, onC
 
 export default function HomePage() {
   const { user } = useAuth()
-  const decksQuery = useCachedQuery(user ? `home:${user.id}` : null, async () => {
-    const [decks, due] = await Promise.all([getDecks(), getDueCards()])
-    return { decks, due }
-  })
-  const decks = decksQuery.data?.decks ?? []
-  const dueReviews = decksQuery.data?.due ?? []
+  const decksQuery = useCachedQuery(user ? `home:${user.id}` : null, getDecks)
+  const decks = decksQuery.data ?? []
   const ankiLibraryQuery = useCachedQuery(user ? `anki-library:${user.id}` : null, getAnkiLibrary)
   const ankiTotal = ankiLibraryQuery.data?.total ?? 0
   const [name, setName] = useState('')
@@ -231,8 +225,6 @@ export default function HomePage() {
   }
 
   const totalCards = decks.reduce((sum, deck) => sum + deck.card_count, 0)
-  const newReviews = dueReviews.filter(r => r.repetitions === 0)
-  const dueOnly = dueReviews.filter(r => r.repetitions > 0)
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
@@ -249,52 +241,13 @@ export default function HomePage() {
       {/* AI Generation Animation */}
       <RobotAnimation isVisible={isGenerating} action={robotAction} />
       <DailyCta />
-      {/* Hero banner when there are due cards */}
-      {dueReviews.length > 0 && (
-        <div className="mb-10 relative rounded-[2rem] p-[1px] animate-fade-in-up" style={{ boxShadow: '0 20px 40px -15px rgba(124,58,237,0.25)' }}>
-          <div className="absolute inset-0 bg-gradient-to-r from-violet-600/50 via-purple-500/40 to-cyan-500/50 opacity-80 blur-md pointer-events-none rounded-[2rem]" />
-          <div className="relative glass rounded-[2rem] p-5 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-6 overflow-hidden bg-black/40 backdrop-blur-xl border border-white/10">
-            {/* Decorative glare */}
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-2xl pointer-events-none opacity-60" />
-
-            <div className="flex items-center gap-4 sm:gap-5 relative z-10 w-full sm:w-auto">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] bg-gradient-to-br from-violet-500/20 to-purple-600/30 border border-violet-500/40 flex items-center justify-center text-2xl sm:text-3xl shadow-[0_0_20px_rgba(139,92,246,0.3)] shrink-0 animate-pulse-glow">
-                🔥
-              </div>
-              <div>
-                <p className="text-white font-extrabold text-xl sm:text-2xl tracking-tight">
-                  {dueOnly.length > 0 ? (
-                    <><span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400">{dueOnly.length}</span> thẻ đang chờ ôn!</>
-                  ) : (
-                    <><span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400">{newReviews.length}</span> từ mới đang chờ bạn!</>
-                  )}
-                </p>
-                <p className="text-gray-400 text-sm sm:text-base mt-1 font-medium">
-                  {dueOnly.length > 0 && newReviews.length > 0
-                    ? `Cùng ${newReviews.length} từ mới sẵn sàng để học.`
-                    : 'Giữ vững chuỗi streak, học ngay nào.'}
-                </p>
-              </div>
-            </div>
-
-            <Link
-              to={dueOnly.length > 0 ? '/review?mode=review' : '/review?mode=learn'}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 btn-primary px-8 py-3.5 rounded-xl font-bold shadow-[0_0_20px_rgba(124,58,237,0.4)] hover:shadow-[0_0_30px_rgba(124,58,237,0.6)] hover:scale-105 transition-all text-base relative z-10"
-            >
-              Bắt đầu ôn 🚀
-            </Link>
-          </div>
-        </div>
-      )}
 
       {/* Stats row */}
       {decks.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 animate-fade-in-up" style={{ animationDelay: '60ms' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10 animate-fade-in-up" style={{ animationDelay: '60ms' }}>
           {[
             { label: 'Bộ thẻ', value: decks.length, icon: '🗂️', color: 'from-blue-500/20 to-cyan-500/10', border: 'border-blue-500/30', text: 'text-blue-300' },
             { label: 'Tổng thẻ', value: totalCards, icon: '🃏', color: 'from-violet-500/20 to-purple-500/10', border: 'border-violet-500/30', text: 'text-violet-300' },
-            { label: 'Từ mới', value: newReviews.length, icon: '✨', color: 'from-amber-500/20 to-yellow-500/10', border: 'border-amber-500/30', text: 'text-amber-300' },
-            { label: 'Cần ôn hôm nay', value: dueOnly.length, icon: '⏰', color: 'from-orange-500/20 to-red-500/10', border: 'border-orange-500/30', text: 'text-orange-300' },
           ].map((s, i) => (
             <div key={s.label} className={`glass rounded-[1.5rem] p-5 flex items-center gap-4 bg-gradient-to-br ${s.color} border ${s.border} hover:scale-[1.02] transition-transform duration-300`}>
               <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl shadow-inner border border-white/10 shrink-0">

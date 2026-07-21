@@ -104,7 +104,8 @@ function FlyingGlassCard({ data, onComplete }: { data: GlobalFlyingCardData, onC
 
 export default function HomePage() {
   const { user } = useAuth()
-  const decksQuery = useCachedQuery(user ? `home:${user.id}` : null, getDecks)
+  // The previous home cache stored { decks, due }; use a new key after simplifying it to Deck[].
+  const decksQuery = useCachedQuery(user ? `home-v2:${user.id}` : null, getDecks)
   const decks = decksQuery.data ?? []
   const ankiLibraryQuery = useCachedQuery(user ? `anki-library:${user.id}` : null, getAnkiLibrary)
   const ankiTotal = ankiLibraryQuery.data?.total ?? 0

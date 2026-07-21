@@ -10,6 +10,7 @@ import DeckCard from '../components/DeckCard'
 import ImportAnkiModal from '../components/ImportAnkiModal'
 import AnkiLibraryModal from '../components/AnkiLibraryModal'
 import RobotAnimation from '../components/RobotAnimation'
+import DailyCta from '../components/daily/DailyCta'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getAnkiLibrary } from '../api/anki'
 
@@ -247,6 +248,7 @@ export default function HomePage() {
 
       {/* AI Generation Animation */}
       <RobotAnimation isVisible={isGenerating} action={robotAction} />
+      <DailyCta />
       {/* Hero banner when there are due cards */}
       {dueReviews.length > 0 && (
         <div className="mb-10 relative rounded-[2rem] p-[1px] animate-fade-in-up" style={{ boxShadow: '0 20px 40px -15px rgba(124,58,237,0.25)' }}>

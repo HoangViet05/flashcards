@@ -12,3 +12,4 @@ from app.models.translation_worker import TranslationWorker  # noqa: F401
 from app.models.anki_entry import AnkiEntry  # noqa: F401
 from app.models.shadow_video import ShadowVideo  # noqa: F401
 from app.models.shadowing_attempt import ShadowingAttempt  # noqa: F401
+from app.models.daily_session import DailySession, DailySessionWord  # noqa: F401

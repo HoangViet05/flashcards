@@ -72,8 +72,6 @@ export interface Stats {
   reviews_by_source: Record<string, number>
 }
 
-export type GameMode = 'sentence' | 'cloze' | 'match'
-
 export interface HeatmapDay {
   date: string
   count: number
@@ -178,3 +176,12 @@ export interface ShadowCard { id: string; front_text: string; example_sentence: 
 export interface ShadowAttemptInput { source_type: 'card' | 'article' | 'youtube'; card_id: string | null; article_id: string | null; video_id: string | null; segment_index: number | null; target_text: string; transcript: string; score: number; word_results: ShadowWordResult[] }
 export interface ShadowingDayStat { date: string; count: number; avg_score: number | null }
 export interface ShadowingStats { total_attempts: number; attempts_7d: number; avg_score_7d: number | null; by_day: ShadowingDayStat[] }
+
+export type ExerciseStep = 'dictation' | 'vi_en' | 'en_vi'
+export interface DailyWord { id: string; card_id: string; is_new: boolean; assigned_step: ExerciseStep; steps_done: string[]; wrong_count: number; card: Card }
+export interface DailySession { id: string; session_date: string; status: 'learning' | 'game' | 'done'; phase: 'review' | 'flip' | 'dictation' | 'split' | 'game'; words: DailyWord[] }
+export interface DailyStatus { new_remaining: number; low_new_words: boolean; session_status: 'none' | 'learning' | 'game' | 'done'; session_date: string | null; new_count: number; due_count: number }
+export interface GameMeaning { token: string; meaning: string; hint_level: number }
+export interface GameChip { card_id: string; word: string; cells: number[][] | null }
+export interface DailyGame { size: number; grid: string[][]; meanings: GameMeaning[]; found: GameChip[]; total_words: number; status: string }
+export interface GameConfirmResult { card_id: string; word: string; meaning: string; correct: boolean; quality_after: number | null }

@@ -17,6 +17,7 @@ const ReaderListPage = lazy(() => import('./pages/ReaderListPage'))
 const ReaderPage = lazy(() => import('./pages/ReaderPage'))
 const GamesPage = lazy(() => import('./pages/GamesPage'))
 const ShadowingPage = lazy(() => import('./pages/ShadowingPage'))
+const DailyPage = lazy(() => import('./pages/DailyPage'))
 
 function PageFallback() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
             <Route path="/decks/:id" element={<RequireAuth><DeckDetailPage /></RequireAuth>} />
             <Route path="/review" element={<RequireAuth><ReviewPage /></RequireAuth>} />
+            <Route path="/daily" element={<RequireAuth><DailyPage /></RequireAuth>} />
             <Route path="/stats" element={<RequireAuth><StatsPage /></RequireAuth>} />
             <Route path="/documents" element={<RequireAuth><DocumentListPage /></RequireAuth>} />
             <Route path="/documents/:id" element={<RequireAuth><DocumentDetailPage /></RequireAuth>} />

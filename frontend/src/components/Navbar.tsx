@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { to: '/documents', label: 'Tài liệu', icon: 'document', soon: true },
   { to: '/reader', label: 'Đọc', icon: 'book', soon: false },
   { to: '/review', label: 'Ôn tập', icon: 'review', soon: false },
+  { to: '/daily', label: 'Học hôm nay', icon: 'review', soon: false },
   { to: '/games', label: 'Games', icon: 'games', soon: false },
   { to: '/shadowing', label: 'Nói', icon: 'mic', soon: false },
 ] as const

@@ -6,9 +6,59 @@ import WordSearchGrid from './WordSearchGrid'
 
 type Wire = { id: string; path: string; startX: number; startY: number; endX: number; endY: number }
 
+const MUSIC_NOTES = [261.63, 329.63, 392, 493.88, 440, 392, 329.63, 293.66]
+
 function wirePath(startX: number, startY: number, endX: number, endY: number) {
   const curve = Math.max(44, (endX - startX) * 0.4)
   return `M ${startX} ${startY} C ${startX + curve} ${startY}, ${endX - curve} ${endY}, ${endX} ${endY}`
+}
+
+function GameMusicToggle() {
+  const [playing, setPlaying] = useState(false)
+  const contextRef = useRef<AudioContext | null>(null)
+  const loopRef = useRef<number | null>(null)
+
+  const stop = useCallback(() => {
+    if (loopRef.current !== null) window.clearInterval(loopRef.current)
+    loopRef.current = null
+    const context = contextRef.current
+    contextRef.current = null
+    if (context && context.state !== 'closed') void context.close()
+    setPlaying(false)
+  }, [])
+
+  const start = useCallback(async () => {
+    const context = new AudioContext()
+    contextRef.current = context
+    await context.resume()
+    const playNote = (frequency: number, volume: number, duration: number) => {
+      const oscillator = context.createOscillator()
+      const gain = context.createGain()
+      const now = context.currentTime
+      oscillator.type = 'sine'
+      oscillator.frequency.setValueAtTime(frequency, now)
+      gain.gain.setValueAtTime(0.0001, now)
+      gain.gain.exponentialRampToValueAtTime(volume, now + 0.045)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration)
+      oscillator.connect(gain).connect(context.destination)
+      oscillator.start(now)
+      oscillator.stop(now + duration + 0.03)
+    }
+    let step = 0
+    const play = () => {
+      const note = MUSIC_NOTES[step % MUSIC_NOTES.length]
+      playNote(note, 0.028, 0.58)
+      if (step % 4 === 0) playNote(note / 2, 0.012, 0.72)
+      step += 1
+    }
+    play()
+    loopRef.current = window.setInterval(play, 520)
+    setPlaying(true)
+  }, [])
+
+  useEffect(() => () => stop(), [stop])
+
+  return <button onClick={() => { if (playing) stop(); else void start() }} aria-pressed={playing} className={`game-music-toggle ${playing ? 'is-playing' : ''}`} title={playing ? 'Tắt nhạc nền' : 'Bật nhạc nền'}><span className="game-equalizer" aria-hidden="true"><i /><i /><i /></span><span>{playing ? 'Nhạc: bật' : 'Nhạc: tắt'}</span></button>
 }
 
 export default function DailyGamePanel({ onDone }: { onDone?: () => void }) {
@@ -95,10 +145,11 @@ export default function DailyGamePanel({ onDone }: { onDone?: () => void }) {
   }
 
   return (
-    <section className="rounded-[2rem] border border-white/[.07] bg-[#090a11]/80 p-4 shadow-[0_24px_80px_rgba(0,0,0,.28)] sm:p-6">
+    <section className="game-stage relative isolate overflow-hidden rounded-[2rem] border border-white/[.07] bg-[#090a11]/80 p-4 shadow-[0_24px_80px_rgba(0,0,0,.28)] sm:p-6">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"><span className="game-stage-orb game-stage-orb-one" /><span className="game-stage-orb game-stage-orb-two" /><span className="game-stage-star game-stage-star-one" /><span className="game-stage-star game-stage-star-two" /><span className="game-stage-star game-stage-star-three" /></div>
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div><p className="text-[10px] font-black uppercase tracking-[.18em] text-cyan-300">Word wire</p><h2 className="mt-1 text-xl font-black text-white">Tìm từ, rồi nối đúng nghĩa</h2><p className="mt-1 text-sm text-slate-400">Chữ cái tìm đúng sẽ bay thành thẻ tiếng Anh để bạn kéo dây ghép nghĩa.</p></div>
-        <div className="rounded-full border border-cyan-300/20 bg-cyan-400/[.08] px-3 py-1.5 text-sm font-black text-cyan-100">{found.length}/{game.total_words} từ</div>
+        <div className="flex items-center gap-2"><GameMusicToggle /><div className="rounded-full border border-cyan-300/20 bg-cyan-400/[.08] px-3 py-1.5 text-sm font-black text-cyan-100">{found.length}/{game.total_words} từ</div></div>
       </header>
 
       <div ref={boardRef} className="relative">

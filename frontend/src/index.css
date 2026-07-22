@@ -200,6 +200,86 @@ body::before {
 .animate-letter-flight { animation: letterFlight 0.62s cubic-bezier(.2, .8, .2, 1) both; }
 .animate-word-card-assemble { animation: wordCardAssemble 0.64s cubic-bezier(.2, .8, .2, 1) 0.2s both; }
 
+/* Game stage: a separate visual world from the calmer study screens. */
+.game-stage {
+  background:
+    radial-gradient(ellipse 70% 64% at 17% 5%, rgba(33, 22, 82, 0.88), transparent 68%),
+    radial-gradient(ellipse 56% 74% at 95% 42%, rgba(3, 72, 79, 0.44), transparent 70%),
+    linear-gradient(145deg, rgba(11, 9, 29, 0.98), rgba(5, 12, 22, 0.98));
+}
+
+.game-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  opacity: 0.5;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(103, 232, 249, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(167, 139, 250, 0.055) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: linear-gradient(105deg, black, transparent 86%);
+  -webkit-mask-image: linear-gradient(105deg, black, transparent 86%);
+  animation: gameGridDrift 16s linear infinite;
+}
+
+.game-stage::after {
+  content: '';
+  position: absolute;
+  inset: 14% -15% auto auto;
+  z-index: -1;
+  width: 20rem;
+  height: 20rem;
+  border: 1px solid rgba(103, 232, 249, 0.12);
+  border-radius: 9999px;
+  box-shadow: 0 0 0 2.5rem rgba(103, 232, 249, 0.025), 0 0 0 5.5rem rgba(167, 139, 250, 0.018);
+  animation: gameOrbit 18s linear infinite;
+}
+
+.game-stage-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(24px);
+  opacity: 0.75;
+  animation: gameOrbFloat 8s ease-in-out infinite;
+}
+
+.game-stage-orb-one { top: 30%; left: 17%; width: 9rem; height: 9rem; background: rgba(139, 92, 246, 0.18); }
+.game-stage-orb-two { right: 5%; bottom: 14%; width: 11rem; height: 11rem; background: rgba(6, 182, 212, 0.15); animation-delay: -4s; }
+.game-stage-star { position: absolute; width: 0.25rem; height: 0.25rem; border-radius: 9999px; background: #cffafe; box-shadow: 0 0 14px 3px rgba(103, 232, 249, 0.65); animation: gameStarPulse 2.8s ease-in-out infinite; }
+.game-stage-star-one { top: 17%; right: 21%; }
+.game-stage-star-two { top: 61%; left: 47%; animation-delay: -1.2s; }
+.game-stage-star-three { right: 8%; bottom: 19%; animation-delay: -2.2s; }
+
+.game-music-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 9999px;
+  padding: 0.42rem 0.7rem;
+  background: rgba(15, 23, 42, 0.58);
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  transition: 180ms ease;
+}
+
+.game-music-toggle:hover { border-color: rgba(103, 232, 249, 0.45); color: #cffafe; background: rgba(8, 47, 73, 0.5); }
+.game-music-toggle.is-playing { border-color: rgba(103, 232, 249, 0.52); background: rgba(8, 145, 178, 0.16); color: #cffafe; box-shadow: 0 0 20px rgba(34, 211, 238, 0.12); }
+.game-equalizer { display: inline-flex; height: 0.7rem; align-items: end; gap: 2px; }
+.game-equalizer i { display: block; width: 2px; height: 0.3rem; border-radius: 9999px; background: currentColor; opacity: 0.75; }
+.game-music-toggle.is-playing .game-equalizer i { animation: gameEqualizer 600ms ease-in-out infinite alternate; }
+.game-music-toggle.is-playing .game-equalizer i:nth-child(2) { animation-delay: -220ms; }
+.game-music-toggle.is-playing .game-equalizer i:nth-child(3) { animation-delay: -410ms; }
+
+@keyframes gameGridDrift { to { background-position: 38px 38px; } }
+@keyframes gameOrbit { to { transform: rotate(1turn); } }
+@keyframes gameOrbFloat { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(1.5rem, -1rem, 0) scale(1.15); } }
+@keyframes gameStarPulse { 0%, 100% { transform: scale(0.75); opacity: 0.35; } 50% { transform: scale(1.7); opacity: 1; } }
+@keyframes gameEqualizer { from { height: 0.25rem; } to { height: 0.75rem; } }
+
 @keyframes flyIntoDeck {
   0% {
     transform: translate(60px, -60px) scale(1.5) rotate(15deg);
@@ -609,5 +689,5 @@ textarea:focus {
 @keyframes shadowingWave { from { height: 0.42rem; opacity: 0.65; } to { height: 1.65rem; opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .shadowing-listening-panel, .shadowing-listening-panel::before, .shadowing-listening-orb, .shadowing-waveform i { animation: none; }
+  .shadowing-listening-panel, .shadowing-listening-panel::before, .shadowing-listening-orb, .shadowing-waveform i, .game-stage::before, .game-stage::after, .game-stage-orb, .game-stage-star, .game-music-toggle.is-playing .game-equalizer i { animation: none; }
 }

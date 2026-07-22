@@ -4,6 +4,7 @@ import { completeLearning, getDailySession, postDailyAnswer } from '../api/daily
 import ExerciseCard from '../components/daily/ExerciseCard'
 import DailyGamePanel from '../components/daily/DailyGamePanel'
 import DailyCta from '../components/daily/DailyCta'
+import DailyStatusHero from '../components/daily/DailyStatusHero'
 import FlipCard from '../components/FlipCard'
 import { useNotification } from '../components/NotificationProvider'
 import type { DailySession, DailyWord } from '../types'
@@ -21,7 +22,7 @@ export default function DailyPage() {
   const splitDone = leftQueue.length === 0 && rightQueue.length === 0
   useEffect(() => { if (phase === 'split' && splitDone && session) finishLearning() }, [phase, splitDone, session])
   if (loading) return <div className="flex justify-center py-24"><div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" /></div>
-  if (phase === 'empty') return <div className="mx-auto max-w-2xl px-4 py-16 text-center"><p className="mb-3 text-3xl">🎉</p><h1 className="mb-2 text-xl font-black text-white">Hôm nay hết bài rồi!</h1><p className="mb-6 text-sm text-slate-400">Không còn từ mới và không có từ nào đến hạn ôn tập.</p><Link to="/" className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-5 py-2.5 text-sm font-bold text-cyan-200">Tạo thêm thẻ mới</Link></div>
+  if (phase === 'empty') return <div className="mx-auto max-w-4xl px-4 py-12"><DailyStatusHero kind="empty" primaryTo="/" primaryLabel="Tạo thêm thẻ mới" secondaryTo="/reader" secondaryLabel="Đọc bài" /></div>
   const beginNew = () => { if (flipQueue.length) setPhase('flip'); else if (dictationQueue.length) setPhase('dictation'); else if (!splitDone) setPhase('split'); else finishLearning() }
   return <div className="mx-auto max-w-7xl px-4 py-8"><h1 className="mb-4 text-2xl font-black text-white">📚 Học hôm nay</h1><div className="mb-6 flex flex-wrap gap-2">{labels.map(([key, label]) => <span key={key} className={`rounded-full px-3 py-1 text-xs font-bold ${phase === key ? 'bg-violet-500/30 text-violet-200' : 'bg-white/[.05] text-slate-500'}`}>{label}</span>)}</div>
     {phase === 'review' && (reviewQueue.length ? <div className="mx-auto max-w-2xl"><p className="mb-3 text-sm text-slate-400">Ôn tập · còn {reviewQueue.length} từ</p><ExerciseCard key={`${reviewQueue[0].card_id}-${presented}`} card={reviewQueue[0].card} mode={reviewQueue[0].assigned_step} onResult={result(reviewQueue, setReviewQueue, reviewQueue[0].assigned_step, null)} /></div> : <div className="text-center"><p className="mb-4 text-emerald-300">✅ Xong phần ôn tập!</p><button onClick={beginNew} className="rounded-xl border border-violet-300/25 bg-violet-400/10 px-5 py-2.5 text-sm font-bold text-violet-200">Tiếp tục →</button></div>)}
@@ -29,6 +30,6 @@ export default function DailyPage() {
     {phase === 'dictation' && dictationQueue.length > 0 && <div className="mx-auto max-w-2xl"><p className="mb-3 text-sm text-slate-400">Nghe & điền · còn {dictationQueue.length} từ</p><ExerciseCard key={`${dictationQueue[0].card_id}-${presented}`} card={dictationQueue[0].card} mode="dictation" onResult={result(dictationQueue, setDictationQueue, 'dictation', dictationQueue.length === 1 ? 'split' : null)} /></div>}
     {phase === 'split' && !splitDone && <div className="grid gap-4 md:grid-cols-2"><div><p className="mb-2 text-center text-xs font-black uppercase text-slate-500">Việt → Anh · còn {leftQueue.length}</p>{leftQueue.length ? <ExerciseCard key={`${leftQueue[0].card_id}-${presented}`} card={leftQueue[0].card} mode="vi_en" onResult={result(leftQueue, setLeftQueue, 'vi_en', null)} /> : <p className="text-center text-emerald-300">✅ Xong bên này</p>}</div><div><p className="mb-2 text-center text-xs font-black uppercase text-slate-500">Anh → Việt · còn {rightQueue.length}</p>{rightQueue.length ? <ExerciseCard key={`${rightQueue[0].card_id}-${presented}`} card={rightQueue[0].card} mode="en_vi" onResult={result(rightQueue, setRightQueue, 'en_vi', null)} /> : <p className="text-center text-emerald-300">✅ Xong bên này</p>}</div></div>}
     {phase === 'game' && <DailyGamePanel />}
-    {phase === 'done' && <div className="mx-auto max-w-2xl text-center"><p className="mb-3 text-3xl">🏁</p><p className="mb-5 text-sm text-slate-400">Hôm nay đã hoàn thành. Hẹn gặp lại ngày mai!</p><DailyCta /></div>}
+    {phase === 'done' && <div className="mx-auto max-w-4xl"><DailyStatusHero kind="complete" primaryTo="/" primaryLabel="Tạo thêm thẻ" secondaryTo="/games" secondaryLabel="Xem game" /><div className="mt-5"><DailyCta /></div></div>}
   </div>
 }

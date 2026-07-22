@@ -200,6 +200,23 @@ body::before {
 .animate-letter-flight { animation: letterFlight 0.62s cubic-bezier(.2, .8, .2, 1) both; }
 .animate-word-card-assemble { animation: wordCardAssemble 0.64s cubic-bezier(.2, .8, .2, 1) 0.2s both; }
 
+/* Achievement states for a finished or quiet study day. */
+.daily-status-hero { position: relative; isolation: isolate; overflow: hidden; border: 1px solid rgba(103, 232, 249, 0.2); border-radius: 2rem; background: linear-gradient(135deg, rgba(9, 13, 31, 0.96), rgba(3, 35, 43, 0.9)); box-shadow: 0 28px 80px rgba(0, 0, 0, 0.3), inset 0 1px rgba(255, 255, 255, 0.06); }
+.daily-status-hero::before { content: ''; position: absolute; inset: 0; z-index: -2; opacity: .7; background-image: linear-gradient(rgba(103, 232, 249, 0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(167, 139, 250, 0.05) 1px, transparent 1px); background-size: 42px 42px; mask-image: radial-gradient(ellipse at 50% 25%, black, transparent 76%); -webkit-mask-image: radial-gradient(ellipse at 50% 25%, black, transparent 76%); }
+.daily-status-hero::after { content: ''; position: absolute; top: -11rem; left: calc(50% - 11rem); z-index: -1; width: 22rem; height: 22rem; border-radius: 9999px; background: radial-gradient(circle, rgba(34, 211, 238, 0.22), rgba(124, 58, 237, 0.1) 38%, transparent 70%); filter: blur(10px); animation: dailyStatusGlow 5s ease-in-out infinite; }
+.daily-status-empty::after { background: radial-gradient(circle, rgba(96, 165, 250, 0.17), rgba(167, 139, 250, 0.1) 38%, transparent 70%); }
+.daily-status-sky { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.daily-status-sky i { position: absolute; width: .22rem; height: .22rem; border-radius: 9999px; background: #cffafe; box-shadow: 0 0 12px 2px rgba(103, 232, 249, .65); animation: dailyStatusStar 3.2s ease-in-out infinite; }
+.daily-status-sky i:nth-child(1) { top: 18%; left: 13%; }.daily-status-sky i:nth-child(2) { top: 26%; right: 16%; animation-delay: -1s; }.daily-status-sky i:nth-child(3) { top: 66%; left: 21%; animation-delay: -2.3s; }.daily-status-sky i:nth-child(4) { top: 75%; right: 27%; animation-delay: -.6s; }.daily-status-sky i:nth-child(5) { top: 44%; left: 8%; animation-delay: -1.8s; }.daily-status-sky i:nth-child(6) { top: 52%; right: 8%; animation-delay: -2.7s; }
+.daily-status-comet { position: absolute; top: 22%; right: 15%; width: 6rem; height: 1px; background: linear-gradient(90deg, transparent, rgba(165, 243, 252, .9)); box-shadow: 0 0 10px rgba(103, 232, 249, .85); transform: rotate(-22deg); animation: dailyStatusComet 5.4s ease-in-out infinite; }
+.daily-status-card { animation: dailyStatusEnter 550ms cubic-bezier(.2, .8, .2, 1) both; }
+.daily-status-medal { display: grid; width: 5.6rem; height: 5.6rem; margin: 0 auto; place-items: center; border: 1px solid rgba(207, 250, 254, .7); border-radius: 9999px; background: radial-gradient(circle at 32% 24%, #e0f2fe, #22d3ee 30%, #4f46e5 72%); box-shadow: 0 0 0 .7rem rgba(34, 211, 238, .08), 0 0 44px rgba(34, 211, 238, .42); font-size: 2.45rem; animation: dailyStatusMedal 850ms cubic-bezier(.2, 1.35, .3, 1) both; }
+.daily-status-empty .daily-status-medal { background: radial-gradient(circle at 32% 24%, #fefce8, #a5b4fc 33%, #4c1d95 72%); box-shadow: 0 0 0 .7rem rgba(167, 139, 250, .08), 0 0 44px rgba(167, 139, 250, .36); }
+.daily-status-milestone { position: relative; min-height: 4.9rem; padding: .78rem 1.85rem .7rem .75rem; border: 1px solid rgba(255,255,255,.1); border-radius: 1rem; background: rgba(2, 6, 23, .34); text-align: left; }
+.daily-status-milestone > span { display: inline-grid; width: 1.2rem; height: 1.2rem; place-items: center; border-radius: 9999px; background: rgba(34, 211, 238, .16); color: #a5f3fc; font-size: .62rem; font-weight: 900; }.daily-status-milestone p { margin-top: .35rem; color: #cbd5e1; font-size: .72rem; font-weight: 700; }.daily-status-milestone i { position: absolute; top: 1.3rem; right: .75rem; color: #6ee7b7; font-size: 1.1rem; font-style: normal; }
+.daily-status-primary, .daily-status-secondary { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; border-radius: .85rem; padding: .75rem 1.05rem; font-size: .83rem; font-weight: 900; transition: 180ms ease; }.daily-status-primary { border: 1px solid rgba(103, 232, 249, .45); background: linear-gradient(135deg, rgba(8, 145, 178, .38), rgba(79, 70, 229, .34)); color: #ecfeff; box-shadow: 0 10px 26px rgba(14, 116, 144, .18); }.daily-status-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(14, 116, 144, .34); }.daily-status-primary span { font-size: 1.05rem; }.daily-status-secondary { border: 1px solid rgba(255,255,255,.13); color: #cbd5e1; background: rgba(255,255,255,.045); }.daily-status-secondary:hover { border-color: rgba(165, 243, 252, .36); color: #e0f2fe; background: rgba(34, 211, 238, .08); }
+@keyframes dailyStatusEnter { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: translateY(0); } } @keyframes dailyStatusMedal { from { opacity: 0; transform: scale(.25) rotate(-30deg); } 72% { opacity: 1; transform: scale(1.16) rotate(7deg); } to { transform: scale(1) rotate(0); } } @keyframes dailyStatusGlow { 0%,100% { transform: scale(.92); opacity: .65; } 50% { transform: scale(1.14); opacity: 1; } } @keyframes dailyStatusStar { 0%,100% { transform: scale(.65); opacity: .3; } 50% { transform: scale(1.65); opacity: 1; } } @keyframes dailyStatusComet { 0%, 15% { transform: translateX(3rem) rotate(-22deg); opacity: 0; } 25%, 55% { opacity: 1; } 75%,100% { transform: translateX(-22rem) rotate(-22deg); opacity: 0; } }
+
 /* Game stage: a separate visual world from the calmer study screens. */
 .game-stage {
   background:
@@ -274,11 +291,41 @@ body::before {
 .game-music-toggle.is-playing .game-equalizer i:nth-child(2) { animation-delay: -220ms; }
 .game-music-toggle.is-playing .game-equalizer i:nth-child(3) { animation-delay: -410ms; }
 
+.game-audio-controls { display: flex; align-items: center; gap: 0.4rem; }
+.game-track-picker { display: flex; overflow: hidden; border: 1px solid rgba(148, 163, 184, 0.16); border-radius: 9999px; background: rgba(2, 6, 23, 0.42); }
+.game-track-picker button { padding: 0.42rem 0.52rem; color: #64748b; font-size: 0.68rem; font-weight: 800; transition: 160ms ease; }
+.game-track-picker button:hover { color: #cbd5e1; background: rgba(255, 255, 255, 0.06); }
+.game-track-picker button.is-active { color: #e0f2fe; background: linear-gradient(135deg, rgba(6, 182, 212, 0.27), rgba(124, 58, 237, 0.26)); box-shadow: inset 0 0 0 1px rgba(103, 232, 249, 0.22); }
+
+.game-result-screen {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 30rem;
+  padding: 1.5rem;
+  border-radius: 2rem;
+  animation: gameResultReveal 500ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.game-result-screen.is-success { background: radial-gradient(circle at 50% 3%, rgba(250, 204, 21, 0.22), transparent 35%), radial-gradient(circle at 16% 82%, rgba(16, 185, 129, 0.2), transparent 48%), #07191a; }
+.game-result-screen.is-failure { background: radial-gradient(circle at 50% 4%, rgba(251, 113, 133, 0.18), transparent 35%), radial-gradient(circle at 82% 90%, rgba(124, 58, 237, 0.16), transparent 48%), #190a13; }
+.game-result-screen > .relative { border-color: rgba(255, 255, 255, 0.13); background: rgba(4, 8, 17, 0.7); box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34), inset 0 1px rgba(255, 255, 255, 0.08); backdrop-filter: blur(18px); }
+.game-result-icon { display: grid; width: 5.2rem; height: 5.2rem; margin: 0 auto; place-items: center; border: 1px solid rgba(253, 230, 138, 0.5); border-radius: 9999px; background: radial-gradient(circle at 35% 25%, rgba(254, 249, 195, 0.8), rgba(250, 204, 21, 0.23) 34%, rgba(217, 70, 239, 0.08)); box-shadow: 0 0 0 0.7rem rgba(250, 204, 21, 0.07), 0 0 38px rgba(250, 204, 21, 0.32); font-size: 2.35rem; animation: gameResultIcon 850ms cubic-bezier(.2, 1.4, .35, 1) both; }
+.is-failure .game-result-icon { border-color: rgba(253, 164, 175, 0.46); background: radial-gradient(circle at 35% 25%, rgba(255, 228, 230, 0.65), rgba(244, 63, 94, 0.2) 35%, rgba(124, 58, 237, 0.12)); box-shadow: 0 0 0 0.7rem rgba(244, 63, 94, 0.06), 0 0 38px rgba(244, 63, 94, 0.25); animation-name: gameResultShake; }
+.game-result-particles { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.game-result-particles i { position: absolute; top: -4%; left: calc(var(--i) * 3.6%); width: 0.48rem; height: 0.8rem; border-radius: 2px; background: hsl(calc(var(--i) * 17) 92% 70%); box-shadow: 0 0 9px currentColor; animation: gameConfetti 2.1s cubic-bezier(.15, .7, .35, 1) calc(var(--i) * -0.06s) both; }
+.is-failure .game-result-particles i { width: 0.24rem; height: 0.24rem; border-radius: 9999px; background: #fda4af; animation-name: gameFailureSpark; }
+
 @keyframes gameGridDrift { to { background-position: 38px 38px; } }
 @keyframes gameOrbit { to { transform: rotate(1turn); } }
 @keyframes gameOrbFloat { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(1.5rem, -1rem, 0) scale(1.15); } }
 @keyframes gameStarPulse { 0%, 100% { transform: scale(0.75); opacity: 0.35; } 50% { transform: scale(1.7); opacity: 1; } }
 @keyframes gameEqualizer { from { height: 0.25rem; } to { height: 0.75rem; } }
+@keyframes gameResultReveal { from { opacity: 0; transform: translateY(1.25rem) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes gameResultIcon { 0% { transform: scale(.2) rotate(-24deg); opacity: 0; } 72% { transform: scale(1.17) rotate(8deg); opacity: 1; } 100% { transform: scale(1) rotate(0); } }
+@keyframes gameResultShake { 0%, 100% { transform: translateX(0) rotate(0); } 18% { transform: translateX(-0.6rem) rotate(-6deg); } 36% { transform: translateX(0.6rem) rotate(6deg); } 54% { transform: translateX(-0.3rem) rotate(-3deg); } 72% { transform: translateX(0.2rem) rotate(2deg); } }
+@keyframes gameConfetti { 0% { transform: translate3d(0, -1rem, 0) rotate(0); opacity: 0; } 14% { opacity: 1; } 100% { transform: translate3d(calc((var(--i) - 14) * .35rem), 34rem, 0) rotate(calc(var(--i) * 70deg)); opacity: 0; } }
+@keyframes gameFailureSpark { 0% { transform: translate3d(0, 0, 0) scale(.5); opacity: 0; } 25% { opacity: 1; } 100% { transform: translate3d(calc((var(--i) - 7) * .55rem), 18rem, 0) scale(1.6); opacity: 0; } }
 
 @keyframes flyIntoDeck {
   0% {
@@ -689,5 +736,5 @@ textarea:focus {
 @keyframes shadowingWave { from { height: 0.42rem; opacity: 0.65; } to { height: 1.65rem; opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .shadowing-listening-panel, .shadowing-listening-panel::before, .shadowing-listening-orb, .shadowing-waveform i, .game-stage::before, .game-stage::after, .game-stage-orb, .game-stage-star, .game-music-toggle.is-playing .game-equalizer i { animation: none; }
+  .shadowing-listening-panel, .shadowing-listening-panel::before, .shadowing-listening-orb, .shadowing-waveform i, .game-stage::before, .game-stage::after, .game-stage-orb, .game-stage-star, .game-music-toggle.is-playing .game-equalizer i, .game-result-screen, .game-result-icon, .game-result-particles i, .daily-status-hero::after, .daily-status-sky i, .daily-status-comet, .daily-status-card, .daily-status-medal { animation: none; }
 }

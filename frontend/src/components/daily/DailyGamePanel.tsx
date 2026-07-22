@@ -1,12 +1,17 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { confirmGame, getDailyGame, postGameFound, postGameHint } from '../../api/daily'
 import { useNotification } from '../NotificationProvider'
 import type { DailyGame, GameChip, GameConfirmResult } from '../../types'
 import WordSearchGrid from './WordSearchGrid'
 
 type Wire = { id: string; path: string; startX: number; startY: number; endX: number; endY: number }
+type MusicMode = 'arcade' | 'chase' | 'epic'
 
-const MUSIC_NOTES = [261.63, 329.63, 392, 493.88, 440, 392, 329.63, 293.66]
+const MUSIC_TRACKS: Record<MusicMode, { label: string; notes: number[]; tempo: number; wave: OscillatorType }> = {
+  arcade: { label: 'Arcade', notes: [261.63, 329.63, 392, 523.25, 493.88, 392, 329.63, 293.66], tempo: 310, wave: 'square' },
+  chase: { label: 'Rượt đuổi', notes: [110, 130.81, 164.81, 196, 164.81, 220, 196, 164.81], tempo: 230, wave: 'sawtooth' },
+  epic: { label: 'Cao trào', notes: [130.81, 164.81, 196, 261.63, 220, 196, 164.81, 196], tempo: 390, wave: 'triangle' },
+}
 
 function wirePath(startX: number, startY: number, endX: number, endY: number) {
   const curve = Math.max(44, (endX - startX) * 0.4)
@@ -15,6 +20,7 @@ function wirePath(startX: number, startY: number, endX: number, endY: number) {
 
 function GameMusicToggle() {
   const [playing, setPlaying] = useState(false)
+  const [mode, setMode] = useState<MusicMode>('chase')
   const contextRef = useRef<AudioContext | null>(null)
   const loopRef = useRef<number | null>(null)
 
@@ -27,15 +33,16 @@ function GameMusicToggle() {
     setPlaying(false)
   }, [])
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (nextMode: MusicMode) => {
+    const track = MUSIC_TRACKS[nextMode]
     const context = new AudioContext()
     contextRef.current = context
     await context.resume()
-    const playNote = (frequency: number, volume: number, duration: number) => {
+    const playNote = (frequency: number, volume: number, duration: number, wave = track.wave) => {
       const oscillator = context.createOscillator()
       const gain = context.createGain()
       const now = context.currentTime
-      oscillator.type = 'sine'
+      oscillator.type = wave
       oscillator.frequency.setValueAtTime(frequency, now)
       gain.gain.setValueAtTime(0.0001, now)
       gain.gain.exponentialRampToValueAtTime(volume, now + 0.045)
@@ -44,21 +51,49 @@ function GameMusicToggle() {
       oscillator.start(now)
       oscillator.stop(now + duration + 0.03)
     }
+    const playDrum = (strength: number) => {
+      const oscillator = context.createOscillator()
+      const gain = context.createGain()
+      const now = context.currentTime
+      oscillator.type = 'sine'
+      oscillator.frequency.setValueAtTime(120, now)
+      oscillator.frequency.exponentialRampToValueAtTime(45, now + 0.13)
+      gain.gain.setValueAtTime(strength, now)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16)
+      oscillator.connect(gain).connect(context.destination)
+      oscillator.start(now)
+      oscillator.stop(now + 0.18)
+    }
     let step = 0
     const play = () => {
-      const note = MUSIC_NOTES[step % MUSIC_NOTES.length]
-      playNote(note, 0.028, 0.58)
-      if (step % 4 === 0) playNote(note / 2, 0.012, 0.72)
+      const note = track.notes[step % track.notes.length]
+      playNote(note, nextMode === 'chase' ? 0.022 : 0.027, nextMode === 'chase' ? 0.28 : 0.46)
+      if (step % 2 === 0) playNote(note / 2, 0.015, 0.45, 'sine')
+      if (nextMode !== 'arcade' || step % 2 === 0) playDrum(step % 4 === 0 ? 0.08 : 0.038)
+      if (nextMode === 'epic' && step % 4 === 2) playNote(note * 1.5, 0.014, 0.35, 'sine')
       step += 1
     }
     play()
-    loopRef.current = window.setInterval(play, 520)
+    loopRef.current = window.setInterval(play, track.tempo)
     setPlaying(true)
   }, [])
 
   useEffect(() => () => stop(), [stop])
 
-  return <button onClick={() => { if (playing) stop(); else void start() }} aria-pressed={playing} className={`game-music-toggle ${playing ? 'is-playing' : ''}`} title={playing ? 'Tắt nhạc nền' : 'Bật nhạc nền'}><span className="game-equalizer" aria-hidden="true"><i /><i /><i /></span><span>{playing ? 'Nhạc: bật' : 'Nhạc: tắt'}</span></button>
+  const changeMode = (nextMode: MusicMode) => {
+    setMode(nextMode)
+    if (playing) { stop(); window.setTimeout(() => void start(nextMode), 0) }
+  }
+
+  return <div className="game-audio-controls"><button onClick={() => { if (playing) stop(); else void start(mode) }} aria-pressed={playing} className={`game-music-toggle ${playing ? 'is-playing' : ''}`} title={playing ? 'Tắt nhạc nền' : 'Bật nhạc nền'}><span className="game-equalizer" aria-hidden="true"><i /><i /><i /></span><span>{playing ? 'Nhạc: bật' : 'Nhạc: tắt'}</span></button><div className="game-track-picker" role="group" aria-label="Chọn thể loại nhạc">{(Object.keys(MUSIC_TRACKS) as MusicMode[]).map(item => <button key={item} onClick={() => changeMode(item)} className={mode === item ? 'is-active' : ''}>{MUSIC_TRACKS[item].label}</button>)}</div></div>
+}
+
+function GameResults({ results }: { results: GameConfirmResult[] }) {
+  const correct = results.filter(item => item.correct).length
+  const perfect = correct === results.length
+  const passed = correct >= Math.ceil(results.length * 0.6)
+  const celebration = perfect || passed
+  return <div className={`game-result-screen ${celebration ? 'is-success' : 'is-failure'}`}><div className="game-result-particles" aria-hidden="true">{Array.from({ length: celebration ? 28 : 14 }, (_, index) => <i key={index} style={{ '--i': index } as CSSProperties} />)}</div><div className="relative z-10 mx-auto max-w-2xl rounded-[2rem] border p-6 text-center sm:p-8"><div className="game-result-icon" aria-hidden="true">{perfect ? '🏆' : celebration ? '✨' : '⚠️'}</div><p className="mt-4 text-[10px] font-black uppercase tracking-[.2em] text-slate-400">{perfect ? 'Perfect connection' : celebration ? 'Good run' : 'Needs another round'}</p><h2 className="mt-2 text-2xl font-black text-white">{perfect ? 'Kết nối hoàn hảo!' : celebration ? 'Bạn đã làm rất tốt!' : 'Chưa chính xác lần này'}</h2><p className="mt-2 text-sm text-slate-300">Bạn nối đúng <b className={celebration ? 'text-emerald-200' : 'text-rose-200'}>{correct}/{results.length}</b> cặp từ.</p><ul className="mt-6 space-y-2 text-left">{results.map(item => <li key={item.card_id} className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm ${item.correct ? 'border-emerald-300/20 bg-emerald-400/[.09] text-emerald-100' : 'border-rose-300/20 bg-rose-400/[.08] text-rose-100'}`}><b>{item.word}</b><span className="text-right">{item.meaning}</span><span>{item.correct ? '✓' : '×'}</span></li>)}</ul>{!celebration && <p className="mt-5 text-sm text-rose-200/90">Đừng nản nhé — lần sau hãy lần theo dây và kiểm tra kỹ nghĩa trước khi xác nhận.</p>}</div></div>
 }
 
 export default function DailyGamePanel({ onDone }: { onDone?: () => void }) {
@@ -118,7 +153,7 @@ export default function DailyGamePanel({ onDone }: { onDone?: () => void }) {
   if (error === 'learning') return <p className="py-8 text-center text-sm text-amber-300">📚 Học bài xong mới chơi được game nhé!</p>
   if (error === 'missing') return <p className="py-8 text-center text-sm text-slate-400">Hôm nay không có game.</p>
   if (!game) return <div className="flex justify-center py-16"><div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" /></div>
-  if (results) return <div className="mx-auto max-w-2xl rounded-3xl border border-white/[.07] bg-white/[.03] p-5 sm:p-7"><h2 className="mb-1 text-xl font-black text-white">🏁 Kết quả game</h2><p className="mb-5 text-sm text-slate-400">Đúng {results.filter(item => item.correct).length}/{results.length} cặp.</p><ul className="space-y-2">{results.map(item => <li key={item.card_id} className={`flex items-center justify-between gap-3 rounded-2xl p-3 text-sm ${item.correct ? 'bg-emerald-400/10 text-emerald-200' : 'bg-rose-400/10 text-rose-200'}`}><b>{item.word}</b><span className="text-right">{item.meaning}</span><span>{item.correct ? '✅' : '❌'}</span></li>)}</ul></div>
+  if (results) return <GameResults results={results} />
 
   const allFound = found.length === game.total_words
   const allLinked = allFound && found.every(chip => chip.card_id in links)

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { addArticleHighlightsToDeck, deleteArticleHighlight, getArticle, getArticleHighlights, getArticleTranslation, saveArticleHighlight } from '../api/articles'
-import { lookupViDictionary } from '../api/dictionary'
+import { lookupEnDictionary, lookupViDictionary } from '../api/dictionary'
 import WordPopup from '../components/reader/WordPopup'
 import { useNotification } from '../components/NotificationProvider'
 import type { Article, ArticleHighlight, ArticleTranslation } from '../types'
@@ -459,7 +459,17 @@ export default function ReaderPage() {
     if (!article || !highlights.length) return
     setAddingHighlights(true)
     try {
-      const result = await addArticleHighlightsToDeck(article.id)
+      const cards = await Promise.all(highlights.map(async highlight => {
+        if (highlight.anki_match) return { word: highlight.word }
+        const entry = await lookupEnDictionary(highlight.word)
+        return {
+          word: highlight.word,
+          pronunciation: entry?.phonetic ?? undefined,
+          definition: entry?.meanings[0]?.definitions[0] ?? undefined,
+          audio_url: entry?.audioUrl ?? undefined,
+        }
+      }))
+      const result = await addArticleHighlightsToDeck(article.id, cards)
       const details = result.anki_matches ? `, ${result.anki_matches} từ dùng dữ liệu Anki` : ''
       toast(`Đã thêm ${result.cards_created} thẻ${result.cards_skipped ? `, bỏ qua ${result.cards_skipped} thẻ đã có` : ''}${details}`, 'success')
     } catch (error: any) {

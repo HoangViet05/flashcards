@@ -111,6 +111,28 @@ def test_article_deck_and_bulk_highlights_prefer_anki_data(client, db):
     assert repeated.json()["cards_skipped"] == 1
 
 
+def test_bulk_highlights_keep_dictionary_pronunciation_and_audio(client):
+    article = client.post("/api/articles", json=PASTE_BODY).json()
+    url = f"/api/articles/{article['id']}/highlights"
+    assert client.post(url, json={"word": "containers", "meaning": "vật chứa"}).status_code == 200
+
+    saved = client.post(
+        f"/api/articles/{article['id']}/highlights/to-deck",
+        json={
+            "cards": [{
+                "word": "containers",
+                "pronunciation": "/kənˈteɪnəz/",
+                "definition": "objects used to hold things",
+                "audio_url": "https://audio.example/containers.mp3",
+            }]
+        },
+    )
+    assert saved.status_code == 200, saved.text
+    card = client.get(f"/api/decks/{article['deck_id']}/cards").json()[0]
+    assert card["pronunciation"] == "/kənˈteɪnəz/"
+    assert card["audio_url"] == "https://audio.example/containers.mp3"
+
+
 def test_local_translation_worker_claims_only_its_users_jobs(client, user_b_client):
     article = client.post("/api/articles", json=PASTE_BODY).json()
     queued = client.post(f"/api/articles/{article['id']}/translation-jobs", json={})

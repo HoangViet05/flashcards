@@ -5,9 +5,11 @@ from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.models.article import Article
 from app.models.card import Card
 from app.models.deck import Deck
 from app.models.review import Review
+from app.models.review_log import ReviewLog
 from app.models.user import User
 from app.schemas.deck import DeckCreate, DeckOut, DeckUpdate
 from app.services.security import get_current_user
@@ -116,6 +118,18 @@ def delete_deck(
     deck = get_owned_deck(deck_id, db, user)
     row = deck_counts_query(db, user.id, deck_id).first()
     out = deck_to_out(row)
+
+    # Keep learning history when a deck is removed. New databases have
+    # ``ON DELETE SET NULL`` on review_logs.card_id, but older SQLite files
+    # may have been created before that foreign-key action existed.
+    card_ids = db.query(Card.id).filter(Card.deck_id == deck.id)
+    db.query(ReviewLog).filter(ReviewLog.card_id.in_(card_ids)).update(
+        {ReviewLog.card_id: None}, synchronize_session=False
+    )
+    # The reading item remains available after deleting its paired deck.
+    db.query(Article).filter(Article.deck_id == deck.id).update(
+        {Article.deck_id: None}, synchronize_session=False
+    )
     db.delete(deck)
     db.commit()
     return out

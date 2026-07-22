@@ -40,6 +40,23 @@ def test_delete_deck(client):
     assert client.get(f"/api/decks/{created['id']}").status_code == 404
 
 
+def test_delete_deck_after_review_keeps_review_history(client, db):
+    from app.models.review_log import ReviewLog
+
+    deck = client.post("/api/decks", json={"name": "Studied deck"}).json()
+    card = client.post(
+        f"/api/decks/{deck['id']}/cards",
+        json={"front_text": "hello", "back_text": "xin chào"},
+    ).json()
+    reviewed = client.post(f"/api/review/{card['id']}", json={"quality": 5})
+    assert reviewed.status_code == 200
+
+    deleted = client.delete(f"/api/decks/{deck['id']}")
+    assert deleted.status_code == 200, deleted.text
+    assert client.get(f"/api/decks/{deck['id']}").status_code == 404
+    assert db.query(ReviewLog).one().card_id is None
+
+
 def test_decks_require_auth(anon_client):
     assert anon_client.get("/api/decks").status_code == 401
 

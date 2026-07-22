@@ -14,7 +14,7 @@ from app.models.translation_worker import TranslationWorker
 from app.models.user import User
 from app.schemas.article import (
     ArticleCardCreate, ArticleCreate, ArticleHighlightCreate, ArticleHighlightOut, ArticleListItem, ArticleOut,
-    HighlightCardsResult,
+    HighlightCardMetadata, HighlightCardsCreate, HighlightCardsResult,
     ArticleTranslationOut, LocalWorkerCreate, LocalWorkerCreated, LocalWorkerOut, TranslationQueueResult,
     TranslationRequest, WorkerClaimOut, WorkerComplete, WorkerFailure,
 )
@@ -372,6 +372,7 @@ def save_article_card(
 @router.post("/{article_id}/highlights/to-deck", response_model=HighlightCardsResult)
 def save_highlights_to_article_deck(
     article_id: str,
+    body: HighlightCardsCreate | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -383,10 +384,15 @@ def save_highlights_to_article_deck(
         .all()
     )
     deck = ensure_article_deck(article, db)
+    metadata_by_word: dict[str, HighlightCardMetadata] = {
+        normalize_word(metadata.word): metadata
+        for metadata in (body.cards if body else [])
+    }
     cards_created = 0
     cards_skipped = 0
     anki_matches = 0
     for highlight in highlights:
+        metadata = metadata_by_word.get(normalize_word(highlight.word))
         result = create_article_card(
             article,
             user,
@@ -394,6 +400,9 @@ def save_highlights_to_article_deck(
             word=highlight.word,
             back_text=highlight.meaning or "Chưa có nghĩa Việt",
             example_sentence=first_sentence_containing(article, highlight.word),
+            pronunciation=metadata.pronunciation if metadata else None,
+            definition=metadata.definition if metadata else None,
+            audio_url=metadata.audio_url if metadata else None,
         )
         if result.duplicate:
             cards_skipped += 1

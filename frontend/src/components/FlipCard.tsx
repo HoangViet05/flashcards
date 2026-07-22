@@ -107,12 +107,22 @@ function inferTypedAnswerQuality(correct: boolean, responseTimeMs: number, attem
   }
 }
 
-function AudioButton({ src, small, onPlay }: { src: string; small?: boolean; onPlay?: () => void }) {
+function AudioButton({ src, fallbackText, small, onPlay }: { src?: string | null; fallbackText?: string; small?: boolean; onPlay?: () => void }) {
   const resolvedSrc = resolveAssetUrl(src)
   const play = (e: MouseEvent) => {
     e.stopPropagation()
     onPlay?.()
-    if (resolvedSrc) new Audio(resolvedSrc).play().catch(() => {})
+    if (resolvedSrc) {
+      new Audio(resolvedSrc).play().catch(() => {})
+      return
+    }
+    if (fallbackText) {
+      window.speechSynthesis.cancel()
+      const utterance = new SpeechSynthesisUtterance(fallbackText)
+      utterance.lang = 'en-US'
+      utterance.rate = 0.9
+      window.speechSynthesis.speak(utterance)
+    }
   }
   return (
     <button
@@ -391,7 +401,7 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
             {card.pronunciation && (
               <p className="text-cyan-200/70 text-lg sm:text-xl font-medium tracking-wide text-center break-words">{card.pronunciation}</p>
             )}
-            {card.audio_url && <AudioButton src={card.audio_url} onPlay={() => setAudioPlayCount(value => value + 1)} />}
+            <AudioButton src={card.audio_url} fallbackText={card.front_text} onPlay={() => setAudioPlayCount(value => value + 1)} />
             <div className="flex items-center gap-2 sm:gap-3 mt-4 sm:mt-6">
               <span className="w-8 sm:w-12 h-px bg-gradient-to-r from-transparent to-violet-500/50" />
               <span className="text-violet-400/80 text-xs font-bold uppercase tracking-widest bg-violet-500/10 px-3 py-1 rounded-full border border-violet-500/20">nhấn để lật</span>

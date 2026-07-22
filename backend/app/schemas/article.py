@@ -72,6 +72,17 @@ class ArticleCardCreate(BaseModel):
     example_audio_url: str | None = None
 
 
+class HighlightCardMetadata(BaseModel):
+    word: str = Field(min_length=1, max_length=500)
+    pronunciation: str | None = None
+    definition: str | None = None
+    audio_url: str | None = None
+
+
+class HighlightCardsCreate(BaseModel):
+    cards: list[HighlightCardMetadata] = Field(default_factory=list)
+
+
 class HighlightCardsResult(BaseModel):
     deck_id: str
     cards_created: int

@@ -23,7 +23,15 @@ export const createArticleCard = (articleId: string, data: {
   audio_url?: string
   example_audio_url?: string
 }) => client.post<Card>(`/articles/${articleId}/cards`, data).then(response => response.data)
-export const addArticleHighlightsToDeck = (articleId: string) => client.post<ArticleHighlightCardsResult>(`/articles/${articleId}/highlights/to-deck`).then(response => response.data)
+export type HighlightCardMetadata = {
+  word: string
+  pronunciation?: string
+  definition?: string
+  audio_url?: string
+}
+
+export const addArticleHighlightsToDeck = (articleId: string, cards: HighlightCardMetadata[] = []) =>
+  client.post<ArticleHighlightCardsResult>(`/articles/${articleId}/highlights/to-deck`, { cards }).then(response => response.data)
 export const queueArticleTranslation = (id: string, force = false) => client.post<ArticleTranslation>(`/articles/${id}/translation-jobs`, { force }).then(response => response.data)
 export const queueUntranslatedArticles = () => client.post<{ queued_count: number; already_pending_count: number }>('/articles/translation-jobs/untranslated').then(response => response.data)
 export const getArticleTranslation = (id: string) => client.get<ArticleTranslation>(`/articles/${id}/translation`).then(response => response.data)

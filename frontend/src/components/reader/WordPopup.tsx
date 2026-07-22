@@ -61,7 +61,7 @@ export default function WordPopup({ word, sentence, articleId, onClose }: Props)
   }
 
   const save = async () => {
-    if (!backText.trim()) return
+    if (!backText.trim() || vi === 'loading' || en === 'loading') return
     setSaving(true)
     try {
       await createArticleCard(articleId, {
@@ -69,8 +69,8 @@ export default function WordPopup({ word, sentence, articleId, onClose }: Props)
         back_text: backText.trim(),
         example_sentence: sentence,
         pronunciation: ipa ?? undefined,
-        definition: en !== 'loading' ? en?.meanings[0]?.definitions[0] : undefined,
-        audio_url: en !== 'loading' ? en?.audioUrl ?? undefined : undefined,
+        definition: en?.meanings[0]?.definitions[0],
+        audio_url: en?.audioUrl ?? undefined,
       })
       toast(`Đã lưu “${word}” vào bộ thẻ của bài đọc`, 'success')
       onClose()
@@ -128,7 +128,7 @@ export default function WordPopup({ word, sentence, articleId, onClose }: Props)
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[.12em] text-slate-500">Lưu vào bộ thẻ của bài đọc</p>
           <div className="space-y-2">
             <input value={backText} onChange={event => setBackText(event.target.value)} placeholder="Nghĩa trên mặt sau" className="w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none placeholder:text-slate-500 transition focus:border-cyan-300/50" />
-            <button onClick={() => void save()} disabled={saving || !backText.trim()} className="w-full rounded-xl border border-emerald-300/25 bg-emerald-400/10 py-2.5 text-sm font-bold text-emerald-200 transition hover:bg-emerald-400/15 disabled:cursor-not-allowed disabled:opacity-40">{saving ? 'Đang lưu…' : 'Lưu vào bộ thẻ'}</button>
+            <button onClick={() => void save()} disabled={saving || !backText.trim() || vi === 'loading' || en === 'loading'} className="w-full rounded-xl border border-emerald-300/25 bg-emerald-400/10 py-2.5 text-sm font-bold text-emerald-200 transition hover:bg-emerald-400/15 disabled:cursor-not-allowed disabled:opacity-40">{saving ? 'Đang lưu…' : vi === 'loading' || en === 'loading' ? 'Đang lấy phiên âm và giọng đọc…' : 'Lưu vào bộ thẻ'}</button>
           </div>
         </footer>
       </div>

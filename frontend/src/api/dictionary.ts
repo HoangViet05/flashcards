@@ -25,10 +25,11 @@ export async function lookupEnDictionary(word: string): Promise<EnDictResult | n
     const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`, { timeout: 8000 })
     const first = response.data[0]
     if (first) {
+      const phonetics = first.phonetics ?? []
       result = {
         word: first.word,
-        phonetic: first.phonetic ?? first.phonetics?.find((item: { text?: string }) => item.text)?.text ?? null,
-        audioUrl: first.phonetics?.find((item: { audio?: string }) => item.audio)?.audio ?? null,
+        phonetic: first.phonetic?.trim() || phonetics.find((item: { text?: string }) => item.text?.trim())?.text?.trim() || null,
+        audioUrl: phonetics.find((item: { audio?: string }) => item.audio?.trim())?.audio?.trim() || null,
         meanings: (first.meanings ?? []).slice(0, 3).map((meaning: { partOfSpeech: string; definitions: { definition: string }[] }) => ({
           partOfSpeech: meaning.partOfSpeech,
           definitions: meaning.definitions.slice(0, 2).map(definition => definition.definition),

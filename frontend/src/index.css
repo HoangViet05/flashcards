@@ -185,6 +185,21 @@ body::before {
   animation: slideInLeft 0.3s ease-out both;
 }
 
+@keyframes letterFlight {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; box-shadow: 0 0 0 rgba(34, 211, 238, 0); }
+  35% { transform: translate(64px, -12px) scale(1.35); opacity: 1; box-shadow: 0 0 18px rgba(34, 211, 238, 0.9); }
+  100% { transform: translate(150px, 8px) scale(0.45); opacity: 0; }
+}
+
+@keyframes wordCardAssemble {
+  0% { opacity: 0; transform: translateX(-80px) scale(0.72); filter: blur(6px); }
+  55% { opacity: 1; transform: translateX(8px) scale(1.05); filter: blur(0); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.animate-letter-flight { animation: letterFlight 0.62s cubic-bezier(.2, .8, .2, 1) both; }
+.animate-word-card-assemble { animation: wordCardAssemble 0.64s cubic-bezier(.2, .8, .2, 1) 0.2s both; }
+
 @keyframes flyIntoDeck {
   0% {
     transform: translate(60px, -60px) scale(1.5) rotate(15deg);

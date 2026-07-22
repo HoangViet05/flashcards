@@ -3,6 +3,7 @@ import { confirmGame, getDailyGame, postGameFound, postGameHint } from '../../ap
 import { useNotification } from '../NotificationProvider'
 import type { DailyGame, GameChip, GameConfirmResult } from '../../types'
 import WordSearchGrid from './WordSearchGrid'
+import DailyStatusHero from './DailyStatusHero'
 
 type Wire = { id: string; path: string; startX: number; startY: number; endX: number; endY: number }
 type MusicMode = 'arcade' | 'chase' | 'epic'
@@ -150,8 +151,8 @@ export default function DailyGamePanel({ onDone }: { onDone?: () => void }) {
     return () => { observer.disconnect(); window.removeEventListener('resize', measureWires) }
   }, [found, measureWires])
 
-  if (error === 'learning') return <p className="py-8 text-center text-sm text-amber-300">📚 Học bài xong mới chơi được game nhé!</p>
-  if (error === 'missing') return <p className="py-8 text-center text-sm text-slate-400">Hôm nay không có game.</p>
+  if (error === 'learning') return <DailyStatusHero kind="locked" primaryTo="/daily" primaryLabel="Tiếp tục học" secondaryTo="/" secondaryLabel="Về trang chủ" />
+  if (error === 'missing') return <DailyStatusHero kind="start" primaryTo="/" primaryLabel="Tạo thẻ để bắt đầu" secondaryTo="/reader" secondaryLabel="Mở Tech Reader" />
   if (!game) return <div className="flex justify-center py-16"><div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" /></div>
   if (results) return <GameResults results={results} />
 

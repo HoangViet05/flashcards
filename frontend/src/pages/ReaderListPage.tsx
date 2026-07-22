@@ -4,6 +4,7 @@ import { createArticle, createTranslationWorker, deleteArticle, getArticles, get
 import { API_BASE_URL } from '../api/config'
 import { useAuth } from '../auth/AuthContext'
 import { useNotification } from '../components/NotificationProvider'
+import DailyStatusHero from '../components/daily/DailyStatusHero'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import type { TranslationStatus } from '../types'
 import { stripTranscriptTimestamps } from '../utils/readerText'
@@ -147,7 +148,7 @@ export default function ReaderListPage() {
       <p className="-mt-3 mb-6 text-xs text-slate-500">Bản dịch được worker local tạo ở nền và lưu kín trong tài khoản; nội dung tiếng Anh vẫn là màn hình đọc chính.</p>
 
       {articlesQuery.loading ? <div className="grid gap-3 sm:grid-cols-2">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-24 animate-pulse rounded-2xl bg-white/[.05]" />)}</div>
-        : articles.length === 0 ? <p className="rounded-2xl border border-white/[.07] bg-white/[.03] p-8 text-center text-slate-400">Chưa có bài đọc nào — dán một bài báo IT hoặc JD để bắt đầu.</p>
+        : articles.length === 0 ? <DailyStatusHero kind="reader" primaryTo="/reader" primaryLabel="Thêm bài đọc" onPrimary={() => setShow(true)} secondaryTo="/" secondaryLabel="Về trang chủ" />
           : <div className="grid gap-3 sm:grid-cols-2">{articles.map(article => {
             const translation = article.translation_status ? TRANSLATION_BADGES[article.translation_status] : null
             return <div key={article.id} className="group relative rounded-2xl border border-white/[.07] bg-white/[.03] p-4 hover:border-cyan-300/20">

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { addArticleHighlightsToDeck, deleteArticleHighlight, getArticle, getArticleHighlights, getArticleTranslation, saveArticleHighlight } from '../api/articles'
+import { getAllCards } from '../api/cards'
 import { lookupEnDictionary, lookupViDictionary } from '../api/dictionary'
 import PhraseCardPopup from '../components/reader/PhraseCardPopup'
 import WordPopup from '../components/reader/WordPopup'
@@ -20,6 +21,23 @@ type PhraseSelection = {
 }
 
 const normalizedSentence = (sentence: string) => sentence.replace(/\s+/g, ' ').trim().toLowerCase()
+
+type TextRange = { start: number; end: number }
+
+function savedPhraseRanges(sentence: string, phrases: string[]): TextRange[] {
+  const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const ranges: TextRange[] = []
+  for (const phrase of new Set(phrases)) {
+    if (!phrase.includes(' ')) continue
+    const pattern = escapeRegExp(phrase.trim()).replace(/\s+/g, '\\s+')
+    const matcher = new RegExp(`(^|[^A-Za-z'])(${pattern})(?=$|[^A-Za-z'])`, 'gi')
+    for (let match = matcher.exec(sentence); match; match = matcher.exec(sentence)) {
+      const start = match.index + match[1].length
+      ranges.push({ start, end: start + match[2].length })
+    }
+  }
+  return ranges
+}
 
 
 /**
@@ -310,6 +328,7 @@ export default function ReaderPage() {
   const [addingHighlights, setAddingHighlights] = useState(false)
   const [picked, setPicked] = useState<{ word: string; sentence: string } | null>(null)
   const [phraseSelection, setPhraseSelection] = useState<PhraseSelection | null>(null)
+  const [savedPhrases, setSavedPhrases] = useState<string[]>([])
   const [rate, setRate] = useState(1)
   const [tts, setTts] = useState({ playing: false, sentence: -1 })
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
@@ -330,6 +349,20 @@ export default function ReaderPage() {
     }
   }, [id])
 
+  useEffect(() => {
+    let current = true
+    if (!article?.deck_id) {
+      setSavedPhrases([])
+      return () => { current = false }
+    }
+    void getAllCards(article.deck_id)
+      .then(cards => {
+        if (current) setSavedPhrases(cards.map(card => card.front_text).filter(phrase => phrase.trim().includes(' ')))
+      })
+      .catch(() => { if (current) setSavedPhrases([]) })
+    return () => { current = false }
+  }, [article?.deck_id])
+
   const content = useMemo(() => stripTranscriptTimestamps(article?.content ?? ''), [article])
   const paragraphs = useMemo(() => content.split(/\n\n+/).filter(Boolean), [content])
   const sentences = useMemo(
@@ -346,6 +379,10 @@ export default function ReaderPage() {
   const translatedParagraphs = useMemo(
     () => (translation?.translated_content ?? '').split(/\n\n+/).map(value => value.trim()).filter(Boolean),
     [translation],
+  )
+  const phraseRangesBySentence = useMemo(
+    () => sentences.map(sentence => savedPhraseRanges(sentence, savedPhrases)),
+    [sentences, savedPhrases],
   )
   const availableVoices = useMemo(() => {
     const englishVoices = voices.filter(voice => /^en(?:-|_)/i.test(voice.lang))
@@ -580,7 +617,10 @@ export default function ReaderPage() {
                     {sentence.split(/(\s+)/).map((token, tokenIndex) => {
                       const word = cleanToken(token)
                       const normalizedWord = word.toLowerCase()
-                      const isHighlighted = highlights.some(highlight => highlight.word === normalizedWord)
+                      const tokenStart = sentence.split(/(\s+)/).slice(0, tokenIndex).join('').length
+                      const tokenEnd = tokenStart + token.length
+                      const isSavedPhrase = phraseRangesBySentence[current]?.some(range => tokenStart < range.end && tokenEnd > range.start)
+                      const isHighlighted = highlights.some(highlight => highlight.word === normalizedWord) || isSavedPhrase
                       return !word || /^\s+$/.test(token)
                         ? token
                         : <span key={tokenIndex} onClick={() => openWordPopup(normalizedWord, sentence.trim())} onDoubleClick={event => { event.preventDefault(); toggleHighlight(normalizedWord) }} className={`cursor-pointer rounded-sm transition hover:bg-cyan-400/20 ${isHighlighted ? 'bg-amber-300/20 px-0.5 font-semibold text-amber-100 shadow-[inset_0_-2px_0_rgba(252,211,77,.72)] hover:bg-amber-300/30' : ''}`}>{token}</span>
@@ -607,7 +647,7 @@ export default function ReaderPage() {
         </article>
       </div>
       {picked && <WordPopup word={picked.word} sentence={picked.sentence} articleId={article.id} onClose={() => setPicked(null)} />}
-      {phraseSelection && <PhraseCardPopup phrase={phraseSelection.phrase} sentence={phraseSelection.sentence} sentenceTranslation={phraseSelection.translation} articleId={article.id} onClose={() => setPhraseSelection(null)} />}
+      {phraseSelection && <PhraseCardPopup phrase={phraseSelection.phrase} sentence={phraseSelection.sentence} sentenceTranslation={phraseSelection.translation} articleId={article.id} onSaved={phrase => setSavedPhrases(current => current.includes(phrase) ? current : [...current, phrase])} onClose={() => setPhraseSelection(null)} />}
     </div>
   )
 }

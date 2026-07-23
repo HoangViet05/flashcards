@@ -7,10 +7,11 @@ interface Props {
   sentence: string
   sentenceTranslation: string | null
   articleId: string
+  onSaved: (phrase: string) => void
   onClose: () => void
 }
 
-export default function PhraseCardPopup({ phrase, sentence, sentenceTranslation, articleId, onClose }: Props) {
+export default function PhraseCardPopup({ phrase, sentence, sentenceTranslation, articleId, onSaved, onClose }: Props) {
   const { toast } = useNotification()
   const [meaning, setMeaning] = useState('')
   const [saving, setSaving] = useState(false)
@@ -32,6 +33,7 @@ export default function PhraseCardPopup({ phrase, sentence, sentenceTranslation,
         back_text: meaning.trim(),
         example_sentence: sentence,
       })
+      onSaved(phrase)
       toast(`Đã lưu cụm “${phrase}” vào bộ thẻ của bài đọc`, 'success')
       onClose()
     } catch (error: any) {

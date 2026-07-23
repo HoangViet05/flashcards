@@ -9,7 +9,7 @@ export default function GamesPage() {
   useEffect(() => { void getDailyStatus().then(setStatus).catch(() => {}).finally(() => setLoading(false)) }, [])
   if (loading) return <div className="flex justify-center py-24"><div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" /></div>
   const state = status?.session_status ?? 'none'
-  return <div className="mx-auto max-w-7xl px-4 py-8"><h1 className="mb-6 text-2xl font-black text-white">🎮 Game củng cố từ vựng</h1>
+  return <div className="mx-auto max-w-[90rem] px-4 py-8"><h1 className="mb-6 text-2xl font-black text-white">🎮 Game củng cố từ vựng</h1>
     {state === 'none' && <DailyStatusHero kind="start" primaryTo="/" primaryLabel="Tạo thẻ để bắt đầu" secondaryTo="/reader" secondaryLabel="Mở Tech Reader" />}
     {state === 'learning' && <DailyStatusHero kind="locked" primaryTo="/daily" primaryLabel="Học bài ngay" secondaryTo="/" secondaryLabel="Về trang chủ" />}
     {state === 'game' && <DailyGamePanel />}

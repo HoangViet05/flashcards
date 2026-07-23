@@ -189,7 +189,7 @@ export default function DailyGamePanel({ onDone }: { onDone?: () => void }) {
       </header>
 
       <div ref={boardRef} className="relative">
-        <svg aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 hidden h-full w-full lg:block" viewBox={`0 0 ${boardSize.width} ${boardSize.height}`} preserveAspectRatio="none">
+        <svg aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 hidden h-full w-full xl:block" viewBox={`0 0 ${boardSize.width} ${boardSize.height}`} preserveAspectRatio="none">
           <defs>
             <linearGradient id="word-wire" x1="0" x2="1"><stop stopColor="#22d3ee" /><stop offset="1" stopColor="#a78bfa" /></linearGradient>
             <filter id="wire-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
@@ -197,7 +197,7 @@ export default function DailyGamePanel({ onDone }: { onDone?: () => void }) {
           {wires.map(wire => <g key={wire.id} filter="url(#wire-glow)"><path d={wire.path} fill="none" stroke="url(#word-wire)" strokeWidth="2.5" strokeLinecap="round" /><circle cx={wire.startX} cy={wire.startY} r="4" fill="#67e8f9" /><circle cx={wire.endX} cy={wire.endY} r="4" fill="#c4b5fd" /></g>)}
         </svg>
 
-        <div className="relative z-20 grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(11rem,.55fr)_minmax(15rem,.9fr)] lg:items-start lg:gap-8">
+        <div className="relative z-20 grid gap-5 xl:grid-cols-[minmax(34rem,1.1fr)_minmax(14rem,.55fr)_minmax(20rem,.9fr)] xl:items-start xl:gap-8">
           <section>
             <p className="mb-2 text-xs font-black uppercase tracking-wide text-slate-500">🔍 Tìm từ trong ô chữ</p>
             <WordSearchGrid grid={game.grid} foundCells={foundCells} arrivingCells={(flyingChip?.cells ?? []).map(([row, col]) => `${row}-${col}`)} onSelect={findWord} />

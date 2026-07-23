@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { addArticleHighlightsToDeck, deleteArticleHighlight, getArticle, getArticleHighlights, getArticleTranslation, saveArticleHighlight } from '../api/articles'
 import { lookupEnDictionary, lookupViDictionary } from '../api/dictionary'
+import PhraseCardPopup from '../components/reader/PhraseCardPopup'
 import WordPopup from '../components/reader/WordPopup'
 import { useNotification } from '../components/NotificationProvider'
 import type { Article, ArticleHighlight, ArticleTranslation } from '../types'
@@ -10,6 +11,12 @@ import { sentenceParts, splitSentences, stripTranscriptTimestamps } from '../uti
 type SentenceTranslation = {
   source: string
   translated: string | null
+}
+
+type PhraseSelection = {
+  phrase: string
+  sentence: string
+  translation: string | null
 }
 
 const normalizedSentence = (sentence: string) => sentence.replace(/\s+/g, ' ').trim().toLowerCase()
@@ -302,6 +309,7 @@ export default function ReaderPage() {
   const [highlights, setHighlights] = useState<ArticleHighlight[]>([])
   const [addingHighlights, setAddingHighlights] = useState(false)
   const [picked, setPicked] = useState<{ word: string; sentence: string } | null>(null)
+  const [phraseSelection, setPhraseSelection] = useState<PhraseSelection | null>(null)
   const [rate, setRate] = useState(1)
   const [tts, setTts] = useState({ playing: false, sentence: -1 })
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
@@ -417,6 +425,26 @@ export default function ReaderPage() {
     }, 180)
   }
 
+  const saveSelectedPhrase = () => {
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return
+
+    const phrase = selection.toString().replace(/\s+/g, ' ').trim()
+    const range = selection.getRangeAt(0)
+    const elementFor = (node: Node) => (node.nodeType === Node.ELEMENT_NODE ? node as Element : node.parentElement)
+    const startSentence = elementFor(range.startContainer)?.closest<HTMLElement>('[data-reader-sentence]')
+    const endSentence = elementFor(range.endContainer)?.closest<HTMLElement>('[data-reader-sentence]')
+    if (!phrase || phrase.length > 500 || !/[A-Za-z]/.test(phrase) || !startSentence || startSentence !== endSentence) return
+
+    const sentenceIndex = Number(startSentence.dataset.readerSentence)
+    setPhraseSelection({
+      phrase,
+      sentence: startSentence.dataset.sentenceText ?? phrase,
+      translation: startSentence.dataset.sentenceTranslation || sentenceTranslations[sentenceIndex]?.translated || null,
+    })
+    selection.removeAllRanges()
+  }
+
   const removeHighlight = (word: string) => {
     if (!article) return
     const previous = highlights
@@ -426,6 +454,7 @@ export default function ReaderPage() {
 
   const toggleHighlight = (word: string) => {
     if (!article) return
+    window.getSelection()?.removeAllRanges()
     if (wordClickTimer.current) {
       window.clearTimeout(wordClickTimer.current)
       wordClickTimer.current = null
@@ -530,14 +559,14 @@ export default function ReaderPage() {
               <VoicePicker voices={availableVoices} selectedVoice={selectedVoice} onSelect={selectVoice} />
             </div>
             <Link to={`/shadowing?article=${id}`} className="mt-3 block rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-3 py-2 text-center text-xs font-bold text-cyan-200 hover:bg-cyan-400/20">🎤 Shadow</Link>
-            <p className="mt-3 rounded-xl bg-white/[.035] px-2.5 py-2 text-[11px] leading-4 text-slate-500">{tts.playing ? `Đang đọc câu ${tts.sentence + 1}/${sentences.length}` : 'Chọn một từ trong bài để tra nghĩa.'}</p>
+            <p className="mt-3 rounded-xl bg-white/[.035] px-2.5 py-2 text-[11px] leading-4 text-slate-500">{tts.playing ? `Đang đọc câu ${tts.sentence + 1}/${sentences.length}` : 'Bấm một từ để tra nghĩa; bôi đen cụm/câu để lưu thành thẻ.'}</p>
           </section>
           <div className="mt-4 min-[1800px]:hidden">
             <HighlightPanel highlights={highlights} onRemove={removeHighlight} onUpdate={updateHighlightMeaning} onAddAll={addAllHighlights} adding={addingHighlights} />
           </div>
         </aside>
 
-        <article className="min-w-0 max-w-3xl space-y-4 text-[17px] leading-8 text-slate-200">
+        <article onMouseUp={() => window.setTimeout(saveSelectedPhrase)} className="min-w-0 max-w-3xl space-y-4 text-[17px] leading-8 text-slate-200">
           {readerLanguage === 'translated' && (hasCompleteSentenceTranslation ? sentenceTranslations : translatedParagraphs.map(translated => ({ translated }))).map((sentence, index) => (
             <p key={index} className="rounded-xl border border-emerald-300/[.08] bg-emerald-400/[.035] px-4 py-3 text-slate-100">{sentence.translated}</p>
           ))}
@@ -547,7 +576,7 @@ export default function ReaderPage() {
                 sentenceIndex += 1
                 const current = sentenceIndex
                 return (
-                  <span key={childIndex} className={tts.sentence === current ? 'rounded bg-cyan-400/15' : undefined}>
+                  <span key={childIndex} data-reader-sentence={current} data-sentence-text={sentence.trim()} data-sentence-translation={sentenceTranslations[current]?.translated ?? ''} className={tts.sentence === current ? 'rounded bg-cyan-400/15' : undefined}>
                     {sentence.split(/(\s+)/).map((token, tokenIndex) => {
                       const word = cleanToken(token)
                       const normalizedWord = word.toLowerCase()
@@ -565,19 +594,20 @@ export default function ReaderPage() {
           ))}
           {readerLanguage === 'bilingual' && hasCompleteSentenceTranslation && sentenceTranslations.map((sentence, index) => (
             <section key={`${sentence.source}-${index}`} className="rounded-xl border border-emerald-300/[.10] bg-emerald-400/[.035] px-4 py-3 text-[15px] leading-7">
-              <p className="text-slate-300">{sentence.source}</p>
+              <p data-reader-sentence={index} data-sentence-text={sentence.source} data-sentence-translation={sentence.translated ?? ''} className="text-slate-300">{sentence.source}</p>
               <p className="mt-2 border-t border-emerald-300/[.10] pt-2 font-medium text-emerald-100">{sentence.translated}</p>
             </section>
           ))}
           {readerLanguage === 'bilingual' && !hasCompleteSentenceTranslation && translation?.segments?.map((segment, index) => (
             <section key={`${segment.source}-${index}`} className="rounded-xl border border-emerald-300/[.10] bg-emerald-400/[.035] px-4 py-3 text-[15px] leading-7">
-              <p className="text-slate-300">{segment.source}</p>
+              <p data-reader-sentence={index} data-sentence-text={segment.source} data-sentence-translation={segment.translated} className="text-slate-300">{segment.source}</p>
               <p className="mt-2 border-t border-emerald-300/[.10] pt-2 font-medium text-emerald-100">{segment.translated}</p>
             </section>
           ))}
         </article>
       </div>
       {picked && <WordPopup word={picked.word} sentence={picked.sentence} articleId={article.id} onClose={() => setPicked(null)} />}
+      {phraseSelection && <PhraseCardPopup phrase={phraseSelection.phrase} sentence={phraseSelection.sentence} sentenceTranslation={phraseSelection.translation} articleId={article.id} onClose={() => setPhraseSelection(null)} />}
     </div>
   )
 }

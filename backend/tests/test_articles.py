@@ -133,6 +133,29 @@ def test_bulk_highlights_keep_dictionary_pronunciation_and_audio(client):
     assert card["audio_url"] == "https://audio.example/containers.mp3"
 
 
+def test_article_card_accepts_a_multi_word_phrase(client):
+    article = client.post(
+        "/api/articles",
+        json={
+            "title": "Diffusion",
+            "text": "Diffusion models draw their inspiration from physics, specifically thermodynamics.",
+        },
+    ).json()
+
+    saved = client.post(
+        f"/api/articles/{article['id']}/cards",
+        json={
+            "word": "draw their inspiration from physics",
+            "back_text": "được lấy cảm hứng từ vật lý",
+        },
+    )
+
+    assert saved.status_code == 200, saved.text
+    assert saved.json()["front_text"] == "draw their inspiration from physics"
+    assert saved.json()["back_text"] == "được lấy cảm hứng từ vật lý"
+    assert saved.json()["example_sentence"] == "Diffusion models draw their inspiration from physics, specifically thermodynamics."
+
+
 def test_local_translation_worker_claims_only_its_users_jobs(client, user_b_client):
     article = client.post("/api/articles", json=PASTE_BODY).json()
     queued = client.post(f"/api/articles/{article['id']}/translation-jobs", json={})

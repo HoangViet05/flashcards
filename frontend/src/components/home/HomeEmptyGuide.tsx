@@ -1,0 +1,39 @@
+import { Link } from 'react-router-dom'
+
+const STEPS = [
+  ['1', 'Chọn một bài đọc', 'Dán đoạn văn, một đường link hoặc tải PDF lên.'],
+  ['2', 'Bấm vào từ chưa biết', 'Xem nghĩa, phát âm và lưu từ đó thành thẻ.'],
+  ['3', 'Quay lại đây để học', 'Mỗi ngày app sẽ chọn sẵn từ mới và từ cần ôn cho bạn.'],
+] as const
+
+/** Người dùng mới chưa có thẻ nào. Thẻ chỉ sinh từ bài đọc, nên màn rỗng phải
+ *  chỉ thẳng sang Reader thay vì mời tạo bộ thẻ trống. */
+export default function HomeEmptyGuide() {
+  return (
+    <section className="rounded-[1.5rem] border border-subtle bg-surface-1 p-6 sm:p-8">
+      <h1 className="text-xl font-black tracking-tight text-strong-text sm:text-2xl">Bắt đầu từ một bài đọc</h1>
+      <p className="mt-1.5 text-sm font-medium text-muted">
+        Thẻ học của bạn được tạo từ những từ bạn lưu khi đọc, nên bước đầu tiên là chọn một bài.
+      </p>
+
+      <ol className="mt-5 grid gap-3 sm:grid-cols-3">
+        {STEPS.map(([index, title, detail]) => (
+          <li key={index} className="rounded-2xl border border-subtle bg-surface-2 p-4">
+            <span className="inline-grid h-6 w-6 place-items-center rounded-full bg-accent/25 text-xs font-black text-strong-text">
+              {index}
+            </span>
+            <p className="mt-2 text-sm font-bold text-strong-text">{title}</p>
+            <p className="mt-1 text-xs font-medium text-muted">{detail}</p>
+          </li>
+        ))}
+      </ol>
+
+      <Link
+        to="/reader"
+        className="mt-6 inline-flex min-h-[44px] items-center rounded-xl bg-accent px-6 text-sm font-bold text-white transition hover:brightness-110"
+      >
+        Chọn bài đọc
+      </Link>
+    </section>
+  )
+}

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./styles/tokens.css";
 
 html {
   min-height: 100%;
@@ -18,16 +19,12 @@ html {
 
 body {
   background-color: #05050A;
-  /* Dark premium background */
-  color: #e5e7eb;
+  color: #cbd5e1;
   min-height: 100vh;
   width: 100%;
   max-width: 100%;
   overflow-x: clip;
-  background-image:
-    radial-gradient(circle 800px at 10% 0%, rgba(124, 58, 237, 0.22) 0%, transparent 60%),
-    radial-gradient(circle 1000px at 90% 20%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
-    radial-gradient(circle 900px at 50% 100%, rgba(236, 72, 153, 0.12) 0%, transparent 60%);
+  background-image: radial-gradient(circle 900px at 50% -10%, rgba(124, 58, 237, 0.10) 0%, transparent 62%);
   background-attachment: fixed;
 }
 
@@ -54,26 +51,6 @@ select {
   -webkit-tap-highlight-color: transparent;
 }
 
-@media (max-width: 640px) {
-  body {
-    background-attachment: scroll;
-  }
-}
-
-/* Background Grid Overlay */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 48px 48px;
-  z-index: -1;
-  pointer-events: none;
-  mask-image: radial-gradient(ellipse at 50% 30%, black 20%, transparent 80%);
-  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 20%, transparent 80%);
-}
 
 @keyframes fadeInUp {
   from {
@@ -432,204 +409,6 @@ textarea:focus {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* ── AI Generation Animation — GPU-only (transform + opacity) ── */
-
-@keyframes aiEnter {
-  0% {
-    opacity: 0;
-    transform: translateX(-50%) translateY(20px) scale(0.8);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
-  }
-}
-
-@keyframes aiExit {
-  0% {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translateX(-50%) translateY(16px) scale(0.85);
-  }
-}
-
-/* Float lên xuống nhẹ khi thinking */
-@keyframes aiFloat {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-/* Nảy lên khi add */
-@keyframes aiPop {
-  0% {
-    transform: scale(0.6) translateY(10px);
-    opacity: 0;
-  }
-
-  70% {
-    transform: scale(1.15);
-  }
-
-  100% {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Robot nhún nhẹ khi add (không che) */
-@keyframes aiBump {
-  0% {
-    transform: translateY(0);
-  }
-
-  40% {
-    transform: translateY(-10px);
-  }
-
-  100% {
-    transform: translateY(0);
-  }
-}
-
-/* Đồng xu Mario nhảy lên rồi biến mất */
-@keyframes coinPop {
-  0% {
-    transform: translateX(-50%) translateY(0) scaleX(1);
-    opacity: 1;
-  }
-
-  30% {
-    transform: translateX(-50%) translateY(-55px) scaleX(0.55);
-    opacity: 1;
-  }
-
-  55% {
-    transform: translateX(-50%) translateY(-80px) scaleX(1);
-    opacity: 1;
-  }
-
-  80% {
-    transform: translateX(-50%) translateY(-60px) scaleX(0.55);
-    opacity: 0.6;
-  }
-
-  100% {
-    transform: translateX(-50%) translateY(-40px) scaleX(1);
-    opacity: 0;
-  }
-}
-
-/* Rung ngang khi throw */
-@keyframes aiShake {
-
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-
-  20% {
-    transform: translateX(-8px);
-  }
-
-  40% {
-    transform: translateX(8px);
-  }
-
-  60% {
-    transform: translateX(-5px);
-  }
-
-  80% {
-    transform: translateX(5px);
-  }
-}
-
-/* Chấm nảy */
-@keyframes aiDot {
-
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.4;
-  }
-
-  50% {
-    transform: translateY(-6px);
-    opacity: 1;
-  }
-}
-
-/* ── Hologram Robot keyframes ── */
-
-/* Floating up/down gently */
-@keyframes holoFloat {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-10px); }
-}
-
-/* Expanding ring at base */
-@keyframes holoRing {
-  0%   { transform: scale(0.6); opacity: 0.7; }
-  100% { transform: scale(2.2); opacity: 0; }
-}
-
-/* Subtle opacity flicker — hologram effect */
-@keyframes holoFlicker {
-  0%, 100% { opacity: 1; }
-  92%       { opacity: 1; }
-  93%       { opacity: 0.7; }
-  94%       { opacity: 1; }
-  96%       { opacity: 0.85; }
-  97%       { opacity: 1; }
-}
-
-/* Scanlines scroll downward */
-@keyframes scanlinesMove {
-  0%   { background-position: 0 0; }
-  100% { background-position: 0 4px; }
-}
-
-/* ── GlyphViz keyframes ── */
-
-/* Horizontal scan sweep across the glyph grid */
-@keyframes glyphScan {
-  0%        { top: 26px;  opacity: 0.9; }
-  10%       { opacity: 1; }
-  90%       { opacity: 1; }
-  100%      { top: calc(100% - 22px); opacity: 0; }
-}
-
-/* New decoded line slides in from the right */
-@keyframes glyphLineIn {
-  from { opacity: 0; transform: translateX(8px); }
-  to   { opacity: 1; transform: translateX(0);   }
-}
-
-/* Entropy / waveform bars bounce height */
-@keyframes waveBar {
-  from { height: 4px;  }
-  to   { height: 18px; }
-}
-
-/* "ADDED" / "DUP" stamp pops in */
-@keyframes matrixStamp {
-  0%   { opacity: 0; transform: scale(1.6); }
-  60%  { opacity: 1; transform: scale(0.95); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
 /* Shadowing: animated AI listening card while the microphone is recording. */
 .shadowing-listening-panel {
   position: fixed;
@@ -737,6 +516,9 @@ textarea:focus {
 @keyframes shadowingOrbPulse { 0% { box-shadow: 0 0 0 0 rgba(110, 231, 183, 0.52), 0 0 20px rgba(16, 185, 129, 0.62); } 75%, 100% { box-shadow: 0 0 0 0.85rem rgba(110, 231, 183, 0), 0 0 32px rgba(16, 185, 129, 0.45); } }
 @keyframes shadowingWave { from { height: 0.42rem; opacity: 0.65; } to { height: 1.65rem; opacity: 1; } }
 
+@keyframes answerShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-3px); } }
+.animate-answer-shake { animation: answerShake 260ms ease both; }
+
 @media (prefers-reduced-motion: reduce) {
-  .shadowing-listening-panel, .shadowing-listening-panel::before, .shadowing-listening-orb, .shadowing-waveform i, .game-stage::before, .game-stage::after, .game-stage-orb, .game-stage-star, .game-music-toggle.is-playing .game-equalizer i, .game-result-screen, .game-result-icon, .game-result-particles i, .daily-status-hero::after, .daily-status-sky i, .daily-status-comet, .daily-status-card, .daily-status-medal, .app-recovery-orbit, .app-recovery-orbit::after { animation: none; }
+  .shadowing-listening-panel, .shadowing-listening-panel::before, .shadowing-listening-orb, .shadowing-waveform i, .game-stage::before, .game-stage::after, .game-stage-orb, .game-stage-star, .game-music-toggle.is-playing .game-equalizer i, .game-result-screen, .game-result-icon, .game-result-particles i, .daily-status-hero::after, .daily-status-sky i, .daily-status-comet, .daily-status-card, .daily-status-medal, .app-recovery-orbit, .app-recovery-orbit::after, .animate-fade-in-up, .animate-fade-in, .animate-pulse-glow, .animate-slide-out-next, .animate-slide-in-next, .animate-slide-out-prev, .animate-slide-in-prev, .animate-letter-flight, .animate-word-card-assemble, .animate-fly-into-deck, .animate-answer-shake { animation: none; }
 }

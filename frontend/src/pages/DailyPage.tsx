@@ -1,35 +1,77 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { completeLearning, getDailySession, postDailyAnswer } from '../api/daily'
-import ExerciseCard from '../components/daily/ExerciseCard'
-import DailyGamePanel from '../components/daily/DailyGamePanel'
-import DailyCta from '../components/daily/DailyCta'
-import DailyStatusHero from '../components/daily/DailyStatusHero'
-import FlipCard from '../components/FlipCard'
-import { useNotification } from '../components/NotificationProvider'
-import type { DailySession, DailyWord } from '../types'
+import { useState } from 'react'
 
-type Phase = 'review' | 'flip' | 'dictation' | 'split' | 'game' | 'done' | 'empty'
-const labels: [Phase, string][] = [['review', 'Ôn tập'], ['flip', 'Lật thẻ'], ['dictation', 'Nghe & điền'], ['split', 'Chia đôi'], ['game', 'Game']]
-const pending = (word: DailyWord, step: string) => !word.steps_done.includes(step)
+import DailyGamePanel from '../components/daily/DailyGamePanel'
+import DailyProgress from '../components/daily/DailyProgress'
+import DailyStatusHero from '../components/daily/DailyStatusHero'
+import DailySummary from '../components/daily/DailySummary'
+import DictationStep from '../components/daily/steps/DictationStep'
+import FlipStep from '../components/daily/steps/FlipStep'
+import ReviewStep from '../components/daily/steps/ReviewStep'
+import SplitStep from '../components/daily/steps/SplitStep'
+import { useDailySession } from '../hooks/useDailySession'
 
 export default function DailyPage() {
-  const { toast } = useNotification(); const [session, setSession] = useState<DailySession | null>(null); const [loading, setLoading] = useState(true); const [phase, setPhase] = useState<Phase>('review')
-  const [reviewQueue, setReviewQueue] = useState<DailyWord[]>([]); const [flipQueue, setFlipQueue] = useState<DailyWord[]>([]); const [dictationQueue, setDictationQueue] = useState<DailyWord[]>([]); const [leftQueue, setLeftQueue] = useState<DailyWord[]>([]); const [rightQueue, setRightQueue] = useState<DailyWord[]>([]); const [presented, setPresented] = useState(0)
-  useEffect(() => { getDailySession().then(loaded => { setSession(loaded); if (!loaded) { setPhase('empty'); return }; if (loaded.status !== 'learning') { setPhase(loaded.status === 'game' ? 'game' : 'done'); return }; setReviewQueue(loaded.words.filter(word => !word.is_new && pending(word, word.assigned_step))); setFlipQueue(loaded.words.filter(word => word.is_new && pending(word, 'flip'))); setDictationQueue(loaded.words.filter(word => word.is_new && pending(word, 'dictation'))); setLeftQueue(loaded.words.filter(word => word.is_new && word.assigned_step === 'vi_en' && pending(word, 'vi_en'))); setRightQueue(loaded.words.filter(word => word.is_new && word.assigned_step === 'en_vi' && pending(word, 'en_vi'))); setPhase(loaded.phase) }).catch(() => toast('Không tải được phiên học hôm nay', 'error')).finally(() => setLoading(false)) }, [toast])
-  const finishLearning = () => void completeLearning().then(() => setPhase('game')).catch(() => toast('Không hoàn tất được phần học', 'error'))
-  const result = (queue: DailyWord[], setQueue: (words: DailyWord[]) => void, step: string, next: Phase | null) => (correct: boolean) => { const [word, ...rest] = queue; if (!word) return; void postDailyAnswer(word.card_id, step, correct).then(() => { const following = correct ? rest : [...rest, word]; setQueue(following); setPresented(value => value + 1); if (!following.length && next) setPhase(next) }).catch(() => toast('Không lưu được câu trả lời', 'error')) }
-  const splitDone = leftQueue.length === 0 && rightQueue.length === 0
-  useEffect(() => { if (phase === 'split' && splitDone && session) finishLearning() }, [phase, splitDone, session])
-  if (loading) return <div className="flex justify-center py-24"><div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" /></div>
-  if (phase === 'empty') return <div className="mx-auto max-w-4xl px-4 py-12"><DailyStatusHero kind="empty" primaryTo="/" primaryLabel="Tạo thêm thẻ mới" secondaryTo="/reader" secondaryLabel="Đọc bài" /></div>
-  const beginNew = () => { if (flipQueue.length) setPhase('flip'); else if (dictationQueue.length) setPhase('dictation'); else if (!splitDone) setPhase('split'); else finishLearning() }
-  return <div className="mx-auto max-w-[90rem] px-4 py-8"><h1 className="mb-4 text-2xl font-black text-white">📚 Học hôm nay</h1><div className="mb-6 flex flex-wrap gap-2">{labels.map(([key, label]) => <span key={key} className={`rounded-full px-3 py-1 text-xs font-bold ${phase === key ? 'bg-violet-500/30 text-violet-200' : 'bg-white/[.05] text-slate-500'}`}>{label}</span>)}</div>
-    {phase === 'review' && (reviewQueue.length ? <div className="mx-auto max-w-2xl"><p className="mb-3 text-sm text-slate-400">Ôn tập · còn {reviewQueue.length} từ</p><ExerciseCard key={`${reviewQueue[0].card_id}-${presented}`} card={reviewQueue[0].card} mode={reviewQueue[0].assigned_step} onResult={result(reviewQueue, setReviewQueue, reviewQueue[0].assigned_step, null)} /></div> : <div className="text-center"><p className="mb-4 text-emerald-300">✅ Xong phần ôn tập!</p><button onClick={beginNew} className="rounded-xl border border-violet-300/25 bg-violet-400/10 px-5 py-2.5 text-sm font-bold text-violet-200">Tiếp tục →</button></div>)}
-    {phase === 'flip' && flipQueue.length > 0 && <div className="mx-auto max-w-2xl"><p className="mb-3 text-sm text-slate-400">Lật thẻ & nghe · còn {flipQueue.length} từ</p><FlipCard key={flipQueue[0].card_id} card={flipQueue[0].card} isPractice onRate={() => undefined} onNext={() => result(flipQueue, setFlipQueue, 'flip', flipQueue.length === 1 ? 'dictation' : null)(true)} /></div>}
-    {phase === 'dictation' && dictationQueue.length > 0 && <div className="mx-auto max-w-2xl"><p className="mb-3 text-sm text-slate-400">Nghe & điền · còn {dictationQueue.length} từ</p><ExerciseCard key={`${dictationQueue[0].card_id}-${presented}`} card={dictationQueue[0].card} mode="dictation" onResult={result(dictationQueue, setDictationQueue, 'dictation', dictationQueue.length === 1 ? 'split' : null)} /></div>}
-    {phase === 'split' && !splitDone && <div className="grid gap-4 md:grid-cols-2"><div><p className="mb-2 text-center text-xs font-black uppercase text-slate-500">Việt → Anh · còn {leftQueue.length}</p>{leftQueue.length ? <ExerciseCard key={`${leftQueue[0].card_id}-${presented}`} card={leftQueue[0].card} mode="vi_en" onResult={result(leftQueue, setLeftQueue, 'vi_en', null)} /> : <p className="text-center text-emerald-300">✅ Xong bên này</p>}</div><div><p className="mb-2 text-center text-xs font-black uppercase text-slate-500">Anh → Việt · còn {rightQueue.length}</p>{rightQueue.length ? <ExerciseCard key={`${rightQueue[0].card_id}-${presented}`} card={rightQueue[0].card} mode="en_vi" onResult={result(rightQueue, setRightQueue, 'en_vi', null)} /> : <p className="text-center text-emerald-300">✅ Xong bên này</p>}</div></div>}
-    {phase === 'game' && <DailyGamePanel />}
-    {phase === 'done' && <div className="mx-auto max-w-4xl"><DailyStatusHero kind="complete" primaryTo="/" primaryLabel="Tạo thêm thẻ" secondaryTo="/games" secondaryLabel="Xem game" /><div className="mt-5"><DailyCta /></div></div>}
-  </div>
+  const daily = useDailySession()
+  const [combo, setCombo] = useState(0)
+
+  if (daily.loading) {
+    return (
+      <div className="flex justify-center py-24">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+      </div>
+    )
+  }
+
+  if (daily.phase === 'empty') {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-12">
+        <DailyStatusHero
+          kind="empty"
+          primaryTo="/reader"
+          primaryLabel="Đọc bài để lưu thêm từ"
+          secondaryTo="/"
+          secondaryLabel="Về trang chủ"
+        />
+      </div>
+    )
+  }
+
+  // Màn tổng kết chiếm trọn màn hình nên thanh tiến độ lùi đi trong lúc đó.
+  const showProgress = daily.phase !== 'done' && !daily.justFinished
+
+  return (
+    <div className="mx-auto max-w-[90rem] px-4 py-8">
+      {showProgress && (
+        <DailyProgress
+          phase={daily.phase}
+          stepsDone={daily.stepsDone}
+          stepsTotal={daily.stepsTotal}
+          combo={combo}
+        />
+      )}
+
+      {daily.phase === 'review' && <ReviewStep daily={daily} onCorrectStreak={setCombo} />}
+      {daily.phase === 'flip' && <FlipStep daily={daily} />}
+      {daily.phase === 'dictation' && <DictationStep daily={daily} onCorrectStreak={setCombo} />}
+      {daily.phase === 'split' && <SplitStep daily={daily} onCorrectStreak={setCombo} />}
+
+      {daily.phase === 'game' && (
+        daily.justFinished
+          ? <DailySummary daily={daily} onContinue={() => daily.setJustFinished(false)} />
+          : <DailyGamePanel />
+      )}
+
+      {daily.phase === 'done' && (
+        <div className="mx-auto max-w-4xl">
+          <DailyStatusHero
+            kind="complete"
+            primaryTo="/"
+            primaryLabel="Về trang chủ"
+            secondaryTo="/reader"
+            secondaryLabel="Đọc bài"
+          />
+        </div>
+      )}
+    </div>
+  )
 }

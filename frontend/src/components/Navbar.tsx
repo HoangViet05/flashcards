@@ -2,14 +2,13 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Bộ thẻ', icon: 'deck', soon: false },
+  { to: '/', label: 'Học hôm nay', icon: 'review', soon: false },
   { to: '/reader', label: 'Đọc', icon: 'book', soon: false },
-  { to: '/daily', label: 'Học hôm nay', icon: 'review', soon: false },
-  { to: '/games', label: 'Games', icon: 'games', soon: false },
   { to: '/shadowing', label: 'Nói', icon: 'mic', soon: false },
+  { to: '/library', label: 'Thư viện', icon: 'deck', soon: false },
 ] as const
 
-type NavIconName = (typeof NAV_ITEMS)[number]['icon'] | 'mail' | 'login' | 'logout'
+type NavIconName = (typeof NAV_ITEMS)[number]['icon'] | 'mail' | 'login' | 'logout' | 'chart'
 
 function NavIcon({ name, className = '' }: { name: NavIconName; className?: string }) {
   const common = {
@@ -49,13 +48,7 @@ function NavIcon({ name, className = '' }: { name: NavIconName; className?: stri
           <path d="M10 7h5M10 10h5" />
         </svg>
       )
-    case 'games':
-      return (
-        <svg {...common}>
-          <path d="M7.5 9h9a3.5 3.5 0 0 1 3.3 4.7l-1.1 3.1a2 2 0 0 1-3.1.9L13 16H11l-2.6 1.7a2 2 0 0 1-3.1-.9l-1.1-3.1A3.5 3.5 0 0 1 7.5 9Z" />
-          <path d="M8 13h3M9.5 11.5v3M15.5 12.5h.01M17.5 14h.01" />
-        </svg>
-      )
+    case 'chart': return <svg {...common}><path d="M4.5 19.5h15" /><path d="M7 16.5v-5M12 16.5v-9M17 16.5v-3" /></svg>
     case 'mic':
       return <svg {...common}><rect x="9" y="3.5" width="6" height="11" rx="3" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" /><path d="M12 18v3" /></svg>
     case 'mail':
@@ -86,8 +79,9 @@ function NavIcon({ name, className = '' }: { name: NavIconName; className?: stri
 
 function isRouteActive(pathname: string, to: string) {
   if (to === '/') {
-    return pathname === '/' || pathname.startsWith('/decks')
+    return pathname === '/'
   }
+  if (to === '/library') return pathname === '/library' || pathname.startsWith('/decks')
 
   return pathname === to || pathname.startsWith(`${to}/`)
 }
@@ -113,6 +107,7 @@ export default function Navbar() {
             <div className="flex shrink-0 items-center gap-1.5 sm:order-3">
               {user ? (
                 <>
+                  <Link to="/stats" title="Tiến độ" className={`flex h-10 items-center gap-2 rounded-xl border px-3 text-xs font-bold transition ${pathname === '/stats' ? 'border-cyan-300/35 bg-cyan-300/12 text-cyan-100' : 'border-white/10 bg-white/[0.04] text-slate-300 hover:border-white/18 hover:bg-white/[0.07] hover:text-white'}`}><NavIcon name="chart" className="h-4 w-4" /><span className="hidden lg:inline">Tiến độ</span></Link>
                   <Link
                     to="/account"
                     className={`flex h-10 max-w-[11rem] items-center gap-2 rounded-xl border px-3 text-xs font-bold transition ${
@@ -155,7 +150,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="grid min-w-0 grid-cols-3 items-center gap-1 rounded-2xl border border-white/[0.07] bg-black/20 p-1 shadow-inner shadow-black/30 sm:flex sm:flex-1 sm:justify-center">
+          <div className="grid min-w-0 grid-cols-4 items-center gap-1 rounded-2xl border border-white/[0.07] bg-black/20 p-1 shadow-inner shadow-black/30 sm:flex sm:flex-1 sm:justify-center">
           {NAV_ITEMS.map(({ to, label, icon, soon }) => {
             const active = isRouteActive(pathname, to)
             return (

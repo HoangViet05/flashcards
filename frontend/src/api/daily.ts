@@ -1,5 +1,5 @@
 import client from './client'
-import type { DailyGame, DailySession, DailyStatus, DailyWord, GameChip, GameConfirmResult } from '../types'
+import type { DailyGame, DailyHome, DailySession, DailyStatus, DailyWord, GameChip, GameConfirmResult } from '../types'
 
 export const getDailySession = () => client.get<{ session: DailySession | null }>('/daily/session').then(r => r.data.session)
 export const postDailyAnswer = (cardId: string, step: string, correct: boolean) => client.post<DailyWord>('/daily/answer', { card_id: cardId, step, correct }).then(r => r.data)
@@ -9,3 +9,4 @@ export const postGameFound = (selection: { start_row: number; start_col: number;
 export const postGameHint = (token: string) => client.post<{ level: number; text: string }>('/daily/game/hint', { token }).then(r => r.data)
 export const confirmGame = (pairs: { card_id: string; token: string }[]) => client.post<{ results: GameConfirmResult[] }>('/daily/game/confirm', { pairs }).then(r => r.data.results)
 export const getDailyStatus = () => client.get<DailyStatus>('/daily/status').then(r => r.data)
+export const getDailyHome = () => client.get<DailyHome>('/daily/home').then(r => r.data)

@@ -14,8 +14,9 @@ from app.models.user import User
 from app.schemas.card import CardOut
 from app.schemas.daily import (
     AnswerIn, ConfirmIn, ConfirmOut, ConfirmResultItem, DailySessionOut,
-    DailySessionResponse, DailyStatusOut, DailyWordOut, FoundIn, FoundOut,
+    DailySessionResponse, DailyStatusOut, DailyHomeOut, DailyWordOut, FoundIn, FoundOut,
     GameMeaning, GameOut, GameWordChip, HintIn, HintOut,
+    LatestArticleOut,
 )
 from app.services import daily as daily_service
 from app.services import word_search
@@ -249,3 +250,38 @@ def get_status(db: Session = Depends(get_db), user: User = Depends(get_current_u
     return DailyStatusOut(new_remaining=remaining, low_new_words=remaining <= daily_service.LOW_NEW_WORDS_THRESHOLD,
                           session_status=session.status if session else "none", session_date=session.session_date if session else None,
                           new_count=sum(word.is_new for word in words), due_count=sum(not word.is_new for word in words))
+
+
+@router.get("/home", response_model=DailyHomeOut)
+def get_home(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    _close_stale_game_sessions(db, user)
+    db.commit()
+    session = _active_session(db, user)
+    if session is None:
+        session = db.query(DailySession).options(
+            joinedload(DailySession.words).joinedload(DailySessionWord.card)
+        ).filter(
+            DailySession.user_id == user.id, DailySession.session_date == date.today(),
+            DailySession.status == "done",
+        ).first()
+    words = _live_words(session) if session else []
+    new_words = [word for word in words if word.is_new]
+    due_words = [word for word in words if not word.is_new]
+    steps_total = len(due_words) + len(new_words) * 3
+    steps_done = sum(len(json.loads(word.steps_done or "[]")) for word in words)
+    active_new = {word.card_id for word in new_words} if session and session.status != "done" else set()
+    remaining = max(0, daily_service.count_remaining_new(db, user.id) - len(active_new))
+    counters = daily_service.home_counters(db, user.id)
+    latest = counters.latest_article
+    return DailyHomeOut(
+        new_count=len(new_words), due_count=len(due_words),
+        session_status=session.status if session else "none", steps_total=steps_total,
+        steps_done=steps_done, streak=counters.streak, studied_today=counters.studied_today,
+        mastered_cards=counters.mastered_cards, total_cards=counters.total_cards,
+        deck_count=counters.deck_count,
+        low_new_words=remaining <= daily_service.LOW_NEW_WORDS_THRESHOLD,
+        new_remaining=remaining,
+        latest_article=LatestArticleOut(
+            id=latest.id, title=latest.title, unlearned_saved_words=latest.unlearned_saved_words
+        ) if latest else None,
+    )

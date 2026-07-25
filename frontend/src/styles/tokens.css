@@ -1,15 +1,27 @@
 @theme {
+  /* Bề mặt — đúng 3 tầng, thay cho bg-white/[.03] .04 .045 .05 .07 rải rác.
+     Dùng rgba chứ không dùng oklch(from …): cú pháp màu tương đối chưa chắc
+     qua được Lightning CSS của Vite 8 và Safari cũ. */
   --color-surface-1: rgba(255, 255, 255, 0.035);
   --color-surface-2: rgba(255, 255, 255, 0.06);
   --color-surface-3: rgba(255, 255, 255, 0.10);
+
+  /* Viền */
   --color-subtle: rgba(255, 255, 255, 0.10);
   --color-strong: rgba(255, 255, 255, 0.18);
+
+  /* Chữ — text-muted phải đạt tương phản >= 4.5:1 trên nền nội dung.
+     #94a3b8 (slate-400) trên #05050A đạt ~7:1; slate-500 cũ chỉ ~3:1. */
   --color-strong-text: #f1f5f9;
   --color-body: #cbd5e1;
   --color-muted: #94a3b8;
+
+  /* Trạng thái bài tập — dùng thống nhất ở mọi màn học */
   --color-correct: #34d399;
   --color-wrong: #fb7185;
   --color-warn: #fbbf24;
+
+  /* Nhấn — giữ đúng nhận diện tím/cyan hiện tại */
   --color-accent: #7c3aed;
   --color-accent-2: #22d3ee;
 }

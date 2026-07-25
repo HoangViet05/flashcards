@@ -1,0 +1,21 @@
+@theme {
+  --color-surface-1: rgba(255, 255, 255, 0.035);
+  --color-surface-2: rgba(255, 255, 255, 0.06);
+  --color-surface-3: rgba(255, 255, 255, 0.10);
+  --color-subtle: rgba(255, 255, 255, 0.10);
+  --color-strong: rgba(255, 255, 255, 0.18);
+  --color-strong-text: #f1f5f9;
+  --color-body: #cbd5e1;
+  --color-muted: #94a3b8;
+  --color-correct: #34d399;
+  --color-wrong: #fb7185;
+  --color-warn: #fbbf24;
+  --color-accent: #7c3aed;
+  --color-accent-2: #22d3ee;
+}
+
+:root {
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --dur-slow: 400ms;
+}

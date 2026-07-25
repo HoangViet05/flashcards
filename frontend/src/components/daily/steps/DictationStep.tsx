@@ -1,0 +1,3 @@
+import ExerciseCard from '../ExerciseCard'
+import type { useDailySession } from '../../../hooks/useDailySession'
+export default function DictationStep({ daily, onCorrectStreak }: { daily: ReturnType<typeof useDailySession>; onCorrectStreak?: (streak: number) => void }) { const queue = daily.queues.dictation; if (!queue.length) return null; const word = queue[0]; return <div className="mx-auto max-w-2xl"><p className="mb-3 text-sm font-medium text-muted">Nghe &amp; điền · còn {queue.length} từ</p><ExerciseCard key={`${word.card_id}-${daily.presented}`} card={word.card} mode="dictation" onResult={correct => daily.answer('dictation', 'dictation', correct)} onCorrectStreak={onCorrectStreak} /></div> }

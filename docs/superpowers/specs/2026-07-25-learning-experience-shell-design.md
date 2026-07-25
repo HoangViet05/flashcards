@@ -66,9 +66,14 @@ vốn đã phải chạm vào (danh sách ở mục 5).
 ### 1.2 Dọn dẹp
 
 - Xóa `frontend/src/components/RobotAnimation.tsx` (425 dòng) và mọi chỗ dùng.
-- Xóa khỏi `index.css` các cụm CSS chỉ phục vụ robot/AI: keyframes `ai*`,
-  `holo*`, `glyph*`, `waveBar`, `matrixStamp`, `coinPop`, `flyIntoDeck`,
-  `.animate-fly-into-deck`.
+- Xóa khỏi `index.css` các cụm CSS chỉ phục vụ robot/AI: keyframes `aiEnter`,
+  `aiExit`, `aiFloat`, `aiPop`, `aiBump`, `aiShake`, `aiDot`, `coinPop`,
+  `holoFloat`, `holoRing`, `holoFlicker`, `scanlinesMove`, `glyphScan`,
+  `glyphLineIn`, `waveBar`, `matrixStamp`.
+  **Giữ lại** `flyIntoDeck` + `.animate-fly-into-deck` (`DeckCard` đang dùng),
+  `letterFlight` (`WordSearchGrid`), `wordCardAssemble` (`DailyGamePanel`),
+  `pulse-glow` (`StatsPage`), `game-stage*`, `daily-status-*`, `app-recovery-*`,
+  `shadowing-*`.
 - Xóa ô "Trợ lý AI tạo thẻ nhanh" ở `HomePage.tsx` và ô "Tạo lô thẻ AI cho chủ
   đề này" ở `DeckDetailPage.tsx`, cùng hằng `AI_ENABLED`, state `aiTopic`,
   `aiCount`, `isGenerating`, `robotAction`, `globalFlyingCards`, component

@@ -21,3 +21,14 @@ class ConfirmResultItem(BaseModel): card_id: str; word: str; meaning: str; corre
 class ConfirmOut(BaseModel): results: list[ConfirmResultItem]
 class DailyStatusOut(BaseModel):
     new_remaining: int; low_new_words: bool; session_status: str; session_date: date | None; new_count: int; due_count: int
+
+class LatestArticleOut(BaseModel):
+    id: str; title: str; unlearned_saved_words: int
+
+class DailyHomeOut(BaseModel):
+    new_count: int; due_count: int; session_status: str
+    steps_total: int; steps_done: int
+    streak: int; studied_today: bool
+    mastered_cards: int; total_cards: int; deck_count: int
+    low_new_words: bool; new_remaining: int
+    latest_article: LatestArticleOut | None

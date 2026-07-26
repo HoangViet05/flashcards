@@ -12,6 +12,7 @@ import SpeakStep from '../components/daily/steps/SpeakStep'
 import SplitStep from '../components/daily/steps/SplitStep'
 import WeakStep from '../components/daily/steps/WeakStep'
 import { useDailySession } from '../hooks/useDailySession'
+import AiOrb from '../components/orb/AiOrb'
 
 export default function DailyPage() {
   const [params] = useSearchParams()
@@ -44,7 +45,10 @@ export default function DailyPage() {
   const showProgress = daily.phase !== 'done' && !daily.justFinished
 
   return (
-    <div className="mx-auto max-w-[90rem] px-4 py-8">
+    <main className="study-chamber">
+      <header className="study-chamber__header"><div><span>Full session · learning energy</span><h2>Signal calibration</h2></div><div><b>{daily.stepsDone}/{daily.stepsTotal}</b><small>signals stabilized</small></div></header>
+      <div className="study-chamber__orb"><AiOrb state={daily.phase === 'done' ? 'success' : daily.phase === 'dictation' ? 'listening' : 'idle'} compact /></div>
+    <div className="study-chamber__content">
       {showProgress && (
         <DailyProgress
           phase={daily.phase}
@@ -79,5 +83,6 @@ export default function DailyPage() {
         </div>
       )}
     </div>
+    </main>
   )
 }

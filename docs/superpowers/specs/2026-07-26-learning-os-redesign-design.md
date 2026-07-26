@@ -6,6 +6,101 @@ Trạng thái: Đã chốt với chủ sản phẩm
 Implementation plan:
 `../plans/2026-07-26-learning-os-redesign.md`.
 
+Current implementation remediation plan:
+`../plans/2026-07-26-learning-os-visual-remediation.md`.
+
+## 0. Visual source of truth — approved
+
+The owner approved the following interactive prototypes on 2026-07-26:
+
+| Surface | Canonical prototype | Approved direction/states |
+|---|---|---|
+| Today | `C:/Users/Admin/.codex/visualizations/2026/07/26/019f9dab-65a3-7100-a171-d7101f52a773/flashie-today-directions.html` | **A · Orbital Command only**, desktop and mobile |
+| Study, Reader, Shadowing | `C:/Users/Admin/.codex/visualizations/2026/07/26/019f9dab-65a3-7100-a171-d7101f52a773/flashie-core-experiences.html` | All three surfaces, all three displayed states, desktop and mobile |
+
+Before changing product code, the remediation agent must copy the approved HTML
+fragments and rendered desktop/mobile reference images into
+`docs/superpowers/visual-references/` so they are versioned with the repository.
+The thread-scoped paths above identify the approved originals; they are not a
+substitute for the checked-in copies.
+
+### 0.1 Precedence when sources disagree
+
+1. The approved prototypes control composition, visual hierarchy, density,
+   spatial relationships, art direction, interaction emphasis and motion mood.
+2. This written spec controls behavior, data, accessibility, performance,
+   fallback and free-tier constraints.
+3. Existing implementation controls neither. It is evidence of current behavior,
+   not a visual reference.
+4. B · Quest Console and C · Constellation from the Today comparison are rejected
+   as full-page directions. Their elements must not be mixed into A without new
+   owner approval.
+
+### 0.2 Non-negotiable visual contracts
+
+**Today — Orbital Command**
+
+- The first viewport is intentionally filled: compact icon rail, greeting/status
+  header, dominant Daily Core hero, orb energy system, primary/quick CTA, useful
+  live metrics, missions and weekly trajectory.
+- The orb is part of the action hierarchy, not decorative content floating in
+  empty space.
+- The weekly route and four skill levels must read as a game system at a glance.
+- Slow backend state preserves the same composition with cached/skeleton content;
+  it must never collapse into a blank page with one centered orb.
+
+**Study**
+
+- Active state is an “energy chamber”: session progress, centered exercise,
+  responsive orb, one primary answer action and a visible trajectory rail.
+- Correct feedback visibly changes the chamber, awards XP/combo/energy and
+  confirms the exact answer before continuing.
+- Summary makes time, accuracy, XP and streak feel earned; it is not a plain
+  statistics card.
+- Mobile removes the side trajectory rail but keeps progress and the primary
+  learning stage above the fold.
+
+**Reader**
+
+- Reading text is the dominant surface. Global navigation, saved words, audio
+  and dictionary controls may support it but never overlap or narrow it
+  unpredictably.
+- Desktop uses one contextual companion dock. Word definition and audio states
+  replace content inside that dock rather than opening competing floating panels.
+- Mobile uses a compact dock/sheet and keeps the article readable.
+- Motion and glow are calmer than Today/Study, while typography and orbital
+  materials keep the same product identity.
+
+**Shadowing**
+
+- The initial viewport contains the target sentence, sample playback, waveform,
+  large record control, session progress and worker state.
+- Recording visibly transforms the orb/waveform and shows a live transcript.
+- Score state highlights word-level results, one actionable pronunciation tip,
+  Retry and Next.
+- Worker offline changes scoring capability, not the entire visual structure.
+
+### 0.3 Explicitly rejected patterns from the current implementation
+
+- More than half of a normal desktop viewport left as purposeless empty canvas.
+- Text-only oversized sidebar with no icon, context or useful status.
+- Dot-grid background presented as the primary visual identity.
+- A centered loading orb as the only visible content.
+- CRUD-style Reader cards without progress, discovery or visual invitation.
+- Reader panels/dropdowns overlapping the article or one another.
+- Shadowing represented by a small select and button at the top of an empty page.
+- Mixed Vietnamese/English UI, emoji used as control icons, raw Tailwind palette
+  utilities and legacy dark-only panels.
+- “Audio system” represented only by a short oscillator tone with no approved
+  music/SFX assets.
+
+### 0.4 Visual implementation rule
+
+Passing build/unit tests is necessary but not sufficient. A surface is incomplete
+until its required screenshots have passed the visual QA gate in section 16 and
+the owner has approved the phase evidence. Coding agents must not reinterpret
+the prototypes into a simpler dashboard for implementation convenience.
+
 ## 1. Mục tiêu
 
 Thiết kế lại toàn bộ Flashie thành một **Learning OS** bằng tiếng Anh: trưởng
@@ -514,6 +609,48 @@ deploy trước; frontend bật Learning OS sau khi API/migration/smoke test ho�
 - Không còn user-facing Vietnamese string.
 - Không có horizontal overflow, keyboard-covered input, unlabeled control,
   autoplay audio hoặc progress duplication.
+
+### 16.1 Mandatory visual QA gate
+
+Required reference sizes:
+
+- Desktop: 1440×900.
+- Mobile: 390×844.
+- Compact overflow smoke: 320×568.
+
+Required screenshot matrix:
+
+| Surface | States | Themes | Required devices |
+|---|---|---|---|
+| Today | loaded, slow/cached, empty/new user | dark + light | desktop + mobile |
+| Study | active, correct, summary | dark + light | desktop + mobile |
+| Reader | focus, word selected, audio reader | dark + light | desktop + mobile |
+| Shadowing | ready, recording, score, worker offline | dark + light | desktop + mobile |
+
+For every row:
+
+1. Store implementation screenshots under
+   `artifacts/visual-qa/<phase>/<surface>/<theme>-<device>-<state>.png`.
+2. Produce a side-by-side contact sheet with the approved prototype reference.
+3. Run Playwright assertions for no horizontal overflow, clipped controls,
+   overlapping regions, missing focus state and console errors.
+4. Run screenshot regression only after the owner approves the first
+   implementation screenshot as the baseline.
+5. Attach the artifact paths to the phase handoff. “Looks close” without
+   screenshots is not evidence.
+
+Immediate reject conditions:
+
+- Any primary content collision/occlusion.
+- More than 35% purposeless empty space in the first desktop viewport.
+- Primary CTA or active learning content below the first mobile viewport.
+- Mixed-language copy, emoji control icons or raw dark-only legacy surfaces.
+- Loading longer than 1.2 seconds that replaces the full composition with a
+  blank canvas.
+- Missing visible state change for correct, recording, processing or score.
+- Light mode that is merely color inversion instead of the approved material
+  hierarchy.
+- Any material divergence from the approved composition without owner approval.
 
 ## 17. Ngoài phạm vi
 

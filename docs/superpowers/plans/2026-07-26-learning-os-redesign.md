@@ -1,5 +1,12 @@
 # Flashie Learning OS — Implementation Plan
 
+> **Status update — 2026-07-26:** The first implementation at commit `ad32fe9`
+> is functionally broad but visually rejected. Do not rerun this greenfield plan
+> against the current tree. Use
+> `docs/superpowers/plans/2026-07-26-learning-os-visual-remediation.md`.
+> The design spec now contains approved visual sources and mandatory screenshot
+> gates that supersede any looser visual wording below.
+
 > **Execution contract:** Work task-by-task on the current `main` branch. Do not
 > create a feature branch. Commit only after the task's tests pass. Do not push
 > an incomplete phase to a production-connected `main`.

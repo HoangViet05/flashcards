@@ -1,0 +1,38 @@
+.ambient-background {
+  position: fixed;
+  z-index: -2;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 5% 5%, var(--ambient-one), transparent 30rem),
+    radial-gradient(circle at 94% 80%, var(--ambient-two), transparent 28rem),
+    linear-gradient(135deg, var(--bg-depth), var(--bg-canvas) 52%, var(--bg-elevated));
+}
+
+.ambient-background::before,
+.ambient-background::after {
+  position: absolute;
+  content: '';
+  inset: -35%;
+  opacity: .42;
+  background-image: radial-gradient(var(--constellation-dot) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(135deg, transparent, black 35%, transparent 78%);
+}
+.ambient-background::after { transform: rotate(24deg) scale(1.2); opacity: .24; }
+.ambient-background i { position: absolute; display: block; border: 1px solid var(--ring-line); border-radius: 999px; }
+.ambient-background i:first-child { width: 38rem; height: 38rem; top: -18rem; right: -15rem; }
+.ambient-background i:last-child { width: 30rem; height: 16rem; bottom: -8rem; left: 18%; transform: rotate(-22deg); }
+
+.glass-surface {
+  border: 1px solid var(--glass-border);
+  background: var(--glass-fill);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), 0 22px 58px var(--glass-shadow);
+  backdrop-filter: blur(var(--blur-glass)) saturate(130%);
+  -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(130%);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-surface { background: var(--glass-fallback); }
+}

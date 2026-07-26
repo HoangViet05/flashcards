@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 
 import { useAuth } from './auth/AuthContext'
 import AppShell from './components/shell/AppShell'
+import { features } from './config/features'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
 const DeckDetailPage = lazy(() => import('./pages/DeckDetailPage'))
@@ -20,6 +21,7 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'))
 const QuickStudyPage = lazy(() => import('./pages/QuickStudyPage'))
 const BossPage = lazy(() => import('./pages/BossPage'))
+const VisualFixturePage = lazy(() => import('./dev/VisualFixturePage'))
 
 function PageFallback() {
   return (
@@ -45,6 +47,7 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<AuthPage mode="login" />} />
             <Route path="/register" element={<AuthPage mode="register" />} />
+            {features.visualFixtures && <Route path="/__visual-fixtures" element={<VisualFixturePage />} />}
             <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
             <Route path="/library" element={<RequireAuth><LibraryPage /></RequireAuth>} />
             <Route path="/decks/:id" element={<RequireAuth><DeckDetailPage /></RequireAuth>} />

@@ -8,4 +8,5 @@ export const features = {
   progression: enabled(import.meta.env.VITE_FEATURE_PROGRESSION),
   boss: enabled(import.meta.env.VITE_FEATURE_BOSS),
   audio: enabled(import.meta.env.VITE_FEATURE_AUDIO),
+  visualFixtures: import.meta.env.DEV || import.meta.env.VITE_VISUAL_FIXTURES === 'true',
 } as const

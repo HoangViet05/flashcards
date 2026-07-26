@@ -71,6 +71,10 @@ ARTICLE_EXTRA_COLUMNS = {
     "deck_id": "VARCHAR(36)",
 }
 
+USER_EXTRA_COLUMNS = {
+    "preferred_level": "INTEGER",
+}
+
 
 def ensure_card_columns(engine_) -> None:
     """Lightweight migration: add new nullable Card columns to existing DBs."""
@@ -123,4 +127,17 @@ def ensure_article_columns(engine_) -> None:
         for name, ddl in ARTICLE_EXTRA_COLUMNS.items():
             if name not in existing:
                 conn.execute(text(f'ALTER TABLE articles ADD COLUMN "{name}" {ddl}'))
+        conn.commit()
+
+
+def ensure_user_columns(engine_) -> None:
+    """Add nullable user preferences to legacy databases."""
+    inspector = inspect(engine_)
+    if not inspector.has_table("users"):
+        return
+    existing = {column["name"] for column in inspector.get_columns("users")}
+    with engine_.connect() as conn:
+        for name, ddl in USER_EXTRA_COLUMNS.items():
+            if name not in existing:
+                conn.execute(text(f'ALTER TABLE users ADD COLUMN "{name}" {ddl}'))
         conn.commit()

@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../api/config'
 import { useAuth } from '../auth/AuthContext'
 import { useNotification } from '../components/NotificationProvider'
 import DailyStatusHero from '../components/daily/DailyStatusHero'
+import CatalogTab from '../components/reader/CatalogTab'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import type { TranslationStatus } from '../types'
 import { stripTranscriptTimestamps } from '../utils/readerText'
@@ -38,6 +39,7 @@ export default function ReaderListPage() {
   const [queuingArticle, setQueuingArticle] = useState<string | null>(null)
   const [pairingToken, setPairingToken] = useState<string | null>(null)
   const [pairing, setPairing] = useState(false)
+  const [view, setView] = useState<'mine' | 'catalog'>('mine')
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -140,14 +142,20 @@ export default function ReaderListPage() {
             <span className={`mr-1.5 inline-block h-2 w-2 rounded-full ${workerOnline ? 'bg-emerald-300' : 'bg-slate-500'}`} />
             {pairing ? 'Đang tạo mã…' : workerOnline ? 'Máy dịch đang bật' : 'Kết nối máy dịch'}
           </button>
-          <button onClick={() => void queueAll()} disabled={queuingAll || articles.length === 0} className="rounded-xl border border-violet-300/25 bg-violet-400/10 px-3 py-2 text-sm font-bold text-violet-200 disabled:opacity-50">{queuingAll ? 'Đang xếp hàng…' : '⚡ Dịch tất cả bài mới'}</button>
-          <button onClick={() => setShow(true)} className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-200">+ Bài mới</button>
+          {view === 'mine' && <>
+            <button onClick={() => void queueAll()} disabled={queuingAll || articles.length === 0} className="rounded-xl border border-violet-300/25 bg-violet-400/10 px-3 py-2 text-sm font-bold text-violet-200 disabled:opacity-50">{queuingAll ? 'Đang xếp hàng…' : '⚡ Dịch tất cả bài mới'}</button>
+            <button onClick={() => setShow(true)} className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-200">+ Bài mới</button>
+          </>}
         </div>
       </div>
 
       <p className="-mt-3 mb-6 text-xs text-slate-500">Bản dịch được worker local tạo ở nền và lưu kín trong tài khoản; nội dung tiếng Anh vẫn là màn hình đọc chính.</p>
 
-      {articlesQuery.loading ? <div className="grid gap-3 sm:grid-cols-2">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-24 animate-pulse rounded-2xl bg-white/[.05]" />)}</div>
+      <div className="mb-5 flex gap-1 rounded-xl bg-black/30 p-1">
+        {([['mine', 'Bài của tôi'], ['catalog', 'Thư viện theo cấp độ']] as ['mine' | 'catalog', string][]).map(([value, label]) => <button key={value} onClick={() => setView(value)} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold transition ${view === value ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-slate-200'}`}>{label}</button>)}
+      </div>
+
+      {view === 'catalog' ? <CatalogTab onAdopted={() => void articlesQuery.refresh()} /> : articlesQuery.loading ? <div className="grid gap-3 sm:grid-cols-2">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-24 animate-pulse rounded-2xl bg-white/[.05]" />)}</div>
         : articles.length === 0 ? <DailyStatusHero kind="reader" primaryTo="/reader" primaryLabel="Thêm bài đọc" onPrimary={() => setShow(true)} secondaryTo="/" secondaryLabel="Về trang chủ" />
           : <div className="grid gap-3 sm:grid-cols-2">{articles.map(article => {
             const translation = article.translation_status ? TRANSLATION_BADGES[article.translation_status] : null

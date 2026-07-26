@@ -41,6 +41,7 @@ class ArticleOut(BaseModel):
     word_count: int
     created_at: datetime
     translation_status: str | None = None
+    level: int | None = None
 
     model_config = {"from_attributes": True}
 

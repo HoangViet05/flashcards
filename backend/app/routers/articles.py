@@ -28,6 +28,7 @@ from app.services.article_extractor import (
     ExtractionError, count_words, extract_from_html, extract_from_pdf_source, fetch_url, normalize_text,
 )
 from app.services.security import get_current_user
+from app.services.readability import level_for
 from app.services import weak_words as weak_service
 
 router = APIRouter(prefix="/api/articles", tags=["articles"])
@@ -184,6 +185,7 @@ def get_article(article_id: str, db: Session = Depends(get_db), user: User = Dep
     article = get_owned_article(article_id, db, user)
     result = ArticleOut.model_validate(article)
     result.translation_status = _translation_status(article.id, db)
+    result.level = level_for(article.content)
     return result
 
 
@@ -399,7 +401,9 @@ def save_article_card(
     user: User = Depends(get_current_user),
 ):
     article = get_owned_article(article_id, db, user)
-    result = create_article_card(article, user, db, **body.model_dump())
+    payload = body.model_dump()
+    payload["example_sentence"] = payload["example_sentence"] or first_sentence_containing(article, body.word)
+    result = create_article_card(article, user, db, **payload)
     if result.duplicate:
         raise HTTPException(status_code=400, detail="Từ này đã có trong bộ thẻ của bài đọc")
     db.commit()

@@ -80,7 +80,7 @@ export interface HeatmapDay {
 export interface ArticleListItem {
   id: string
   title: string
-  source_type: 'paste' | 'url' | 'pdf' | 'rss'
+  source_type: 'paste' | 'url' | 'pdf' | 'rss' | 'catalog'
   source_url: string | null
   word_count: number
   has_summary: boolean
@@ -93,6 +93,7 @@ export interface Article extends ArticleListItem {
   document_id: string | null
   deck_id: string | null
   summary: string | null
+  level?: ReadingLevel | null
 }
 
 export type TranslationStatus = 'queued' | 'processing' | 'completed' | 'failed'
@@ -153,6 +154,7 @@ export interface User {
   id: string
   email: string
   name: string | null
+  preferred_level: ReadingLevel | null
   created_at: string
 }
 
@@ -192,4 +194,40 @@ export interface WeakWord {
   total_reviews: number
   last_step: ExerciseStep | null
   suggested_step: ExerciseStep
+}
+
+export type ReadingLevel = 1 | 2 | 3
+
+export const READING_LEVEL_LABELS: Record<ReadingLevel, string> = {
+  1: 'Mới bắt đầu',
+  2: 'Cơ bản',
+  3: 'Trung cấp',
+}
+
+export interface CatalogListItem {
+  id: string
+  title: string
+  level: ReadingLevel
+  word_count: number
+  source: 'voa' | 'simplewiki'
+  attribution: string
+  audio_url: string | null
+  suggested_word_count: number
+  already_added: boolean
+  published_at: string | null
+}
+
+export interface CatalogDetail {
+  id: string
+  title: string
+  content: string
+  level: ReadingLevel
+  word_count: number
+  source: 'voa' | 'simplewiki'
+  source_url: string
+  license: string
+  attribution: string
+  audio_url: string | null
+  suggested_words: string[]
+  already_added: boolean
 }

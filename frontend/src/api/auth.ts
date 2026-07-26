@@ -1,5 +1,5 @@
 import client from './client'
-import type { User } from '../types'
+import type { ReadingLevel, User } from '../types'
 
 export interface AuthResponse {
   access_token: string
@@ -14,3 +14,6 @@ export const login = (payload: { email: string; password: string }) =>
   client.post<AuthResponse>('/auth/login', payload).then(r => r.data)
 
 export const getMe = () => client.get<User>('/auth/me').then(r => r.data)
+
+export const updatePreferences = (preferredLevel: ReadingLevel) =>
+  client.patch<User>('/auth/me/preferences', { preferred_level: preferredLevel }).then(r => r.data)

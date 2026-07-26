@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     supabase_service_role_key: str | None = None
     supabase_storage_bucket: str | None = None
     supabase_storage_prefix: str = "flashcards"
+    catalog_ingest_token: str | None = None
 
     @property
     def parsed_cors_origins(self) -> list[str]:

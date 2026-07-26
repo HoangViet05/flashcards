@@ -35,9 +35,14 @@ class UserOut(BaseModel):
     id: str
     email: str
     name: str | None
+    preferred_level: int | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class PreferencesUpdate(BaseModel):
+    preferred_level: int = Field(ge=1, le=3)
 
 
 class AuthToken(BaseModel):

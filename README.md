@@ -456,3 +456,19 @@ Distributed under the **MIT License**. See `LICENSE` for more information.
   <br />
   <sub>If this project helped or inspired you, consider giving it a ⭐!</sub>
 </div>
+# Thư viện bài đọc theo cấp độ
+
+Nạp seed catalog đã commit sau khi deploy (không gọi mạng):
+
+    conda activate flashcard && cd backend && python scripts/import_catalog.py
+
+Lấy seed mới để kiểm tra rồi commit:
+
+    python scripts/fetch_catalog.py --source voa --out data/catalog/voa.json --per-feed 6
+    python scripts/fetch_catalog.py --source simplewiki --out data/catalog/simplewiki.json
+
+Đẩy trực tiếp nội dung mới lên production (cần cấu hình `CATALOG_INGEST_TOKEN`):
+
+    python scripts/fetch_catalog.py --source voa --push --api-base https://<render-app>.onrender.com --token "$CATALOG_INGEST_TOKEN"
+
+Các ngưỡng bậc nằm tại `backend/app/services/readability.py`; đo lại từ seed thay vì chỉnh tay nếu thư viện thay đổi đáng kể.

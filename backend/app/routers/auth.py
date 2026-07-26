@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.auth import AuthToken, LoginRequest, RegisterRequest, UserOut
+from app.schemas.auth import AuthToken, LoginRequest, PreferencesUpdate, RegisterRequest, UserOut
+from app.services.catalog import seed_first_article
 from app.services.security import create_access_token, get_current_user, hash_password, verify_password
 
 
@@ -28,6 +29,8 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
+    seed_first_article(user, db)
+    db.commit()
     return _auth_response(user)
 
 
@@ -41,4 +44,12 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserOut)
 def me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+@router.patch("/me/preferences", response_model=UserOut)
+def update_preferences(body: PreferencesUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    current_user.preferred_level = body.preferred_level
+    db.commit()
+    db.refresh(current_user)
     return current_user

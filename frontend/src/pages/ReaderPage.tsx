@@ -7,7 +7,9 @@ import { getWordStates } from '../api/weak'
 import PhraseCardPopup from '../components/reader/PhraseCardPopup'
 import WordPopup from '../components/reader/WordPopup'
 import { useNotification } from '../components/NotificationProvider'
-import type { Article, ArticleHighlight, ArticleTranslation, WordState } from '../types'
+import SourceAttribution from '../components/reader/SourceAttribution'
+import { useAuth } from '../auth/AuthContext'
+import { READING_LEVEL_LABELS, type Article, type ArticleHighlight, type ArticleTranslation, type WordState } from '../types'
 import { sentenceParts, splitSentences, stripTranscriptTimestamps } from '../utils/readerText'
 
 type SentenceTranslation = {
@@ -327,6 +329,7 @@ function VoicePicker({
 
 export default function ReaderPage() {
   const { id } = useParams<{ id: string }>()
+  const { user } = useAuth()
   const { toast } = useNotification()
   const [article, setArticle] = useState<Article | null>(null)
   const [translation, setTranslation] = useState<ArticleTranslation | null>(null)
@@ -573,6 +576,7 @@ export default function ReaderPage() {
       <header className="mx-auto max-w-3xl lg:ml-60">
         <Link to="/reader" className="text-sm text-slate-400 hover:text-cyan-300">← Danh sách bài đọc</Link>
         <h1 className="mt-2 text-2xl font-black text-white">{article.title}</h1>
+        {article.level && article.level > (user?.preferred_level ?? 1) && <p className="mt-2 inline-flex rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-[11px] font-bold text-amber-100">Bài này ở mức {READING_LEVEL_LABELS[article.level]} — cao hơn mức bạn đang chọn</p>}
         <p className="mb-6 mt-1 text-xs text-slate-500">
           {article.word_count} từ {article.source_url && <>· <a href={article.source_url} target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline">nguồn</a></>}
         </p>
@@ -674,6 +678,7 @@ export default function ReaderPage() {
               <p className="mt-2 border-t border-emerald-300/[.10] pt-2 font-medium text-emerald-100">{segment.translated}</p>
             </section>
           ))}
+          {article.source_type === 'catalog' && <SourceAttribution sourceUrl={article.source_url} />}
         </article>
       </div>
       {picked && <WordPopup word={picked.word} sentence={picked.sentence} articleId={article.id} onClose={() => setPicked(null)} />}

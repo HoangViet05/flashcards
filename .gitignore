@@ -13,6 +13,14 @@ node_modules/
 dist/
 .DS_Store
 backend/data/
+# Keep the small, reproducible reading catalog seed in the repository. Other
+# runtime data (dictionary, uploaded media, and local databases) stays ignored.
+!backend/data/
+backend/data/*
+!backend/data/voa_core_words.txt
+!backend/data/catalog/
+!backend/data/catalog/voa.json
+!backend/data/catalog/simplewiki.json
 extracted_anki/
 backend/.pytest_tmp/
 backend/data/dictionaries/

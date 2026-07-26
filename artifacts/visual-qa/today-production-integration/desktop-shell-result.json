@@ -1,0 +1,14 @@
+{
+  "proofFlag": "unset",
+  "rails": 1,
+  "headers": 1,
+  "overflow": false,
+  "consoleErrors": [],
+  "values": {
+    "due_count": 3,
+    "new_count": 2,
+    "streak": 7,
+    "study_minutes_today": 11
+  },
+  "pass": true
+}

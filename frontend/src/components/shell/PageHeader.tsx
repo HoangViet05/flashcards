@@ -22,7 +22,7 @@ export default function PageHeader() {
   return <header className="page-header">
     <div className="page-header__context"><span className="page-header__eyebrow">{context.eyebrow}</span><h1 className="page-header__title">{context.title}</h1></div>
     <div className="page-header__actions">
-      <span className="header-status" title="Current streak"><Icon name="flame" /><span>{user ? '12 day streak' : 'Review mode'}</span></span>
+      <span className="header-status" title="Current streak"><Icon name="flame" /><span>{user ? 'Current streak' : 'Review mode'}</span></span>
       <button className="header-control" type="button" aria-label={silent ? 'Turn sound on' : 'Turn silent mode on'} onClick={toggleSilent}><Icon name={silent ? 'silent' : 'sound'} /></button>
       <button className="header-control" type="button" aria-label={dark ? 'Use light theme' : 'Use dark theme'} onClick={() => setTheme(dark ? 'light' : 'dark')}><Icon name={dark ? 'sun' : 'moon'} /></button>
     </div>

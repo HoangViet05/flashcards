@@ -1,0 +1,9 @@
+@import '../home/TodayOrbitalCommand.css';
+@import '../home/TodayOrbitalCommandMobile.css';
+@import '../home/TodayOrbitalCommandStates.css';
+
+#flashie-today-directions .ftd-rail a { display:grid; width:3rem; min-height:3rem; place-items:center; gap:.2rem; border-radius:.8rem; color:var(--muted-foreground); text-decoration:none; }
+#flashie-today-directions .ftd-rail a span { font-size:.62rem; }
+#flashie-today-directions .ftd-rail a.is-active { color:var(--foreground); background:color-mix(in srgb,var(--ftd-glow) 17%,transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ftd-glow) 28%,transparent); }
+#flashie-today-directions .ftd-avatar { text-decoration:none; }
+@media (max-width:640px) { #flashie-today-directions .ftd-mobile-nav a { display:grid; min-height:56px; grid-template-rows:22px 12px; place-items:center; gap:1px; border-radius:.7rem; color:var(--muted-foreground); text-decoration:none; } #flashie-today-directions .ftd-mobile-nav a svg { width:20px; height:20px; } #flashie-today-directions .ftd-mobile-nav a span { font-size:.62rem; line-height:12px; } #flashie-today-directions .ftd-mobile-nav a.is-active { color:var(--foreground); background:color-mix(in srgb,var(--ftd-glow) 17%,transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ftd-glow) 28%,transparent); } }

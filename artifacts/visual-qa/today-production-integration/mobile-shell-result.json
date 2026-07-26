@@ -1,0 +1,9 @@
+{
+  "proofFlag": "unset",
+  "mobileNavigation": 1,
+  "navHeight": 64,
+  "missionHeadingVisible": true,
+  "firstMissionClear": true,
+  "noOverflow": true,
+  "pass": true
+}

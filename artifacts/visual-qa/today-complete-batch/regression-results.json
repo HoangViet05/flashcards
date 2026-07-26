@@ -1,0 +1,12 @@
+{
+  "desktop": {
+    "viewport": "1440x900",
+    "sha256": "fd804d9a6397f6bf1a6d644ffa5294f0c70baff347ddda4fe51dae478e9b0ac9",
+    "pass": true
+  },
+  "mobile": {
+    "viewport": "390x844",
+    "sha256": "ec0b79e259a01b295e7b4a0e9954225c90ff4485c34c96f8e1f25c84077e3b3b",
+    "pass": true
+  }
+}

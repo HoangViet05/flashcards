@@ -1,0 +1,15 @@
+{
+  "mobile": true,
+  "state": "loaded",
+  "ctaAndOrbInViewport": true,
+  "missionTop": 628.34375,
+  "navHeight": 64,
+  "navClear": true,
+  "railVisible": true,
+  "endScroll": {
+    "passes": true,
+    "navTop": 496.8125,
+    "lastBottom": 475.703125
+  },
+  "pass": true
+}

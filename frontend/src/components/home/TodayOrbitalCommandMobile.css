@@ -1,0 +1,25 @@
+#flashie-today-directions .ftd-mobile-nav { display: none; }
+
+@media (max-width: 640px) {
+  #flashie-today-directions .ftd-screen { grid-template-columns: 1fr; min-height: 48rem; }
+  #flashie-today-directions .ftd-rail { display: none; }
+  #flashie-today-directions .ftd-main { padding: .8rem .8rem calc(4.75rem + env(safe-area-inset-bottom)); }
+  #flashie-today-directions .ftd-header { align-items: start; }
+  #flashie-today-directions .ftd-header h2 { font-size: 1.05rem; }
+  #flashie-today-directions .ftd-header-actions .viz-badge { display: none; }
+  #flashie-today-directions .ftd-core-hero,
+  #flashie-today-directions .ftd-lower-grid { grid-template-columns: 1fr; }
+  #flashie-today-directions .ftd-core-hero { padding: 1rem; text-align: center; }
+  #flashie-today-directions .ftd-core-copy .viz-row { justify-content: center; }
+  #flashie-today-directions .ftd-core-stats { grid-template-columns: repeat(3, 1fr); padding: .8rem 0 0; box-shadow: 0 -1px var(--border); }
+  #flashie-today-directions .ftd-core-hero:after { top: 30%; right: 20%; }
+  #flashie-today-directions .ftd-orb-zone { min-height: 10rem; }
+  #flashie-today-directions .ftd-lower-grid { margin-top: calc(.8rem + 1.15rem); }
+  #flashie-today-directions .ftd-lower-grid .ftd-week { display: none; }
+  #flashie-today-directions .ftd-main svg { display: none; }
+  #flashie-today-directions .ftd-mobile-nav { position: fixed; right: .45rem; bottom: max(.45rem, env(safe-area-inset-bottom)); left: .45rem; z-index: 9; display: grid; height: 64px; grid-template-columns: repeat(5, 1fr); padding: 4px; border-radius: 1rem; background: color-mix(in srgb, var(--card) 88%, transparent); box-shadow: inset 0 0 0 1px var(--border), 0 .8rem 2rem color-mix(in srgb, var(--background) 45%, transparent); backdrop-filter: blur(1rem); }
+  #flashie-today-directions .ftd-mobile-nav button { display: grid; min-height: 56px; grid-template-rows: 22px 12px; place-items: center; gap: 1px; border: 0; border-radius: .7rem; color: var(--muted-foreground); background: transparent; font: inherit; }
+  #flashie-today-directions .ftd-mobile-nav button svg { width: 20px; height: 20px; }
+  #flashie-today-directions .ftd-mobile-nav button span { font-size: .62rem; line-height: 12px; }
+  #flashie-today-directions .ftd-mobile-nav button.is-active { color: var(--foreground); background: color-mix(in srgb, var(--ftd-glow) 17%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ftd-glow) 28%, transparent); }
+}

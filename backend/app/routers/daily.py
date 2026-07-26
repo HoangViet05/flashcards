@@ -19,6 +19,8 @@ from app.schemas.daily import (
     LatestArticleOut,
 )
 from app.services import daily as daily_service
+from app.services import missions as missions_service
+from app.services import progression as progression_service
 from app.services import weak_words as weak_service
 from app.services import word_search
 from app.services.security import get_current_user
@@ -49,8 +51,8 @@ def _word_out(word: DailySessionWord, weak_ids: set[str] | None = None) -> Daily
 def _session_out(db: Session, user_id: str, session: DailySession) -> DailySessionOut:
     words = sorted(_live_words(session), key=lambda word: (word.is_new, word.id))
     weak_ids = weak_service.weak_card_ids(db, user_id)
-    return DailySessionOut(id=session.id, session_date=session.session_date, status=session.status,
-                           phase=session.phase, words=[_word_out(word, weak_ids) for word in words])
+    return DailySessionOut(id=session.id, session_date=session.session_date, mode=session.mode, status=session.status,
+                           phase=session.phase, duration_seconds=session.duration_seconds, words=[_word_out(word, weak_ids) for word in words])
 
 
 def _make_word(session: DailySession, card: Card, is_new: bool, assigned_step: str) -> DailySessionWord:
@@ -59,12 +61,14 @@ def _make_word(session: DailySession, card: Card, is_new: bool, assigned_step: s
                             prev_ease=review.ease_factor, prev_interval=review.interval, prev_reps=review.repetitions)
 
 
-def _create_session(db: Session, user: User) -> DailySession | None:
-    if db.query(DailySession).filter(DailySession.user_id == user.id, DailySession.session_date == date.today(), DailySession.status == "done").first():
+def _create_session(db: Session, user: User, mode: str = "full") -> DailySession | None:
+    if db.query(DailySession).filter(DailySession.user_id == user.id, DailySession.session_date == date.today(), DailySession.mode == mode, DailySession.status == "done").first():
         return None
     rng = random.Random()
     review_cards = daily_service.due_review_cards(db, user.id)
-    new_cards = daily_service.pick_new_cards(db, user.id, rng=rng)
+    new_cards = daily_service.pick_new_cards(db, user.id, limit=2 if mode == "quick" else daily_service.NEW_WORDS_PER_DAY, rng=rng)
+    if mode == "quick":
+        review_cards = review_cards[:5]
     due_ids = {card.id for card in review_cards}
     weak_items = [
         item for item in weak_service.weak_words(db, user.id, rng)
@@ -76,7 +80,7 @@ def _create_session(db: Session, user: User) -> DailySession | None:
     } if weak_items else {}
     if not review_cards and not new_cards and not weak_items:
         return None
-    session = DailySession(user_id=user.id, session_date=date.today(), phase="review" if review_cards else "flip")
+    session = DailySession(user_id=user.id, session_date=date.today(), mode=mode, phase="review" if review_cards else "flip")
     db.add(session); db.flush()
     sides = (["vi_en", "en_vi"] * ((len(new_cards) + 1) // 2))[:len(new_cards)]
     rng.shuffle(sides)
@@ -90,23 +94,25 @@ def _create_session(db: Session, user: User) -> DailySession | None:
     return session
 
 
-def _active_session(db: Session, user: User) -> DailySession | None:
+def _active_session(db: Session, user: User, mode: str | None = None) -> DailySession | None:
     return db.query(DailySession).options(joinedload(DailySession.words).joinedload(DailySessionWord.card)).filter(
-        DailySession.user_id == user.id, DailySession.status.in_(["learning", "game"])
+        DailySession.user_id == user.id, DailySession.status.in_(["learning", "game"]),
+        *((DailySession.mode == mode,) if mode else ())
     ).order_by(DailySession.created_at.asc()).first()
 
 
-def _get_learning_session(db: Session, user: User) -> DailySession:
-    session = _active_session(db, user)
+def _get_learning_session(db: Session, user: User, mode: str = "full") -> DailySession:
+    session = _active_session(db, user, mode)
     if session is None or session.status != "learning":
         raise HTTPException(status_code=404, detail="Không có phiên học đang mở")
     return session
 
 
 @router.get("/session", response_model=DailySessionResponse)
-def get_session(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def get_session(mode: str = "full", db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    if mode not in {"full", "quick"}: raise HTTPException(status_code=422, detail="Mode must be full or quick")
     _close_stale_game_sessions(db, user)
-    session = _active_session(db, user) or _create_session(db, user)
+    session = _active_session(db, user, mode) or _create_session(db, user, mode)
     db.commit()
     if session is None: return DailySessionResponse(session=None)
     db.refresh(session)
@@ -133,7 +139,8 @@ def _current_phase(session: DailySession) -> str:
 
 @router.post("/answer", response_model=DailyWordOut)
 def submit_answer(body: AnswerIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    session = _get_learning_session(db, user)
+    if body.mode not in {"full", "quick"}: raise HTTPException(status_code=422, detail="Mode must be full or quick")
+    session = _get_learning_session(db, user, body.mode)
     word = next((item for item in _live_words(session) if item.card_id == body.card_id), None)
     if word is None: raise HTTPException(status_code=404, detail="Từ không thuộc phiên hôm nay")
     if body.step not in _required_steps(word): raise HTTPException(status_code=400, detail="Bước không hợp lệ cho từ này")
@@ -176,8 +183,9 @@ def _build_puzzle(session: DailySession, rng: random.Random) -> None:
 
 
 @router.post("/complete-learning", response_model=DailySessionResponse)
-def complete_learning(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    session = _get_learning_session(db, user)
+def complete_learning(mode: str = "full", db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    if mode not in {"full", "quick"}: raise HTTPException(status_code=422, detail="Mode must be full or quick")
+    session = _get_learning_session(db, user, mode)
     if any(not _steps_complete(word) for word in _live_words(session)):
         raise HTTPException(status_code=409, detail="Chưa hoàn thành hết các bước học")
     rng = random.Random()
@@ -302,4 +310,17 @@ def get_home(db: Session = Depends(get_db), user: User = Depends(get_current_use
         latest_article=LatestArticleOut(
             id=latest.id, title=latest.title, unlearned_saved_words=latest.unlearned_saved_words
         ) if latest else None,
+        progression=progression_service.overview_data(db, user.id),
+        missions={
+            "daily": [
+                {"id": item.id, "mission_key": item.mission_key, "skill": item.skill, "target": item.target, "progress": item.progress, "completed_at": item.completed_at, "rerolled": item.rerolled}
+                for item in missions_service.assignments_for(db, user.id, "daily")
+            ],
+            "weekly": [
+                {"id": item.id, "mission_key": item.mission_key, "skill": item.skill, "target": item.target, "progress": item.progress, "completed_at": item.completed_at, "rerolled": item.rerolled}
+                for item in missions_service.assignments_for(db, user.id, "weekly")
+            ],
+        },
+        journey=missions_service.journey(db, user.id),
+        server_time=progression_service.utcnow(),
     )

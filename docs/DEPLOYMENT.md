@@ -247,3 +247,6 @@ Thu tu nang cap hop ly:
 1. Nang Render backend len paid instance nho.
 2. Nang Supabase len Pro khi DB/storage het quota.
 3. Sau nay neu media lon, chuyen sang Cloudflare R2/S3.
+# Learning OS migrations and reset
+
+Render starts the API with `alembic upgrade head`; it never resets data. For a production reset, first export a Supabase snapshot and verify the exact project host. Then run `python -m scripts.reset_app_schema --project-ref <ref> --confirm "RESET FLASHIE APP DATA" --dry-run`, review the listed app tables, remove `--dry-run`, and run `alembic upgrade head`. The script rejects SQLite, localhost, a missing/mismatched project ref, and an incorrect phrase. It never addresses Supabase `auth`, `storage`, extensions, or storage objects.

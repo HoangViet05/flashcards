@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import DailyGamePanel from '../components/daily/DailyGamePanel'
 import DailyProgress from '../components/daily/DailyProgress'
@@ -13,7 +14,8 @@ import WeakStep from '../components/daily/steps/WeakStep'
 import { useDailySession } from '../hooks/useDailySession'
 
 export default function DailyPage() {
-  const daily = useDailySession()
+  const [params] = useSearchParams()
+  const daily = useDailySession(params.get('mode') === 'quick' ? 'quick' : 'full')
   const [combo, setCombo] = useState(0)
 
   if (daily.loading) {

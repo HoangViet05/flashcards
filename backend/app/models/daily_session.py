@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -13,10 +13,13 @@ class DailySession(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False, index=True)
     session_date: Mapped[date] = mapped_column(Date, nullable=False, default=date.today)
+    mode: Mapped[str] = mapped_column(String(10), nullable=False, default="full", index=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="learning")
     phase: Mapped[str] = mapped_column(String(20), nullable=False, default="review")
     puzzle_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    duration_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     words: Mapped[list["DailySessionWord"]] = relationship(

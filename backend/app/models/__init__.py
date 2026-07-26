@@ -14,3 +14,9 @@ from app.models.shadow_video import ShadowVideo  # noqa: F401
 from app.models.shadowing_attempt import ShadowingAttempt  # noqa: F401
 from app.models.daily_session import DailySession, DailySessionWord  # noqa: F401
 from app.models.catalog_article import CatalogArticle  # noqa: F401
+from app.models.user_preference import UserPreference  # noqa: F401
+from app.models.learning_event import LearningEvent  # noqa: F401
+from app.models.skill_progress import SkillProgress  # noqa: F401
+from app.models.mission_assignment import MissionAssignment  # noqa: F401
+from app.models.boss_attempt import BossAttempt  # noqa: F401
+from app.models.user_unlock import UserUnlock  # noqa: F401

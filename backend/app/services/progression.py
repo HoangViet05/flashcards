@@ -1,0 +1,118 @@
+from collections import defaultdict
+from datetime import date, datetime, timedelta, timezone
+
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from app.models.learning_event import LearningEvent
+from app.models.skill_progress import SkillProgress
+from app.models.review import Review
+from app.models.review_log import ReviewLog
+from app.models.card import Card
+from app.models.deck import Deck
+from app.models.user_unlock import UserUnlock
+
+SKILLS = ("vocabulary", "reading", "listening", "speaking")
+SESSION_CAPS = {"full": 80, "quick": 30, "reading": 80, "speaking": 60}
+
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def level_for_xp(xp: int) -> int:
+    level = 1
+    while 100 * (level + 1) * level // 2 <= xp:
+        level += 1
+    return level
+
+
+def xp_for_event(event_type: str, metric_value: int | None) -> int:
+    if event_type == "answer_correct": return 4
+    if event_type == "answer_corrected": return 1
+    if event_type == "reading_complete": return 20 + min(15, max(5, metric_value or 5))
+    if event_type == "shadowing_scored": return 5 + min(5, max(0, (metric_value or 0) // 20))
+    if event_type == "shadowing_offline": return 4
+    return 0
+
+
+def cap_key(event: LearningEvent) -> tuple[str, date] | None:
+    if event.source_type in {"full", "quick"}: return event.source_type, event.occurred_at.date()
+    if event.event_type == "reading_complete": return "reading", event.occurred_at.date()
+    if event.event_type.startswith("shadowing"): return "speaking", event.occurred_at.date()
+    return None
+
+
+def awarded_xp_with_cap(db: Session, event: LearningEvent, proposed: int) -> int:
+    key = cap_key(event)
+    if key is None: return proposed
+    group, day = key
+    start = datetime.combine(day, datetime.min.time(), tzinfo=timezone.utc)
+    end = start + timedelta(days=1)
+    used = db.query(func.coalesce(func.sum(LearningEvent.payload["xp"].as_integer()), 0)).filter(
+        LearningEvent.user_id == event.user_id, LearningEvent.occurred_at >= start, LearningEvent.occurred_at < end
+    ).scalar() or 0
+    return max(0, min(proposed, SESSION_CAPS[group] - int(used)))
+
+
+def apply_event(db: Session, user_id: str, data) -> tuple[LearningEvent, int, bool]:
+    existing = db.query(LearningEvent).filter(LearningEvent.user_id == user_id, LearningEvent.idempotency_key == data.idempotency_key).first()
+    if existing is not None:
+        return existing, int((existing.payload or {}).get("xp", 0)), True
+    occurred_at = data.occurred_at or utcnow()
+    if occurred_at.tzinfo is None:
+        occurred_at = occurred_at.replace(tzinfo=timezone.utc)
+    event = LearningEvent(user_id=user_id, event_type=data.event_type, skill=data.skill, source_type=data.source_type,
+        source_id=data.source_id, idempotency_key=data.idempotency_key, duration_seconds=min(data.duration_seconds, 300),
+        metric_value=data.metric_value, payload=dict(data.payload), occurred_at=occurred_at)
+    proposed = xp_for_event(data.event_type, data.metric_value)
+    awarded = awarded_xp_with_cap(db, event, proposed)
+    event.payload = {**event.payload, "xp": awarded}
+    db.add(event)
+    progress = db.query(SkillProgress).filter(SkillProgress.user_id == user_id, SkillProgress.skill == data.skill).first()
+    if progress is None:
+        progress = SkillProgress(user_id=user_id, skill=data.skill, xp=0)
+        db.add(progress)
+    progress.xp += awarded
+    return event, awarded, False
+
+
+def ensure_skill_rows(db: Session, user_id: str) -> list[SkillProgress]:
+    current = {item.skill: item for item in db.query(SkillProgress).filter(SkillProgress.user_id == user_id).all()}
+    for skill in SKILLS:
+        if skill not in current:
+            current[skill] = SkillProgress(user_id=user_id, skill=skill, xp=0)
+            db.add(current[skill])
+    db.flush()
+    return [current[skill] for skill in SKILLS]
+
+
+def overview_data(db: Session, user_id: str) -> dict:
+    now = utcnow(); since = now - timedelta(days=30)
+    rows = ensure_skill_rows(db, user_id)
+    event_rows = db.query(LearningEvent.skill, func.count(LearningEvent.id), func.avg(LearningEvent.metric_value)).filter(
+        LearningEvent.user_id == user_id, LearningEvent.occurred_at >= since
+    ).group_by(LearningEvent.skill).all()
+    samples = {skill: (int(count), avg) for skill, count, avg in event_rows}
+    skills = []
+    for row in rows:
+        count, average = samples.get(row.skill, (0, None))
+        mastery = None if count < 3 else max(0, min(100, round(float(average if average is not None else 70))))
+        skills.append({"skill": row.skill, "xp": row.xp, "level": level_for_xp(row.xp), "mastery": mastery, "building_signal": mastery is None})
+    week_start = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+    duration_today = db.query(func.coalesce(func.sum(LearningEvent.duration_seconds), 0)).filter(LearningEvent.user_id == user_id, LearningEvent.occurred_at >= now.replace(hour=0, minute=0, second=0, microsecond=0)).scalar() or 0
+    duration_week = db.query(func.coalesce(func.sum(LearningEvent.duration_seconds), 0)).filter(LearningEvent.user_id == user_id, LearningEvent.occurred_at >= week_start).scalar() or 0
+    remembered = db.query(func.count(Review.id)).join(Card).join(Deck).filter(Deck.user_id == user_id, Review.repetitions >= 3).scalar() or 0
+    logs = db.query(ReviewLog).filter(ReviewLog.user_id == user_id, ReviewLog.reviewed_at >= since).all()
+    retention = None if len(logs) < 3 else round(100 * sum(log.quality >= 3 for log in logs) / len(logs))
+    heatmap = defaultdict(int)
+    for event_day, seconds in db.query(func.date(LearningEvent.occurred_at), func.sum(LearningEvent.duration_seconds)).filter(LearningEvent.user_id == user_id, LearningEvent.occurred_at >= since).group_by(func.date(LearningEvent.occurred_at)).all():
+        heatmap[str(event_day)] = int(seconds or 0)
+    active_days = sorted(heatmap)
+    streak = 0; cursor = now.date().isoformat()
+    while cursor in heatmap:
+        streak += 1
+        cursor = (date.fromisoformat(cursor) - timedelta(days=1)).isoformat()
+    return {"server_time": now, "effective_date": now.date().isoformat(), "streak": streak, "study_minutes_today": int(duration_today) // 60,
+            "study_minutes_week": int(duration_week) // 60, "remembered_cards": int(remembered), "retention": retention,
+            "skills": skills, "heatmap": dict(heatmap), "unlocks": [item.unlock_key for item in db.query(UserUnlock).filter(UserUnlock.user_id == user_id).all()]}

@@ -472,3 +472,6 @@ Lấy seed mới để kiểm tra rồi commit:
     python scripts/fetch_catalog.py --source voa --push --api-base https://<render-app>.onrender.com --token "$CATALOG_INGEST_TOKEN"
 
 Các ngưỡng bậc nằm tại `backend/app/services/readability.py`; đo lại từ seed thay vì chỉnh tay nếu thư viện thay đổi đáng kể.
+# Learning OS local checks
+
+Run the backend suite from `backend` with the configured Python 3.12 runtime: `python -m pytest`. Run frontend checks from `frontend`: `npm.cmd run build` and `npm.cmd test`. Feature flags use `VITE_FEATURE_LEARNING_OS`, `VITE_FEATURE_PROGRESSION`, `VITE_FEATURE_BOSS`, and `VITE_FEATURE_AUDIO`; production defaults are disabled. Audio assets are lazy and their licensing record lives in `frontend/public/audio/ATTRIBUTION.md`.

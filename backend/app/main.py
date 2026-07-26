@@ -3,11 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.config import get_settings
+import app.models  # noqa: F401 - registers every SQLAlchemy model before metadata creation
 from app.database import Base, engine, ensure_article_columns, ensure_card_columns, ensure_owner_columns, ensure_review_columns, ensure_user_columns
 from app.routers import articles, cards, catalog, daily, decks, dictionary, documents, review, shadowing
 from app.routers import ai
 from app.routers import anki_import
 from app.routers import auth
+from app.routers import boss, missions, progress
 
 settings = get_settings()
 
@@ -46,6 +48,9 @@ app.include_router(articles.router)
 app.include_router(catalog.router)
 app.include_router(dictionary.router)
 app.include_router(shadowing.router)
+app.include_router(progress.router)
+app.include_router(missions.router)
+app.include_router(boss.router)
 
 app.mount("/media", StaticFiles(directory=MEDIA_DIR), name="media")
 

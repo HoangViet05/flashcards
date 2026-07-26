@@ -11,6 +11,7 @@ import SourceAttribution from '../components/reader/SourceAttribution'
 import { useAuth } from '../auth/AuthContext'
 import { READING_LEVEL_LABELS, type Article, type ArticleHighlight, type ArticleTranslation, type WordState } from '../types'
 import { sentenceParts, splitSentences, stripTranscriptTimestamps } from '../utils/readerText'
+import { useActivityTimer } from '../hooks/useActivityTimer'
 
 type SentenceTranslation = {
   source: string
@@ -347,6 +348,7 @@ export default function ReaderPage() {
   const [voiceURI, setVoiceURI] = useState(() => window.localStorage.getItem(VOICE_STORAGE_KEY) ?? '')
   const speechRun = useRef(0)
   const wordClickTimer = useRef<ReturnType<typeof window.setTimeout> | null>(null)
+  useActivityTimer({ event_type: 'duration', skill: 'reading', source_type: 'article', source_id: id })
 
   useEffect(() => {
     if (id) {

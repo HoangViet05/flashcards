@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import { useAuth } from './auth/AuthContext'
-import Navbar from './components/Navbar'
+import AppShell from './components/shell/AppShell'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
 const DeckDetailPage = lazy(() => import('./pages/DeckDetailPage'))
@@ -16,6 +16,10 @@ const LibraryPage = lazy(() => import('./pages/LibraryPage'))
 const ShadowingPage = lazy(() => import('./pages/ShadowingPage'))
 const DailyPage = lazy(() => import('./pages/DailyPage'))
 const WeakWordsPage = lazy(() => import('./pages/WeakWordsPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage'))
+const QuickStudyPage = lazy(() => import('./pages/QuickStudyPage'))
+const BossPage = lazy(() => import('./pages/BossPage'))
 
 function PageFallback() {
   return (
@@ -36,8 +40,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen">
-        <Navbar />
+      <AppShell>
         <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/login" element={<AuthPage mode="login" />} />
@@ -46,6 +49,7 @@ export default function App() {
             <Route path="/library" element={<RequireAuth><LibraryPage /></RequireAuth>} />
             <Route path="/decks/:id" element={<RequireAuth><DeckDetailPage /></RequireAuth>} />
             <Route path="/daily" element={<RequireAuth><DailyPage /></RequireAuth>} />
+            <Route path="/daily/quick" element={<RequireAuth><QuickStudyPage /></RequireAuth>} />
             <Route path="/weak" element={<RequireAuth><WeakWordsPage /></RequireAuth>} />
             <Route path="/stats" element={<RequireAuth><StatsPage /></RequireAuth>} />
             <Route path="/reader" element={<RequireAuth><ReaderListPage /></RequireAuth>} />
@@ -53,10 +57,13 @@ export default function App() {
             <Route path="/games" element={<Navigate to="/daily" replace />} />
             <Route path="/shadowing" element={<RequireAuth><ShadowingPage /></RequireAuth>} />
             <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
+            <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
+            <Route path="/onboarding" element={<RequireAuth><OnboardingPage /></RequireAuth>} />
+            <Route path="/boss" element={<RequireAuth><BossPage /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
-      </div>
+      </AppShell>
     </BrowserRouter>
   )
 }

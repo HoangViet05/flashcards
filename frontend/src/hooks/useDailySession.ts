@@ -23,7 +23,7 @@ const nextPhaseAfter = (name: QueueName): Phase | null => {
   return null
 }
 
-export function useDailySession() {
+export function useDailySession(mode: 'full' | 'quick' = 'full') {
   const { toast } = useNotification()
   const worker = useShadowingWorker()
   const [loading, setLoading] = useState(true)
@@ -35,7 +35,7 @@ export function useDailySession() {
   const startedAt = useRef(Date.now())
 
   useEffect(() => {
-    getDailySession()
+    getDailySession(mode)
       .then(loaded => {
         setSession(loaded)
         if (!loaded) {
@@ -61,10 +61,10 @@ export function useDailySession() {
       })
       .catch(() => toast('Không tải được phiên học hôm nay', 'error'))
       .finally(() => setLoading(false))
-  }, [toast])
+  }, [toast, mode])
 
   const finishLearning = useCallback(() => {
-    void completeLearning()
+    void completeLearning(mode)
       .then(next => {
         // Nhận lại phiên đã cập nhật để màn tổng kết đếm trên số liệu mới nhất.
         setSession(next)
@@ -72,14 +72,14 @@ export function useDailySession() {
         setPhase('game')
       })
       .catch(() => toast('Không hoàn tất được phần học', 'error'))
-  }, [toast])
+  }, [toast, mode])
 
   /** Trả lời đúng thì bỏ từ khỏi hàng; sai thì đẩy xuống cuối để gặp lại. */
   const answer = useCallback((name: QueueName, step: string, correct: boolean) => {
     const [word, ...rest] = queues[name]
     if (!word) return
 
-    void postDailyAnswer(word.card_id, step, correct)
+    void postDailyAnswer(word.card_id, step, correct, mode)
       .then(() => {
         const following = correct ? rest : [...rest, word]
         setQueues(current => ({ ...current, [name]: following }))
@@ -90,7 +90,7 @@ export function useDailySession() {
         if (!following.length && next) setPhase(next)
       })
       .catch(() => toast('Không lưu được câu trả lời', 'error'))
-  }, [queues, toast, worker.status])
+  }, [queues, toast, worker.status, mode])
 
   const splitDone = queues.left.length === 0 && queues.right.length === 0
 

@@ -1,13 +1,13 @@
-from datetime import date
+from datetime import date, datetime
 from pydantic import BaseModel
 from app.schemas.card import CardOut
 
 class DailyWordOut(BaseModel):
     id: str; card_id: str; is_new: bool; is_weak: bool = False; assigned_step: str; steps_done: list[str]; wrong_count: int; card: CardOut
 class DailySessionOut(BaseModel):
-    id: str; session_date: date; status: str; phase: str; words: list[DailyWordOut]
+    id: str; session_date: date; mode: str = "full"; status: str; phase: str; duration_seconds: int = 0; words: list[DailyWordOut]
 class DailySessionResponse(BaseModel): session: DailySessionOut | None
-class AnswerIn(BaseModel): card_id: str; step: str; correct: bool
+class AnswerIn(BaseModel): card_id: str; step: str; correct: bool; mode: str = "full"
 class GameMeaning(BaseModel): token: str; meaning: str; hint_level: int
 class GameWordChip(BaseModel): card_id: str; word: str; cells: list[list[int]] | None
 class GameOut(BaseModel): size: int; grid: list[list[str]]; meanings: list[GameMeaning]; found: list[GameWordChip]; total_words: int; status: str
@@ -32,3 +32,7 @@ class DailyHomeOut(BaseModel):
     mastered_cards: int; total_cards: int; deck_count: int
     low_new_words: bool; new_remaining: int
     latest_article: LatestArticleOut | None
+    progression: dict | None = None
+    missions: dict | None = None
+    journey: dict | None = None
+    server_time: datetime | None = None

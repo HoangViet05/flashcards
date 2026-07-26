@@ -156,6 +156,17 @@ export interface User {
   name: string | null
   preferred_level: ReadingLevel | null
   created_at: string
+  preferences?: UserPreferences | null
+}
+
+export type ThemeMode = 'system' | 'light' | 'dark'
+export type AccentTheme = 'violet-cyan' | 'blue-emerald' | 'amber-rose' | 'graphite-ice'
+export interface UserPreferences {
+  ui_theme: ThemeMode; accent_theme: AccentTheme; reduce_effects: boolean; daily_goal_minutes: number; timezone: string; work_goal: 'reading' | 'listening' | 'conversation' | 'balanced'
+  preferred_voice_name: string | null; preferred_voice_locale: string | null; speech_rate: number
+  music_enabled: boolean; sfx_enabled: boolean; feedback_enabled: boolean; pronunciation_enabled: boolean; haptic_enabled: boolean
+  master_volume: number; music_volume: number; sfx_volume: number; feedback_volume: number; pronunciation_volume: number; silent_mode: boolean
+  silent_profile: Record<string, boolean>; onboarding_completed_at: string | null
 }
 
 export interface ShadowSegment { start: number; end: number; text: string }
@@ -172,7 +183,7 @@ export interface ShadowingStats { total_attempts: number; attempts_7d: number; a
 
 export type ExerciseStep = 'dictation' | 'vi_en' | 'en_vi'
 export interface DailyWord { id: string; card_id: string; is_new: boolean; is_weak: boolean; assigned_step: ExerciseStep; steps_done: string[]; wrong_count: number; card: Card }
-export interface DailySession { id: string; session_date: string; status: 'learning' | 'game' | 'done'; phase: 'review' | 'flip' | 'dictation' | 'split' | 'game'; words: DailyWord[] }
+export interface DailySession { id: string; session_date: string; mode?: 'full' | 'quick'; status: 'learning' | 'game' | 'done'; phase: 'review' | 'flip' | 'dictation' | 'split' | 'game'; duration_seconds?: number; words: DailyWord[] }
 export interface DailyStatus { new_remaining: number; low_new_words: boolean; session_status: 'none' | 'learning' | 'game' | 'done'; session_date: string | null; new_count: number; due_count: number }
 export interface LatestArticle { id: string; title: string; unlearned_saved_words: number }
 export interface DailyHome {
@@ -180,7 +191,12 @@ export interface DailyHome {
   steps_total: number; steps_done: number; streak: number; studied_today: boolean
   mastered_cards: number; total_cards: number; deck_count: number
   low_new_words: boolean; new_remaining: number; latest_article: LatestArticle | null
+  progression?: ProgressOverview; missions?: { daily: Mission[]; weekly: Mission[] }; journey?: Journey; server_time?: string
 }
+export interface SkillProgressOverview { skill: 'vocabulary' | 'reading' | 'listening' | 'speaking'; xp: number; level: number; mastery: number | null; building_signal: boolean }
+export interface ProgressOverview { streak: number; study_minutes_today: number; study_minutes_week: number; remembered_cards: number; retention: number | null; skills: SkillProgressOverview[]; heatmap: Record<string, number>; unlocks: string[] }
+export interface Mission { id: string; mission_key: string; skill: string; target: number; progress: number; completed_at: string | null; rerolled: boolean }
+export interface Journey { week_start: string; timezone: string; boss_available: boolean; lanes: { skill: string; checkpoints: { date: string; active: boolean }[] }[] }
 export interface GameMeaning { token: string; meaning: string; hint_level: number }
 export interface GameChip { card_id: string; word: string; cells: number[][] | null }
 export interface DailyGame { size: number; grid: string[][]; meanings: GameMeaning[]; found: GameChip[]; total_words: number; status: string }

@@ -48,7 +48,7 @@ export default function LibraryPage() {
     if (!name.trim()) return
 
     await createDeck({ name: name.trim(), description: description.trim() || undefined })
-    toast('Đã tạo bộ thẻ', 'success')
+    toast('Deck created.', 'success')
     setName('')
     setDescription('')
     setShowForm(false)
@@ -56,13 +56,13 @@ export default function LibraryPage() {
   }
 
   const remove = (id: string) => confirm({
-    title: 'Xóa bộ thẻ?',
-    message: 'Toàn bộ thẻ trong bộ này sẽ bị xóa.',
-    confirmText: 'Xóa bộ thẻ',
+    title: 'Delete this deck?',
+    message: 'All cards in this deck will be permanently deleted.',
+    confirmText: 'Delete deck',
     variant: 'danger',
     onConfirm: async () => {
       await deleteDeck(id)
-      toast('Đã xóa bộ thẻ', 'success')
+      toast('Deck deleted.', 'success')
       await decksQuery.refresh()
     },
   })
@@ -71,9 +71,9 @@ export default function LibraryPage() {
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10">
       <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-strong-text">Thư viện của bạn</h1>
+          <p className="eyebrow">Library</p><h1 className="text-3xl font-black tracking-tight text-strong-text">Your vocabulary library</h1>
           <p className="mt-1 text-sm text-muted">
-            {decks.length} bộ thẻ · {decks.reduce((sum, deck) => sum + deck.card_count, 0)} thẻ
+            {decks.length} decks · {decks.reduce((sum, deck) => sum + deck.card_count, 0)} cards
           </p>
         </div>
 
@@ -82,19 +82,19 @@ export default function LibraryPage() {
             onClick={() => setShowImport(true)}
             className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-subtle bg-surface-1 px-4 text-sm font-bold text-body"
           >
-            <IconImport />Nhập dữ liệu Anki
+            <IconImport />Import Anki
           </button>
           <button
             onClick={() => setShowAnki(true)}
             className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-subtle bg-surface-1 px-4 text-sm font-bold text-body"
           >
-            <IconLibrary />Thư viện Anki{ankiQuery.data?.total ? ` (${ankiQuery.data.total})` : ''}
+            <IconLibrary />Anki library{ankiQuery.data?.total ? ` (${ankiQuery.data.total})` : ''}
           </button>
           <button
             onClick={() => setShowForm(true)}
             className="min-h-[44px] rounded-xl bg-accent px-4 text-sm font-bold text-white"
           >
-            Tạo bộ thẻ
+            Create deck
           </button>
         </div>
       </div>
@@ -121,19 +121,19 @@ export default function LibraryPage() {
         </div>
       ) : (
         <div className="rounded-2xl border border-subtle bg-surface-1 p-10 text-center">
-          <p className="text-lg font-bold text-strong-text">Chưa có bộ thẻ nào</p>
-          <p className="mt-1 text-sm text-muted">Tạo một bộ thẻ hoặc lưu từ mới khi đọc bài.</p>
+          <p className="text-lg font-bold text-strong-text">Your library is ready for its first deck.</p>
+          <p className="mt-1 text-sm text-muted">Create a deck or save useful words while reading.</p>
         </div>
       )}
 
       {showForm && (
         <div className="fixed inset-0 z-50 grid place-items-center p-4">
-          <button aria-label="Đóng" className="absolute inset-0 bg-black/65" onClick={() => setShowForm(false)} />
+          <button aria-label="Close" className="absolute inset-0 bg-black/65" onClick={() => setShowForm(false)} />
           <form onSubmit={create} className="relative w-full max-w-md rounded-2xl border border-subtle bg-[#0b0d16] p-6">
-            <h2 className="text-xl font-black text-strong-text">Tạo bộ thẻ mới</h2>
+            <h2 className="text-xl font-black text-strong-text">Create a new deck</h2>
 
             <label className="mt-5 block text-sm font-bold text-body">
-              Tên bộ thẻ
+              Deck name
               <input
                 autoFocus
                 value={name}
@@ -143,7 +143,7 @@ export default function LibraryPage() {
             </label>
 
             <label className="mt-4 block text-sm font-bold text-body">
-              Mô tả (tùy chọn)
+              Description (optional)
               <input
                 value={description}
                 onChange={event => setDescription(event.target.value)}
@@ -153,9 +153,9 @@ export default function LibraryPage() {
 
             <div className="mt-6 flex justify-end gap-3">
               <button type="button" onClick={() => setShowForm(false)} className="min-h-[44px] px-4 text-sm font-bold text-muted">
-                Hủy
+                Cancel
               </button>
-              <button className="min-h-[44px] rounded-xl bg-accent px-5 text-sm font-bold text-white">Lưu bộ thẻ</button>
+              <button className="min-h-[44px] rounded-xl bg-accent px-5 text-sm font-bold text-white">Save deck</button>
             </div>
           </form>
         </div>

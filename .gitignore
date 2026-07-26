@@ -23,5 +23,6 @@ backend/data/*
 !backend/data/catalog/simplewiki.json
 extracted_anki/
 backend/.pytest_tmp/
+backend/tests/.pytest-artifacts/
 backend/data/dictionaries/
 .superpowers/

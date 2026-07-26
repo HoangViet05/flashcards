@@ -12,6 +12,7 @@ import { useAuth } from '../auth/AuthContext'
 import { READING_LEVEL_LABELS, type Article, type ArticleHighlight, type ArticleTranslation, type WordState } from '../types'
 import { sentenceParts, splitSentences, stripTranscriptTimestamps } from '../utils/readerText'
 import { useActivityTimer } from '../hooks/useActivityTimer'
+import ReadingCompanionDock from '../components/reader/ReadingCompanionDock'
 
 type SentenceTranslation = {
   source: string
@@ -574,8 +575,8 @@ export default function ReaderPage() {
 
   let sentenceIndex = -1
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 pb-40 sm:px-6">
-      <header className="mx-auto max-w-3xl lg:ml-60">
+    <div className="reader-focus mx-auto max-w-6xl px-4 py-8 pb-40 sm:px-6">
+      <header className="reader-focus__header mx-auto max-w-3xl lg:ml-60">
         <Link to="/reader" className="text-sm text-slate-400 hover:text-cyan-300">← Danh sách bài đọc</Link>
         <h1 className="mt-2 text-2xl font-black text-white">{article.title}</h1>
         {article.level && article.level > (user?.preferred_level ?? 1) && <p className="mt-2 inline-flex rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-[11px] font-bold text-amber-100">Bài này ở mức {READING_LEVEL_LABELS[article.level]} — cao hơn mức bạn đang chọn</p>}
@@ -584,12 +585,8 @@ export default function ReaderPage() {
         </p>
       </header>
 
-      <aside className="fixed left-6 top-36 z-10 hidden w-80 min-[1800px]:block">
-        <HighlightPanel highlights={highlights} onRemove={removeHighlight} onUpdate={updateHighlightMeaning} onAddAll={addAllHighlights} adding={addingHighlights} />
-      </aside>
-
-      <div className="grid items-start gap-6 lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-8">
-        <aside className="z-10 lg:sticky lg:top-24">
+      <div className="reader-focus__grid grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_13.5rem] lg:gap-8">
+        <ReadingCompanionDock>
           <section className="rounded-2xl border border-cyan-300/[.12] bg-slate-950/70 p-3 shadow-[0_18px_45px_rgba(0,0,0,0.18)] backdrop-blur-xl">
             <div className="mb-3 flex items-center gap-2 px-1">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-400/10 text-sm text-cyan-300">◖</span>
@@ -624,12 +621,12 @@ export default function ReaderPage() {
             <Link to={`/shadowing?article=${id}`} className="mt-3 block rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-3 py-2 text-center text-xs font-bold text-cyan-200 hover:bg-cyan-400/20">🎤 Shadow</Link>
             <p className="mt-3 rounded-xl bg-white/[.035] px-2.5 py-2 text-[11px] leading-4 text-slate-500">{tts.playing ? `Đang đọc câu ${tts.sentence + 1}/${sentences.length}` : 'Bấm một từ để tra nghĩa; bôi đen cụm/câu để lưu thành thẻ.'}</p>
           </section>
-          <div className="mt-4 min-[1800px]:hidden">
+          <div className="mt-4">
             <HighlightPanel highlights={highlights} onRemove={removeHighlight} onUpdate={updateHighlightMeaning} onAddAll={addAllHighlights} adding={addingHighlights} />
           </div>
-        </aside>
+        </ReadingCompanionDock>
 
-        <article onMouseUp={() => window.setTimeout(saveSelectedPhrase)} className="min-w-0 max-w-3xl space-y-4 text-[17px] leading-8 text-slate-200">
+        <article onMouseUp={() => window.setTimeout(saveSelectedPhrase)} className="reader-focus__article min-w-0 max-w-3xl space-y-4 text-[17px] leading-8 text-slate-200">
           {readerLanguage === 'original' && (
             <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-muted">
               <span className="inline-flex items-center gap-1.5"><i className="h-3 w-3 rounded-sm bg-accent-2/40" />đang học</span>

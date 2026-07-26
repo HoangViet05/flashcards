@@ -131,7 +131,7 @@ export default function ReaderListPage() {
   const workerOnline = workers.some(worker => isRecentlyOnline(worker.last_seen_at))
   const workerApiBaseUrl = API_BASE_URL.startsWith('http') ? API_BASE_URL : `${window.location.origin}${API_BASE_URL}`
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="reader-discovery mx-auto max-w-5xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-white">📖 Tech Reader</h1>
@@ -157,9 +157,9 @@ export default function ReaderListPage() {
 
       {view === 'catalog' ? <CatalogTab onAdopted={() => void articlesQuery.refresh()} /> : articlesQuery.loading ? <div className="grid gap-3 sm:grid-cols-2">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-24 animate-pulse rounded-2xl bg-white/[.05]" />)}</div>
         : articles.length === 0 ? <DailyStatusHero kind="reader" primaryTo="/reader" primaryLabel="Thêm bài đọc" onPrimary={() => setShow(true)} secondaryTo="/" secondaryLabel="Về trang chủ" />
-          : <div className="grid gap-3 sm:grid-cols-2">{articles.map(article => {
+          : <div className="reader-discovery__library grid gap-3 sm:grid-cols-2">{articles.map(article => {
             const translation = article.translation_status ? TRANSLATION_BADGES[article.translation_status] : null
-            return <div key={article.id} className="group relative rounded-2xl border border-white/[.07] bg-white/[.03] p-4 hover:border-cyan-300/20">
+            return <div key={article.id} className="reader-discovery__card group relative rounded-2xl border border-white/[.07] bg-white/[.03] p-4 hover:border-cyan-300/20">
               <Link to={`/reader/${article.id}`} className="block pr-20"><h3 className="line-clamp-2 font-bold text-slate-100">{article.title}</h3><p className="mt-2 text-xs text-slate-500">{BADGES[article.source_type]} · {article.word_count} từ · {new Date(article.created_at).toLocaleDateString('vi-VN')}</p>{translation && <span className={`mt-3 inline-flex rounded-full border px-2 py-1 text-[11px] font-bold ${translation.className}`}>{translation.text}</span>}</Link>
               <div className="absolute right-3 top-3 flex gap-1 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
                 <button onClick={event => { event.preventDefault(); void queueOne(article.id, article.translation_status === 'completed') }} disabled={queuingArticle === article.id} className="rounded-lg px-2 py-1 text-xs text-violet-200 hover:bg-violet-500/10 disabled:opacity-50">{queuingArticle === article.id ? '…' : article.translation_status === 'completed' ? 'Dịch lại' : 'Dịch'}</button>

@@ -13,6 +13,8 @@ import SplitStep from '../components/daily/steps/SplitStep'
 import WeakStep from '../components/daily/steps/WeakStep'
 import { useDailySession } from '../hooks/useDailySession'
 import AiOrb from '../components/orb/AiOrb'
+import SessionTrajectory from '../components/study/SessionTrajectory'
+import StudyStage from '../components/study/StudyStage'
 
 export default function DailyPage() {
   const [params] = useSearchParams()
@@ -43,6 +45,8 @@ export default function DailyPage() {
 
   // Màn tổng kết chiếm trọn màn hình nên thanh tiến độ lùi đi trong lúc đó.
   const showProgress = daily.phase !== 'done' && !daily.justFinished
+  const stageTitles: Partial<Record<typeof daily.phase, string>> = { review: 'Retrieve what you know', weak: 'Strengthen a weak signal', speak: 'Match the target voice', flip: 'Introduce a new signal', dictation: 'Listen for the exact signal', split: 'Connect the meaning' }
+  const stageState = daily.phase === 'dictation' ? 'listening' : daily.phase === 'speak' ? 'recording' : 'idle'
 
   return (
     <main className="study-chamber">
@@ -57,13 +61,16 @@ export default function DailyPage() {
           combo={combo}
         />
       )}
+      {showProgress && <SessionTrajectory completed={daily.stepsDone} total={daily.stepsTotal} combo={combo} />}
 
-      {daily.phase === 'review' && <ReviewStep daily={daily} onCorrectStreak={setCombo} />}
-      {daily.phase === 'weak' && <WeakStep daily={daily} onCorrectStreak={setCombo} />}
-      {daily.phase === 'speak' && <SpeakStep words={daily.speakWords} onDone={daily.afterSpeak} />}
-      {daily.phase === 'flip' && <FlipStep daily={daily} />}
-      {daily.phase === 'dictation' && <DictationStep daily={daily} onCorrectStreak={setCombo} />}
-      {daily.phase === 'split' && <SplitStep daily={daily} onCorrectStreak={setCombo} />}
+      {stageTitles[daily.phase] && <StudyStage eyebrow={`${daily.phase} module`} title={stageTitles[daily.phase]!} state={stageState}>
+        {daily.phase === 'review' && <ReviewStep daily={daily} onCorrectStreak={setCombo} />}
+        {daily.phase === 'weak' && <WeakStep daily={daily} onCorrectStreak={setCombo} />}
+        {daily.phase === 'speak' && <SpeakStep words={daily.speakWords} onDone={daily.afterSpeak} />}
+        {daily.phase === 'flip' && <FlipStep daily={daily} />}
+        {daily.phase === 'dictation' && <DictationStep daily={daily} onCorrectStreak={setCombo} />}
+        {daily.phase === 'split' && <SplitStep daily={daily} onCorrectStreak={setCombo} />}
+      </StudyStage>}
 
       {daily.phase === 'game' && (
         daily.justFinished

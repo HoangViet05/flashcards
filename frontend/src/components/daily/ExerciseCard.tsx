@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import type { Card, ExerciseStep } from '../../types'
 import { playCardAudio } from '../../utils/audio'
-import { playFeedback } from '../../utils/feedbackSound'
+import { useAudio } from '../../providers/AudioProvider'
 
 interface Props {
   card: Card
@@ -28,6 +28,7 @@ const PROMPTS: Record<ExerciseStep, string> = {
 const CORRECT_HOLD_MS = 700
 
 export default function ExerciseCard({ card, mode, onResult, onCorrectStreak }: Props) {
+  const { feedback } = useAudio()
   const [typed, setTyped] = useState('')
   const [state, setState] = useState<State>('answering')
   const streak = useRef(0)
@@ -47,7 +48,7 @@ export default function ExerciseCard({ card, mode, onResult, onCorrectStreak }: 
   const succeed = () => {
     streak.current += 1
     onCorrectStreak?.(streak.current)
-    playFeedback('correct')
+    feedback(streak.current >= 3 ? 'combo' : 'correct')
     setState('correct')
     timer.current = setTimeout(() => onResult(true), CORRECT_HOLD_MS)
   }
@@ -55,7 +56,7 @@ export default function ExerciseCard({ card, mode, onResult, onCorrectStreak }: 
   const fail = (next: 'wrong' | 'self_confirm') => {
     streak.current = 0
     onCorrectStreak?.(0)
-    playFeedback('wrong')
+    feedback('wrong')
     setState(next)
   }
 

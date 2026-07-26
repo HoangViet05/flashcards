@@ -1,7 +1,18 @@
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { useAuth } from '../../auth/AuthContext'
 import { useAudio } from '../../providers/AudioProvider'
 import AmbientBackground from './AmbientBackground'
-const items = [{ to: '/', label: 'Today' }, { to: '/reader', label: 'Read' }, { to: '/shadowing', label: 'Speak' }, { to: '/stats', label: 'Progress' }]
-export default function AppShell({ children }: { children: ReactNode }) { const { pathname } = useLocation(); const { logout } = useAuth(); const { silent, toggleSilent } = useAudio(); const authPage = pathname === '/login' || pathname === '/register'; if (authPage) return <><AmbientBackground />{children}</>; return <div className="app-shell"><AmbientBackground /><aside className="desktop-sidebar"><Link className="wordmark" to="/">Flashie</Link><nav>{items.map(item => <NavLink key={item.to} to={item.to} end={item.to === '/'}>{item.label}</NavLink>)}</nav><div className="shell-actions"><button onClick={toggleSilent}>{silent ? 'Silent on' : 'Sound on'}</button><NavLink to="/settings">Settings</NavLink><button onClick={logout}>Sign out</button></div></aside><main className="shell-content">{children}</main><nav className="mobile-nav">{items.map(item => <NavLink key={item.to} to={item.to} end={item.to === '/'}>{item.label}</NavLink>)}<NavLink to="/settings">More</NavLink></nav></div> }
+import DesktopRail from './DesktopRail'
+import MobileNav from './MobileNav'
+import PageHeader from './PageHeader'
+
+export default function AppShell({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation()
+  const { silent, toggleSilent } = useAudio()
+  const [moreOpen, setMoreOpen] = useState(false)
+  const authPage = pathname === '/login' || pathname === '/register'
+  if (authPage) return <><AmbientBackground />{children}</>
+  return <div className="app-shell"><AmbientBackground /><DesktopRail silent={silent} onToggleSilent={toggleSilent} /><div className="shell-content"><PageHeader />{children}</div><MobileNav moreOpen={moreOpen} onToggleMore={() => setMoreOpen((open) => !open)} /></div>
+}

@@ -1,0 +1,762 @@
+<div id="flashie-core-experiences" data-screen="study" data-state="active">
+  <div class="viz-controls fce-controls" aria-label="Prototype controls">
+    <button class="btn btn-primary" type="button" data-screen-button="study" aria-pressed="true">Study</button>
+    <button class="btn" type="button" data-screen-button="reader" aria-pressed="false">Reader</button>
+    <button class="btn" type="button" data-screen-button="shadowing" aria-pressed="false">Shadowing</button>
+    <button class="btn btn-ghost" type="button" id="fce-device"><i data-lucide="smartphone" aria-hidden="true"></i> Mobile preview</button>
+  </div>
+
+  <div class="viz-controls fce-states" aria-label="Screen states">
+    <button class="btn btn-primary" type="button" data-state-button="active" aria-pressed="true">Active</button>
+    <button class="btn" type="button" data-state-button="feedback" aria-pressed="false">Correct</button>
+    <button class="btn" type="button" data-state-button="complete" aria-pressed="false">Summary</button>
+  </div>
+
+  <section class="card fce-screen" aria-label="Flashie core experience prototype">
+    <div class="fce-grid-bg" aria-hidden="true"></div>
+    <aside class="fce-rail" aria-label="Primary navigation">
+      <div class="fce-logo"><span></span><b>Flashie</b></div>
+      <nav>
+        <button type="button" aria-label="Today"><i data-lucide="sparkles" aria-hidden="true"></i><small>Today</small></button>
+        <button data-nav="reader" type="button" aria-label="Read"><i data-lucide="book-open" aria-hidden="true"></i><small>Read</small></button>
+        <button data-nav="shadowing" type="button" aria-label="Speak"><i data-lucide="mic-2" aria-hidden="true"></i><small>Speak</small></button>
+        <button type="button" aria-label="Progress"><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i><small>Progress</small></button>
+      </nav>
+      <button class="fce-user" type="button" aria-label="Account">HV</button>
+    </aside>
+
+    <main class="fce-main">
+      <section class="fce-panel fce-study" data-screen-panel="study">
+        <header class="fce-page-head">
+          <div>
+            <span class="fce-overline">FULL SESSION · LISTENING</span>
+            <h2>Signal calibration</h2>
+          </div>
+          <div class="fce-head-actions">
+            <span class="viz-badge"><i data-lucide="flame" aria-hidden="true"></i> 6 combo</span>
+            <button class="btn btn-ghost" type="button"><i data-lucide="volume-2" aria-hidden="true"></i> Sound</button>
+            <button class="btn btn-ghost" type="button"><i data-lucide="pause" aria-hidden="true"></i> Pause</button>
+          </div>
+        </header>
+
+        <div class="fce-progress-line" aria-label="Session progress 62 percent">
+          <i style="--p:62%"></i>
+          <span>12 / 19 signals stabilized</span>
+          <b>62%</b>
+        </div>
+
+        <div class="fce-study-layout">
+          <section class="card fce-study-stage">
+            <div class="fce-study-active" data-state-panel="active">
+              <span class="fce-overline">LISTEN · TYPE WHAT YOU HEAR</span>
+              <div class="fce-orb fce-orb-listen"><i data-lucide="audio-lines" aria-hidden="true"></i><em></em><em></em></div>
+              <button class="btn fce-play" type="button"><i data-lucide="play" aria-hidden="true"></i> Play signal again</button>
+              <p class="fce-hint">A short workplace phrase · 4 words</p>
+              <label class="form-label">
+                Your answer
+                <input class="form-control" value="Could you clarify that" aria-label="Your answer">
+              </label>
+              <button class="btn btn-primary btn-block" type="button">Lock answer <i data-lucide="arrow-right" aria-hidden="true"></i></button>
+              <span class="fce-key-hint"><kbd>Enter</kbd> to submit · hold <kbd>Space</kbd> to replay</span>
+            </div>
+
+            <div class="fce-study-feedback" data-state-panel="feedback" hidden>
+              <div class="fce-orb fce-orb-correct"><i data-lucide="check" aria-hidden="true"></i></div>
+              <span class="fce-overline">SIGNAL LOCKED</span>
+              <h3>Exactly right.</h3>
+              <p>“Could you clarify that?”</p>
+              <div class="fce-reward-burst"><span>+4 XP</span><span>7 combo</span><span>Energy +8%</span></div>
+              <div class="fce-word-pulse"><span>Could</span><span>you</span><span>clarify</span><span>that?</span></div>
+              <button class="btn btn-primary" type="button">Continue <i data-lucide="arrow-right" aria-hidden="true"></i></button>
+            </div>
+
+            <div class="fce-study-complete" data-state-panel="complete" hidden>
+              <div class="fce-orb fce-orb-complete"><i data-lucide="sparkles" aria-hidden="true"></i></div>
+              <span class="fce-overline">SESSION CORE STABILIZED</span>
+              <h3>You showed up and moved forward.</h3>
+              <p>Four skills gained energy. Your 12-day streak is safe.</p>
+              <div class="fce-summary-stats">
+                <div><b>24m</b><span>Focused time</span></div>
+                <div><b>87%</b><span>First-try accuracy</span></div>
+                <div><b>+76</b><span>Total XP</span></div>
+              </div>
+              <div class="viz-row">
+                <button class="btn btn-primary" type="button">Return to command</button>
+                <button class="btn" type="button">Review 3 weak signals</button>
+              </div>
+            </div>
+          </section>
+
+          <aside class="card fce-session-rail">
+            <span class="fce-overline">SESSION TRAJECTORY</span>
+            <div class="fce-trajectory">
+              <div class="is-done"><i data-lucide="check" aria-hidden="true"></i><span><b>Memory warm-up</b><small>8 words secured</small></span></div>
+              <em></em>
+              <div class="is-live"><i data-lucide="headphones" aria-hidden="true"></i><span><b>Signal calibration</b><small>4 of 6 complete</small></span></div>
+              <em></em>
+              <div><i data-lucide="languages" aria-hidden="true"></i><span><b>Meaning split</b><small>Up next</small></span></div>
+              <em></em>
+              <div><i data-lucide="gamepad-2" aria-hidden="true"></i><span><b>Core game</b><small>Final challenge</small></span></div>
+            </div>
+            <div class="fce-energy">
+              <div><span>CORE ENERGY</span><b>72%</b></div>
+              <i><em style="--p:72%"></em></i>
+              <small>Keep the combo alive to amplify XP.</small>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="fce-panel fce-reader" data-screen-panel="reader" hidden>
+        <header class="fce-page-head">
+          <div>
+            <span class="fce-overline">FOCUS READER · LEVEL 2</span>
+            <h2>Why psychological safety matters at work</h2>
+          </div>
+          <div class="fce-head-actions">
+            <button class="btn btn-ghost" type="button"><i data-lucide="languages" aria-hidden="true"></i> Bilingual</button>
+            <button class="btn btn-ghost" type="button"><i data-lucide="headphones" aria-hidden="true"></i> Listen</button>
+            <button class="btn btn-ghost" type="button"><i data-lucide="minimize-2" aria-hidden="true"></i> Focus</button>
+          </div>
+        </header>
+
+        <div class="fce-reader-progress"><i style="--p:42%"></i><span>8 min focused · 42% complete</span></div>
+
+        <div class="fce-reader-layout">
+          <article class="fce-article">
+            <p class="fce-lead">Teams perform better when people feel safe to ask questions, admit mistakes, and share ideas without fear.</p>
+            <p>Psychological safety does not mean avoiding difficult conversations. It means creating an environment where <mark data-word="people">people</mark> can speak honestly and still feel respected.</p>
+            <p>For managers, this starts with curiosity. When an employee raises a concern, the first response should be to <mark data-word="clarify">clarify</mark> the situation rather than defend a decision.</p>
+            <blockquote>“What are we missing?” is often more powerful than “Who made the mistake?”</blockquote>
+            <p>Small behaviors build trust over time. Listening carefully, acknowledging uncertainty, and inviting quieter colleagues into the conversation can change how a team solves problems.</p>
+            <p>As that trust grows, teams become more willing to test ideas, learn from failure, and adapt quickly.</p>
+          </article>
+
+          <aside class="card fce-reader-dock">
+            <div data-state-panel="active">
+              <span class="fce-overline">READING COMPANION</span>
+              <div class="fce-mini-orb"><i data-lucide="sparkles" aria-hidden="true"></i></div>
+              <h3>Stay with the idea.</h3>
+              <p>Tap a word only when it blocks your understanding.</p>
+              <div class="fce-reading-metrics"><div><span>Saved</span><b>6 words</b></div><div><span>Focus</span><b>8 min</b></div></div>
+              <div class="fce-saved-list"><span>psychological</span><span>uncertainty</span><span>acknowledging</span></div>
+            </div>
+
+            <div data-state-panel="feedback" hidden>
+              <span class="fce-overline">WORD IN CONTEXT</span>
+              <h3>clarify</h3>
+              <p class="fce-phonetic">/ˈklærəfaɪ/ · verb</p>
+              <button class="btn" type="button"><i data-lucide="volume-2" aria-hidden="true"></i> Hear pronunciation</button>
+              <div class="fce-definition"><b>make something easier to understand</b><p>“Could you clarify what you mean?”</p></div>
+              <button class="btn btn-primary btn-block" type="button"><i data-lucide="bookmark-plus" aria-hidden="true"></i> Save to this reading</button>
+              <span class="fce-reward-note">Creates a learning card with this exact context.</span>
+            </div>
+
+            <div data-state-panel="complete" hidden>
+              <span class="fce-overline">AUDIO READER</span>
+              <div class="fce-audio-orb"><i data-lucide="audio-lines" aria-hidden="true"></i></div>
+              <h3>Listen without losing your place.</h3>
+              <div class="fce-audio-time"><span>03:18</span><i><em style="--p:36%"></em></i><span>09:06</span></div>
+              <div class="viz-row">
+                <button class="btn btn-ghost" type="button" aria-label="Back 10 seconds"><i data-lucide="rotate-ccw" aria-hidden="true"></i></button>
+                <button class="btn btn-primary" type="button"><i data-lucide="pause" aria-hidden="true"></i> Pause</button>
+                <button class="btn btn-ghost" type="button">1×</button>
+              </div>
+              <p class="fce-live-line">“…creating an environment where people can speak honestly…”</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="fce-panel fce-shadowing" data-screen-panel="shadowing" hidden>
+        <header class="fce-page-head">
+          <div>
+            <span class="fce-overline">VOICE CALIBRATION · WORKPLACE ENGLISH</span>
+            <h2>Speak with clarity</h2>
+          </div>
+          <div class="fce-head-actions">
+            <span class="viz-badge"><i data-lucide="radio" aria-hidden="true"></i> Scoring online</span>
+            <button class="btn btn-ghost" type="button"><i data-lucide="sliders-horizontal" aria-hidden="true"></i> Setup</button>
+          </div>
+        </header>
+
+        <div class="fce-progress-line" aria-label="Speaking session progress 40 percent">
+          <i style="--p:40%"></i><span>Line 2 of 5</span><b>40%</b>
+        </div>
+
+        <div class="fce-speaking-layout">
+          <section class="card fce-voice-stage">
+            <div data-state-panel="active">
+              <span class="fce-overline">STEP 1 · LISTEN, THEN SPEAK</span>
+              <button class="fce-sample-orb" type="button" aria-label="Play sample"><i data-lucide="play" aria-hidden="true"></i><em></em></button>
+              <p class="fce-target">“Could you walk me through the next steps?”</p>
+              <p class="fce-pronunciation">Listen for the stress in <b>walk</b>, <b>through</b>, and <b>next</b>.</p>
+              <div class="fce-wave is-idle" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <button class="fce-record-button" type="button"><i data-lucide="mic-2" aria-hidden="true"></i></button>
+              <span class="fce-record-label">Hold to speak</span>
+            </div>
+
+            <div data-state-panel="feedback" hidden>
+              <span class="fce-overline">RECORDING · 00:04</span>
+              <div class="fce-recording-orb"><i data-lucide="mic-2" aria-hidden="true"></i><em></em><em></em></div>
+              <div class="fce-wave is-live" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <p class="fce-live-transcript">Could you walk me through the next steps…</p>
+              <button class="btn btn-primary" type="button"><i data-lucide="square" aria-hidden="true"></i> Finish recording</button>
+              <p class="fce-pronunciation">Your voice stays on this device until you submit it for scoring.</p>
+            </div>
+
+            <div data-state-panel="complete" hidden>
+              <div class="fce-score-ring"><span><b>86</b><small>Strong signal</small></span></div>
+              <span class="fce-overline">VOICE CALIBRATED</span>
+              <h3>Clear and confident.</h3>
+              <div class="fce-score-words"><span class="is-good">Could</span><span class="is-good">you</span><span class="is-good">walk</span><span class="is-warn">me</span><span class="is-good">through</span><span class="is-good">the</span><span class="is-warn">next</span><span class="is-good">steps?</span></div>
+              <p class="fce-score-tip"><i data-lucide="sparkles" aria-hidden="true"></i> Make “next” shorter and release the final /t/ gently.</p>
+              <div class="viz-row">
+                <button class="btn" type="button"><i data-lucide="rotate-ccw" aria-hidden="true"></i> Try again</button>
+                <button class="btn btn-primary" type="button">Next line <i data-lucide="arrow-right" aria-hidden="true"></i></button>
+              </div>
+            </div>
+          </section>
+
+          <aside class="card fce-speaking-side">
+            <span class="fce-overline">CALIBRATION PATH</span>
+            <div class="fce-speaking-steps">
+              <div class="is-done"><i data-lucide="check" aria-hidden="true"></i><span><b>Ask for clarification</b><small>Score 82</small></span></div>
+              <div class="is-live"><i data-lucide="mic-2" aria-hidden="true"></i><span><b>Request next steps</b><small>Current line</small></span></div>
+              <div><i data-lucide="circle" aria-hidden="true"></i><span><b>Share an opinion</b><small>Locked</small></span></div>
+              <div><i data-lucide="circle" aria-hidden="true"></i><span><b>Disagree politely</b><small>Locked</small></span></div>
+              <div><i data-lucide="flag" aria-hidden="true"></i><span><b>Session result</b><small>3 lines away</small></span></div>
+            </div>
+            <div class="fce-device-check"><i data-lucide="headphones" aria-hidden="true"></i><div><b>Microphone ready</b><small>Input level looks good</small></div></div>
+          </aside>
+        </div>
+      </section>
+
+      <nav class="fce-mobile-nav" aria-label="Mobile navigation">
+        <button type="button"><i data-lucide="sparkles" aria-hidden="true"></i><small>Today</small></button>
+        <button data-mobile-nav="reader" type="button"><i data-lucide="book-open" aria-hidden="true"></i><small>Read</small></button>
+        <button data-mobile-nav="shadowing" type="button"><i data-lucide="mic-2" aria-hidden="true"></i><small>Speak</small></button>
+        <button type="button"><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i><small>Progress</small></button>
+        <button type="button"><i data-lucide="circle-ellipsis" aria-hidden="true"></i><small>More</small></button>
+      </nav>
+    </main>
+  </section>
+
+  <div class="viz-row fce-approval">
+    <button class="btn btn-primary" type="button" id="fce-approve">Approve Study, Reader and Shadowing</button>
+    <span class="text-small">You can also request changes per screen and state.</span>
+  </div>
+</div>
+
+<style>
+  #flashie-core-experiences {
+    --fce-glow: var(--viz-series-1);
+    display: grid;
+    gap: .75rem;
+  }
+  #flashie-core-experiences .fce-controls,
+  #flashie-core-experiences .fce-states { align-items: center; }
+  #flashie-core-experiences .fce-screen {
+    position: relative;
+    display: grid;
+    grid-template-columns: 4.2rem 1fr;
+    min-height: 41rem;
+    overflow: hidden;
+    padding: 0;
+    background:
+      radial-gradient(circle at 15% 0%, color-mix(in srgb, var(--fce-glow) 18%, transparent), transparent 34%),
+      radial-gradient(circle at 92% 88%, color-mix(in srgb, var(--viz-series-2) 12%, transparent), transparent 36%),
+      color-mix(in srgb, var(--background) 94%, var(--card));
+  }
+  #flashie-core-experiences .fce-grid-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: .55;
+    background-image: radial-gradient(color-mix(in srgb, var(--foreground) 12%, transparent) 1px, transparent 1px);
+    background-size: 1.75rem 1.75rem;
+    mask-image: linear-gradient(115deg, transparent, black 34%, transparent 94%);
+  }
+  #flashie-core-experiences .fce-rail {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 1rem .55rem;
+    background: color-mix(in srgb, var(--card) 72%, transparent);
+    box-shadow: 1px 0 var(--border);
+    backdrop-filter: blur(1.2rem);
+  }
+  #flashie-core-experiences .fce-logo { display: grid; justify-items: center; gap: .3rem; }
+  #flashie-core-experiences .fce-logo span {
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 50%;
+    background: radial-gradient(circle at 34% 28%, var(--primary-foreground), var(--viz-series-2) 30%, var(--fce-glow));
+    box-shadow: 0 0 1.25rem color-mix(in srgb, var(--fce-glow) 55%, transparent);
+  }
+  #flashie-core-experiences .fce-logo b { font-weight: 500; }
+  #flashie-core-experiences .fce-rail nav { display: grid; gap: .65rem; }
+  #flashie-core-experiences .fce-rail nav button,
+  #flashie-core-experiences .fce-mobile-nav button {
+    display: grid;
+    place-items: center;
+    gap: .16rem;
+    border: 0;
+    color: var(--muted-foreground);
+    background: transparent;
+  }
+  #flashie-core-experiences .fce-rail nav button {
+    width: 3rem;
+    min-height: 3rem;
+    border-radius: .8rem;
+  }
+  #flashie-core-experiences .fce-rail nav button.is-active,
+  #flashie-core-experiences .fce-mobile-nav button.is-active {
+    color: var(--foreground);
+    background: color-mix(in srgb, var(--fce-glow) 17%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fce-glow) 28%, transparent);
+  }
+  #flashie-core-experiences .fce-rail small,
+  #flashie-core-experiences .fce-mobile-nav small { font-size: .6rem; }
+  #flashie-core-experiences .fce-user {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    margin-top: auto;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    color: var(--primary-foreground);
+    background: var(--primary);
+    font-size: .65rem;
+  }
+  #flashie-core-experiences .fce-main {
+    position: relative;
+    z-index: 2;
+    min-width: 0;
+    padding: 1rem;
+  }
+  #flashie-core-experiences .fce-page-head,
+  #flashie-core-experiences .fce-head-actions,
+  #flashie-core-experiences .fce-head-actions .viz-badge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .6rem;
+  }
+  #flashie-core-experiences .fce-page-head h2 { margin: .14rem 0 0; font-weight: 500; }
+  #flashie-core-experiences .fce-overline {
+    color: var(--muted-foreground);
+    font-size: .62rem;
+    letter-spacing: .12em;
+  }
+  #flashie-core-experiences .fce-progress-line {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: .65rem;
+    margin-top: .75rem;
+    color: var(--muted-foreground);
+    font-size: .66rem;
+  }
+  #flashie-core-experiences .fce-progress-line > i,
+  #flashie-core-experiences .fce-reader-progress > i {
+    display: block;
+    height: .25rem;
+    overflow: hidden;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--fce-glow) var(--p), var(--muted) var(--p));
+    box-shadow: 0 0 .8rem color-mix(in srgb, var(--fce-glow) 25%, transparent);
+  }
+  #flashie-core-experiences .fce-progress-line b { color: var(--foreground); font-weight: 500; }
+  #flashie-core-experiences .fce-study-layout,
+  #flashie-core-experiences .fce-speaking-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(12rem, .55fr);
+    gap: .8rem;
+    margin-top: .8rem;
+  }
+  #flashie-core-experiences .fce-study-stage,
+  #flashie-core-experiences .fce-voice-stage {
+    position: relative;
+    display: grid;
+    min-height: 31rem;
+    place-items: center;
+    overflow: hidden;
+    text-align: center;
+    background:
+      radial-gradient(circle at 50% 31%, color-mix(in srgb, var(--fce-glow) 15%, transparent), transparent 34%),
+      color-mix(in srgb, var(--card) 92%, transparent);
+  }
+  #flashie-core-experiences .fce-study-stage::before,
+  #flashie-core-experiences .fce-voice-stage::before {
+    content: "";
+    position: absolute;
+    width: 22rem;
+    height: 22rem;
+    border: 1px solid color-mix(in srgb, var(--fce-glow) 15%, transparent);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3rem color-mix(in srgb, var(--fce-glow) 3%, transparent), 0 0 0 7rem color-mix(in srgb, var(--fce-glow) 2%, transparent);
+  }
+  #flashie-core-experiences .fce-study-stage > div,
+  #flashie-core-experiences .fce-voice-stage > div {
+    position: relative;
+    z-index: 2;
+    width: min(100%, 29rem);
+  }
+  #flashie-core-experiences .fce-orb,
+  #flashie-core-experiences .fce-mini-orb,
+  #flashie-core-experiences .fce-audio-orb,
+  #flashie-core-experiences .fce-recording-orb {
+    display: grid;
+    place-items: center;
+    margin: .9rem auto;
+    border-radius: 50%;
+    color: var(--primary-foreground);
+    background:
+      radial-gradient(circle at 34% 27%, color-mix(in srgb, var(--primary-foreground) 85%, transparent), transparent 14%),
+      radial-gradient(circle at 42% 38%, color-mix(in srgb, var(--viz-series-2) 68%, var(--fce-glow)), var(--fce-glow) 69%, color-mix(in srgb, var(--fce-glow) 55%, var(--background)));
+    box-shadow: 0 0 0 .65rem color-mix(in srgb, var(--fce-glow) 10%, transparent), 0 0 2.8rem color-mix(in srgb, var(--fce-glow) 48%, transparent);
+  }
+  #flashie-core-experiences .fce-orb { position: relative; width: 6rem; height: 6rem; }
+  #flashie-core-experiences .fce-orb em,
+  #flashie-core-experiences .fce-recording-orb em {
+    position: absolute;
+    inset: -.75rem;
+    border: 1px solid color-mix(in srgb, var(--fce-glow) 34%, transparent);
+    border-radius: 50%;
+  }
+  #flashie-core-experiences .fce-orb em:last-child,
+  #flashie-core-experiences .fce-recording-orb em:last-child { inset: -1.5rem; opacity: .55; }
+  #flashie-core-experiences .fce-play { margin-bottom: .8rem; }
+  #flashie-core-experiences .fce-hint,
+  #flashie-core-experiences .fce-key-hint,
+  #flashie-core-experiences .fce-study-feedback > p,
+  #flashie-core-experiences .fce-study-complete > p {
+    color: var(--muted-foreground);
+  }
+  #flashie-core-experiences .fce-study-active .form-label {
+    display: grid;
+    gap: .35rem;
+    margin: .8rem auto;
+    text-align: left;
+  }
+  #flashie-core-experiences .fce-study-active .form-control { width: 100%; text-align: center; }
+  #flashie-core-experiences .fce-key-hint { display: block; margin-top: .65rem; font-size: .66rem; }
+  #flashie-core-experiences kbd { padding: .1rem .25rem; border-radius: .25rem; background: var(--muted); color: var(--foreground); }
+  #flashie-core-experiences .fce-study-feedback h3,
+  #flashie-core-experiences .fce-study-complete h3,
+  #flashie-core-experiences .fce-voice-stage h3 { margin: .35rem 0; font-weight: 500; }
+  #flashie-core-experiences .fce-orb-correct { --fce-glow: var(--viz-series-2); }
+  #flashie-core-experiences .fce-orb-complete { --fce-glow: var(--viz-series-3); width: 7rem; height: 7rem; }
+  #flashie-core-experiences .fce-reward-burst,
+  #flashie-core-experiences .fce-word-pulse,
+  #flashie-core-experiences .fce-score-words {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .4rem;
+    margin: .9rem 0;
+  }
+  #flashie-core-experiences .fce-reward-burst span,
+  #flashie-core-experiences .fce-word-pulse span,
+  #flashie-core-experiences .fce-score-words span {
+    border-radius: 99px;
+    padding: .3rem .55rem;
+    color: var(--foreground);
+    background: color-mix(in srgb, var(--fce-glow) 14%, transparent);
+    font-size: .7rem;
+  }
+  #flashie-core-experiences .fce-summary-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .55rem;
+    margin: 1rem 0;
+  }
+  #flashie-core-experiences .fce-summary-stats div { padding: .7rem; border-radius: .7rem; background: color-mix(in srgb, var(--fce-glow) 8%, transparent); }
+  #flashie-core-experiences .fce-summary-stats b { display: block; font-weight: 500; }
+  #flashie-core-experiences .fce-summary-stats span { color: var(--muted-foreground); font-size: .64rem; }
+  #flashie-core-experiences .fce-session-rail,
+  #flashie-core-experiences .fce-speaking-side { padding: 1rem; }
+  #flashie-core-experiences .fce-trajectory,
+  #flashie-core-experiences .fce-speaking-steps { display: grid; margin-top: 1rem; }
+  #flashie-core-experiences .fce-trajectory > div,
+  #flashie-core-experiences .fce-speaking-steps > div {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    align-items: center;
+    gap: .55rem;
+  }
+  #flashie-core-experiences .fce-trajectory > div > i,
+  #flashie-core-experiences .fce-speaking-steps > div > i {
+    width: 2rem;
+    height: 2rem;
+    padding: .48rem;
+    border-radius: 50%;
+    color: var(--muted-foreground);
+    background: var(--muted);
+  }
+  #flashie-core-experiences .fce-trajectory > div.is-done > i,
+  #flashie-core-experiences .fce-speaking-steps > div.is-done > i {
+    color: var(--primary-foreground);
+    background: var(--primary);
+  }
+  #flashie-core-experiences .fce-trajectory > div.is-live > i,
+  #flashie-core-experiences .fce-speaking-steps > div.is-live > i {
+    color: var(--foreground);
+    background: color-mix(in srgb, var(--fce-glow) 28%, var(--card));
+    box-shadow: 0 0 1rem color-mix(in srgb, var(--fce-glow) 25%, transparent);
+  }
+  #flashie-core-experiences .fce-trajectory > em {
+    width: 1px;
+    height: 1.4rem;
+    margin-left: 1rem;
+    background: var(--border);
+  }
+  #flashie-core-experiences .fce-trajectory b,
+  #flashie-core-experiences .fce-speaking-steps b { font-weight: 500; }
+  #flashie-core-experiences .fce-trajectory small,
+  #flashie-core-experiences .fce-speaking-steps small { display: block; color: var(--muted-foreground); font-size: .64rem; }
+  #flashie-core-experiences .fce-energy { margin-top: 1.4rem; padding-top: .8rem; box-shadow: 0 -1px var(--border); }
+  #flashie-core-experiences .fce-energy > div { display: flex; justify-content: space-between; }
+  #flashie-core-experiences .fce-energy span,
+  #flashie-core-experiences .fce-energy small { color: var(--muted-foreground); font-size: .62rem; }
+  #flashie-core-experiences .fce-energy b { font-weight: 500; }
+  #flashie-core-experiences .fce-energy > i { display: block; height: .3rem; margin: .4rem 0; overflow: hidden; border-radius: 99px; background: var(--muted); }
+  #flashie-core-experiences .fce-energy > i em { display: block; width: var(--p); height: 100%; background: linear-gradient(90deg, var(--fce-glow), var(--viz-series-2)); }
+
+  #flashie-core-experiences .fce-reader-progress { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .7rem; margin-top: .75rem; color: var(--muted-foreground); font-size: .65rem; }
+  #flashie-core-experiences .fce-reader-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(12rem, .5fr);
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  #flashie-core-experiences .fce-article { max-width: 42rem; margin-inline: auto; padding: 1.25rem; }
+  #flashie-core-experiences .fce-article p,
+  #flashie-core-experiences .fce-article blockquote { margin: 0 0 1rem; }
+  #flashie-core-experiences .fce-article .fce-lead { color: var(--foreground); font-size: 1.08rem; }
+  #flashie-core-experiences .fce-article blockquote { padding-left: 1rem; color: var(--foreground); box-shadow: inset .16rem 0 var(--fce-glow); }
+  #flashie-core-experiences .fce-article mark { border-radius: .25rem; color: var(--foreground); background: color-mix(in srgb, var(--fce-glow) 20%, transparent); }
+  #flashie-core-experiences .fce-reader-dock { align-self: start; padding: 1rem; }
+  #flashie-core-experiences .fce-mini-orb,
+  #flashie-core-experiences .fce-audio-orb { width: 4rem; height: 4rem; }
+  #flashie-core-experiences .fce-reader-dock h3 { margin: .4rem 0; font-weight: 500; }
+  #flashie-core-experiences .fce-reader-dock p { color: var(--muted-foreground); }
+  #flashie-core-experiences .fce-reading-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin: .8rem 0; }
+  #flashie-core-experiences .fce-reading-metrics div { padding: .55rem; border-radius: .6rem; background: var(--muted); }
+  #flashie-core-experiences .fce-reading-metrics span,
+  #flashie-core-experiences .fce-reading-metrics b { display: block; font-size: .68rem; font-weight: 500; }
+  #flashie-core-experiences .fce-saved-list { display: flex; flex-wrap: wrap; gap: .3rem; }
+  #flashie-core-experiences .fce-saved-list span { padding: .22rem .4rem; border-radius: 99px; color: var(--muted-foreground); background: var(--muted); font-size: .62rem; }
+  #flashie-core-experiences .fce-phonetic { font-size: .72rem; }
+  #flashie-core-experiences .fce-definition { margin: .8rem 0; padding: .7rem; border-radius: .7rem; background: var(--muted); }
+  #flashie-core-experiences .fce-definition b { font-weight: 500; }
+  #flashie-core-experiences .fce-definition p { margin-bottom: 0; }
+  #flashie-core-experiences .fce-reward-note { display: block; margin-top: .55rem; color: var(--muted-foreground); font-size: .62rem; }
+  #flashie-core-experiences .fce-audio-time { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .4rem; margin: .9rem 0; font-size: .62rem; }
+  #flashie-core-experiences .fce-audio-time i { height: .25rem; overflow: hidden; border-radius: 99px; background: var(--muted); }
+  #flashie-core-experiences .fce-audio-time em { display: block; width: var(--p); height: 100%; background: var(--fce-glow); }
+  #flashie-core-experiences .fce-live-line { padding-top: .7rem; box-shadow: 0 -1px var(--border); }
+
+  #flashie-core-experiences .fce-sample-orb,
+  #flashie-core-experiences .fce-record-button {
+    position: relative;
+    display: grid;
+    width: 4.7rem;
+    height: 4.7rem;
+    margin: 1rem auto;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    color: var(--primary-foreground);
+    background: var(--primary);
+    box-shadow: 0 0 0 .7rem color-mix(in srgb, var(--fce-glow) 11%, transparent), 0 0 2.4rem color-mix(in srgb, var(--fce-glow) 38%, transparent);
+  }
+  #flashie-core-experiences .fce-sample-orb em { position: absolute; inset: -.7rem; border: 1px solid color-mix(in srgb, var(--fce-glow) 30%, transparent); border-radius: 50%; }
+  #flashie-core-experiences .fce-target { margin: 1rem auto .5rem; color: var(--foreground); font-size: 1.25rem; }
+  #flashie-core-experiences .fce-pronunciation { color: var(--muted-foreground); font-size: .72rem; }
+  #flashie-core-experiences .fce-pronunciation b { color: var(--foreground); font-weight: 500; }
+  #flashie-core-experiences .fce-wave { display: flex; height: 3rem; align-items: center; justify-content: center; gap: .25rem; margin: .8rem 0; }
+  #flashie-core-experiences .fce-wave i { width: .22rem; height: var(--h, .7rem); border-radius: 99px; background: var(--fce-glow); opacity: .65; }
+  #flashie-core-experiences .fce-wave i:nth-child(2n) { --h: 1.4rem; }
+  #flashie-core-experiences .fce-wave i:nth-child(3n) { --h: 2.2rem; }
+  #flashie-core-experiences .fce-wave i:nth-child(5n) { --h: 1.8rem; }
+  #flashie-core-experiences .fce-record-button { width: 5.3rem; height: 5.3rem; background: color-mix(in srgb, var(--viz-series-4) 64%, var(--primary)); }
+  #flashie-core-experiences .fce-record-label { display: block; color: var(--muted-foreground); font-size: .68rem; }
+  #flashie-core-experiences .fce-recording-orb { position: relative; width: 6rem; height: 6rem; --fce-glow: var(--viz-series-4); }
+  #flashie-core-experiences .fce-live-transcript { color: var(--foreground); }
+  #flashie-core-experiences .fce-score-ring { display: grid; width: 7rem; height: 7rem; margin: 0 auto 1rem; place-items: center; border-radius: 50%; background: conic-gradient(var(--viz-series-2) 86%, var(--muted) 0); }
+  #flashie-core-experiences .fce-score-ring > span { display: grid; width: 5.6rem; height: 5.6rem; place-items: center; align-content: center; border-radius: 50%; background: var(--card); }
+  #flashie-core-experiences .fce-score-ring b { font-weight: 500; font-size: 1.55rem; }
+  #flashie-core-experiences .fce-score-ring small { color: var(--muted-foreground); font-size: .62rem; }
+  #flashie-core-experiences .fce-score-words span.is-good { background: color-mix(in srgb, var(--viz-series-2) 16%, transparent); }
+  #flashie-core-experiences .fce-score-words span.is-warn { background: color-mix(in srgb, var(--viz-series-3) 20%, transparent); }
+  #flashie-core-experiences .fce-score-tip { display: flex; align-items: center; justify-content: center; gap: .4rem; color: var(--muted-foreground); }
+  #flashie-core-experiences .fce-speaking-steps { gap: .65rem; }
+  #flashie-core-experiences .fce-device-check { display: flex; align-items: center; gap: .55rem; margin-top: 1rem; padding-top: .8rem; box-shadow: 0 -1px var(--border); }
+  #flashie-core-experiences .fce-device-check b { font-weight: 500; }
+  #flashie-core-experiences .fce-device-check small { display: block; color: var(--muted-foreground); font-size: .62rem; }
+  #flashie-core-experiences .fce-mobile-nav { display: none; }
+  #flashie-core-experiences .fce-approval { justify-content: space-between; }
+  #flashie-core-experiences .fce-approval span { color: var(--muted-foreground); }
+
+  #flashie-core-experiences.is-mobile .fce-screen {
+    grid-template-columns: 1fr;
+    width: min(100%, 24rem);
+    min-height: 48rem;
+    margin-inline: auto;
+  }
+  #flashie-core-experiences.is-mobile .fce-rail { display: none; }
+  #flashie-core-experiences.is-mobile .fce-main { padding: .75rem .75rem 4.8rem; }
+  #flashie-core-experiences.is-mobile .fce-page-head { align-items: start; }
+  #flashie-core-experiences.is-mobile .fce-page-head h2 { font-size: 1.05rem; }
+  #flashie-core-experiences.is-mobile .fce-head-actions .viz-badge,
+  #flashie-core-experiences.is-mobile .fce-head-actions .btn:first-of-type { display: none; }
+  #flashie-core-experiences.is-mobile .fce-study-layout,
+  #flashie-core-experiences.is-mobile .fce-speaking-layout,
+  #flashie-core-experiences.is-mobile .fce-reader-layout { grid-template-columns: 1fr; }
+  #flashie-core-experiences.is-mobile .fce-study-stage,
+  #flashie-core-experiences.is-mobile .fce-voice-stage { min-height: 34rem; padding: 1rem; }
+  #flashie-core-experiences.is-mobile .fce-session-rail,
+  #flashie-core-experiences.is-mobile .fce-speaking-side { display: none; }
+  #flashie-core-experiences.is-mobile .fce-reader-dock { order: -1; }
+  #flashie-core-experiences.is-mobile .fce-reader-dock [data-state-panel="active"] .fce-saved-list,
+  #flashie-core-experiences.is-mobile .fce-reader-dock [data-state-panel="active"] > p { display: none; }
+  #flashie-core-experiences.is-mobile .fce-article { padding: .5rem .25rem; }
+  #flashie-core-experiences.is-mobile .fce-mobile-nav {
+    position: absolute;
+    right: .4rem;
+    bottom: .4rem;
+    left: .4rem;
+    z-index: 8;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    padding: .3rem;
+    border-radius: .95rem;
+    background: color-mix(in srgb, var(--card) 90%, transparent);
+    box-shadow: inset 0 0 0 1px var(--border);
+    backdrop-filter: blur(1rem);
+  }
+  #flashie-core-experiences.is-mobile .fce-mobile-nav button { min-height: 3rem; border-radius: .7rem; }
+
+  @media (max-width: 640px) {
+    #flashie-core-experiences .fce-screen { grid-template-columns: 1fr; min-height: 48rem; }
+    #flashie-core-experiences .fce-rail { display: none; }
+    #flashie-core-experiences .fce-main { padding: .75rem .75rem 4.8rem; }
+    #flashie-core-experiences .fce-study-layout,
+    #flashie-core-experiences .fce-speaking-layout,
+    #flashie-core-experiences .fce-reader-layout { grid-template-columns: 1fr; }
+    #flashie-core-experiences .fce-session-rail,
+    #flashie-core-experiences .fce-speaking-side { display: none; }
+    #flashie-core-experiences .fce-mobile-nav {
+      position: absolute;
+      right: .4rem;
+      bottom: .4rem;
+      left: .4rem;
+      z-index: 8;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      padding: .3rem;
+      border-radius: .95rem;
+      background: color-mix(in srgb, var(--card) 90%, transparent);
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    #flashie-core-experiences .fce-orb-listen,
+    #flashie-core-experiences .fce-mini-orb,
+    #flashie-core-experiences .fce-audio-orb { animation: fce-breathe 3.6s ease-in-out infinite; }
+    #flashie-core-experiences .fce-orb-listen em:first-of-type,
+    #flashie-core-experiences .fce-sample-orb em { animation: fce-ring 2.2s ease-out infinite; }
+    #flashie-core-experiences .fce-wave.is-live i { animation: fce-wave .72s ease-in-out infinite alternate; }
+    #flashie-core-experiences .fce-wave.is-live i:nth-child(2n) { animation-delay: -.3s; }
+    #flashie-core-experiences .fce-wave.is-live i:nth-child(3n) { animation-delay: -.55s; }
+    #flashie-core-experiences .fce-recording-orb em { animation: fce-ring 1.15s ease-out infinite; }
+  }
+  @keyframes fce-breathe { 50% { transform: translateY(-.25rem) scale(1.035); } }
+  @keyframes fce-ring { to { transform: scale(1.22); opacity: 0; } }
+  @keyframes fce-wave { from { transform: scaleY(.5); opacity: .55; } to { transform: scaleY(1.35); opacity: 1; } }
+</style>
+
+<script>
+  (() => {
+    const root = document.getElementById('flashie-core-experiences');
+    const screenMeta = {
+      study: { states: ['Active', 'Correct', 'Summary'], keys: ['active', 'feedback', 'complete'], glow: 'var(--viz-series-1)' },
+      reader: { states: ['Focus', 'Word selected', 'Audio reader'], keys: ['active', 'feedback', 'complete'], glow: 'var(--viz-series-2)' },
+      shadowing: { states: ['Ready', 'Recording', 'Score'], keys: ['active', 'feedback', 'complete'], glow: 'var(--viz-series-4)' }
+    };
+    let screen = 'study';
+    let state = 'active';
+    let mobile = false;
+
+    const render = () => {
+      const meta = screenMeta[screen];
+      root.dataset.screen = screen;
+      root.dataset.state = state;
+      root.style.setProperty('--fce-glow', meta.glow);
+      root.classList.toggle('is-mobile', mobile);
+
+      root.querySelectorAll('[data-screen-panel]').forEach((panel) => {
+        panel.hidden = panel.dataset.screenPanel !== screen;
+      });
+      root.querySelectorAll('[data-state-panel]').forEach((panel) => {
+        if (panel.closest('[data-screen-panel]')?.dataset.screenPanel === screen) {
+          panel.hidden = panel.dataset.statePanel !== state;
+        }
+      });
+      root.querySelectorAll('[data-screen-button]').forEach((button) => {
+        const active = button.dataset.screenButton === screen;
+        button.setAttribute('aria-pressed', String(active));
+        button.classList.toggle('btn-primary', active);
+      });
+      root.querySelectorAll('[data-state-button]').forEach((button, index) => {
+        const active = meta.keys[index] === state;
+        button.textContent = meta.states[index];
+        button.dataset.stateButton = meta.keys[index];
+        button.setAttribute('aria-pressed', String(active));
+        button.classList.toggle('btn-primary', active);
+      });
+      root.querySelectorAll('[data-nav], [data-mobile-nav]').forEach((button) => {
+        const key = button.dataset.nav || button.dataset.mobileNav;
+        button.classList.toggle('is-active', key === screen);
+      });
+      root.querySelector('#fce-device').innerHTML = mobile
+        ? '<i data-lucide="monitor" aria-hidden="true"></i> Desktop preview'
+        : '<i data-lucide="smartphone" aria-hidden="true"></i> Mobile preview';
+      if (window.lucide) window.lucide.createIcons({ attrs: { width: 16, height: 16 } });
+    };
+
+    root.querySelectorAll('[data-screen-button]').forEach((button) => {
+      button.addEventListener('click', () => {
+        screen = button.dataset.screenButton;
+        state = 'active';
+        render();
+      });
+    });
+    root.querySelectorAll('[data-state-button]').forEach((button) => {
+      button.addEventListener('click', () => {
+        state = button.dataset.stateButton;
+        render();
+      });
+    });
+    root.querySelector('#fce-device').addEventListener('click', () => {
+      mobile = !mobile;
+      render();
+    });
+    root.querySelector('#fce-approve').addEventListener('click', async () => {
+      if (window.openai?.sendFollowUpMessage) {
+        await window.openai.sendFollowUpMessage({
+          title: 'Approve core experiences',
+          prompt: 'Tôi duyệt bộ visual Study, Reader và Shadowing theo Orbital Command. Hãy cập nhật spec/plan để các prototype này là visual source of truth, thêm visual QA gates bắt buộc, rồi chuẩn bị kế hoạch sửa implementation hiện tại.'
+        });
+      }
+    });
+    render();
+  })();
+</script>

@@ -9,4 +9,5 @@ export const features = {
   boss: enabled(import.meta.env.VITE_FEATURE_BOSS),
   audio: enabled(import.meta.env.VITE_FEATURE_AUDIO),
   visualFixtures: import.meta.env.DEV || import.meta.env.VITE_VISUAL_FIXTURES === 'true',
+  visualTodayProof: import.meta.env.VITE_VISUAL_TODAY_PROOF === 'true',
 } as const

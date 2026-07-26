@@ -21,7 +21,7 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'))
 const QuickStudyPage = lazy(() => import('./pages/QuickStudyPage'))
 const BossPage = lazy(() => import('./pages/BossPage'))
-const VisualFixturePage = lazy(() => import('./dev/VisualFixturePage'))
+const ShellReviewPage = lazy(() => import('./dev/ShellReviewPage'))
 
 function PageFallback() {
   return (
@@ -34,6 +34,7 @@ function PageFallback() {
 function RequireAuth({ children }: { children: ReactNode }) {
   const { token, loading } = useAuth()
   const location = useLocation()
+  if (features.visualTodayProof && location.pathname === '/') return <>{children}</>
   if (loading) return <PageFallback />
   if (!token) return <Navigate to="/login" state={{ from: location }} replace />
   return <>{children}</>
@@ -47,7 +48,7 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<AuthPage mode="login" />} />
             <Route path="/register" element={<AuthPage mode="register" />} />
-            {features.visualFixtures && <Route path="/__visual-fixtures" element={<VisualFixturePage />} />}
+            {features.visualFixtures && <Route path="/__visual-shell" element={<ShellReviewPage />} />}
             <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
             <Route path="/library" element={<RequireAuth><LibraryPage /></RequireAuth>} />
             <Route path="/decks/:id" element={<RequireAuth><DeckDetailPage /></RequireAuth>} />

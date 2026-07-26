@@ -9,7 +9,7 @@ const titles: Record<string, { eyebrow: string; title: string }> = {
   '/reader': { eyebrow: 'Learning OS', title: 'Focus Reader' },
   '/shadowing': { eyebrow: 'Learning OS', title: 'Voice calibration' },
   '/stats': { eyebrow: 'Learning OS', title: 'Progress' },
-  '/__visual-fixtures': { eyebrow: 'Visual QA', title: 'Deterministic review state' },
+  '/__visual-shell': { eyebrow: 'Visual QA', title: 'App shell review' },
 }
 
 export default function PageHeader() {

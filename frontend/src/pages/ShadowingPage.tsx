@@ -14,6 +14,7 @@ import { useShadowingWorker } from '../hooks/useShadowingWorker'
 import type { ArticleListItem, Deck, ShadowCard, ShadowScore, ShadowVideo, ShadowVideoListItem } from '../types'
 import { splitSentences, stripTranscriptTimestamps } from '../utils/readerText'
 import { useActivityTimer } from '../hooks/useActivityTimer'
+import { useAudio } from '../providers/AudioProvider'
 
 type Source = { kind: 'card'; cards: ShadowCard[]; label: string } | { kind: 'article'; articleId: string; sentences: string[]; label: string } | { kind: 'youtube'; video: ShadowVideo; label: string }
 type Tab = 'card' | 'article' | 'youtube'; type Phase = 'setup' | 'loading' | 'practice' | 'done'
@@ -21,8 +22,10 @@ const qualityFor = (score: number) => score >= 80 ? 5 : score >= 60 ? 3 : null
 
 export default function ShadowingPage() {
   const { toast } = useNotification(), worker = useShadowingWorker(), recorder = useRecorder(), [params] = useSearchParams(); const playerRef = useRef<PlayerHandle | null>(null), autoStart = useRef(false)
+  const { duckAmbient, stopAmbient } = useAudio()
   const [phase, setPhase] = useState<Phase>('setup'), [tab, setTab] = useState<Tab>('card'), [decks, setDecks] = useState<Deck[]>([]), [articles, setArticles] = useState<ArticleListItem[]>([]), [videos, setVideos] = useState<ShadowVideoListItem[]>([]), [deckScope, setDeckScope] = useState('due'), [source, setSource] = useState<Source | null>(null), [index, setIndex] = useState(0), [rate, setRate] = useState(1), [result, setResult] = useState<ShadowScore | null>(null), [scoring, setScoring] = useState(false), [scores, setScores] = useState<Record<number, number>>({}), [submitted, setSubmitted] = useState<Record<number, boolean>>({}), [youtubeUrl, setYoutubeUrl] = useState(''), [importing, setImporting] = useState(false)
   useActivityTimer({ event_type: 'duration', skill: 'speaking', source_type: 'shadowing' }, phase === 'practice')
+  useEffect(() => { if (recorder.recording || scoring) stopAmbient(); else duckAmbient(false) }, [recorder.recording, scoring, duckAmbient, stopAmbient])
   useEffect(() => { void getDecks().then(setDecks).catch(() => {}); void getArticles().then(setArticles).catch(() => {}); void getShadowVideos().then(setVideos).catch(() => {}) }, [])
   const sentence = useMemo(() => !source ? '' : source.kind === 'card' ? source.cards[index]?.example_sentence ?? '' : source.kind === 'article' ? source.sentences[index] ?? '' : source.video.segments[index]?.text ?? '', [source, index])
   const total = !source ? 0 : source.kind === 'card' ? source.cards.length : source.kind === 'article' ? source.sentences.length : source.video.segments.length
@@ -37,7 +40,7 @@ export default function ShadowingPage() {
   const importVideo = async () => { if (!youtubeUrl.trim()) return; setImporting(true); try { const subtitles = await fetchWorkerSubtitles(youtubeUrl.trim()); const video = await createShadowVideo(subtitles); setVideos(await getShadowVideos()); setYoutubeUrl(''); begin({ kind: 'youtube', video, label: video.title }) } catch { toast('Không import được video — kiểm tra worker và link', 'error') } finally { setImporting(false) } }
   const exit = () => { flushReview(index); playerRef.current?.stop(); recorder.reset(); setSource(null); setResult(null); setPhase('setup') }
   const badge = worker.status === 'online' ? <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-bold text-emerald-200">🟢 Worker sẵn sàng {worker.health?.device === 'cpu' && '(CPU)'}</span> : <span className="rounded-full bg-rose-400/10 px-3 py-1 text-xs font-bold text-rose-200">🔴 Công tắc đang tắt</span>
-  return <main className="mx-auto max-w-2xl px-4 py-8"><div className="mb-6 flex items-center justify-between gap-3"><h1 className="text-2xl font-black text-white">🎤 Shadowing</h1>{badge}</div>
+  return <main className="shadowing-chamber mx-auto max-w-2xl px-4 py-8"><div className="mb-6 flex items-center justify-between gap-3"><h1 className="text-2xl font-black text-white">🎤 Shadowing</h1>{badge}</div>
     {phase === 'setup' && <><div className="mb-5 flex gap-2">{([{ key: 'card', label: '🃏 Flashcards' }, { key: 'article', label: '📖 Bài đọc' }, { key: 'youtube', label: '▶️ YouTube' }] as { key: Tab; label: string }[]).map(item => <button key={item.key} onClick={() => setTab(item.key)} className={`rounded-xl px-3 py-2 text-sm font-bold ${tab === item.key ? 'bg-cyan-400/10 text-cyan-200' : 'bg-white/[.03] text-slate-400'}`}>{item.label}</button>)}</div>
       {tab === 'card' && <section className="rounded-2xl border border-white/[.07] bg-white/[.03] p-4"><select value={deckScope} onChange={event => setDeckScope(event.target.value)} className="mb-3 w-full rounded-xl bg-black/30 p-3 text-white"><option value="due">🔥 Thẻ đến hạn hôm nay</option>{decks.map(deck => <option key={deck.id} value={deck.id}>{deck.name}</option>)}</select><button onClick={() => void startCards(deckScope === 'due' ? {} : { deckId: deckScope })} className="w-full rounded-xl bg-cyan-400/10 py-3 font-bold text-cyan-200">Bắt đầu luyện</button></section>}
       {tab === 'article' && <div className="space-y-2">{articles.map(article => <button key={article.id} onClick={() => void startArticle(article.id)} className="block w-full rounded-2xl border border-white/[.07] bg-white/[.03] p-4 text-left font-bold text-slate-100">{article.title}<span className="block text-xs text-slate-500">{article.word_count} từ</span></button>)}</div>}

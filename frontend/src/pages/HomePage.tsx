@@ -7,6 +7,8 @@ import AiOrb from '../components/orb/AiOrb'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { useBackendState } from '../hooks/useBackendState'
 import type { DailyHome, Mission } from '../types'
+import { features } from '../config/features'
+import TodayOrbitalCommand from '../components/home/TodayOrbitalCommand'
 
 const labels: Record<string, string> = { study_answers: 'Recall words', study_session: 'Start a study session', reading_minutes: 'Read with focus', read_complete: 'Complete a reading', listen_answers: 'Practice listening', shadowing: 'Practice speaking' }
 
@@ -22,6 +24,7 @@ function Trajectory({ home }: { home: DailyHome }) {
 }
 
 export default function HomePage() {
+  if (features.visualTodayProof) return <TodayOrbitalCommand />
   const { user } = useAuth(); const { online } = useBackendState(); const query = useCachedQuery(user ? `command-center:${user.id}` : null, getDailyHome); const [slow, setSlow] = useState(false)
   useEffect(() => { const id = window.setTimeout(() => setSlow(true), 1200); return () => window.clearTimeout(id) }, [])
   const home = query.data

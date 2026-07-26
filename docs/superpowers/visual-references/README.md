@@ -2,6 +2,10 @@
 
 These files preserve the approved 2026-07-26 prototypes named in the Learning OS design. They are immutable inputs to visual QA, not implementation examples.
 
+## Capture rule
+
+The legacy images directly under `screenshots/` include the prototype review chrome and are retained only as historical evidence. They are not valid comparison inputs. R0/R1 comparison images are written under `screenshots/cropped/` by the Playwright gate, which captures only the prototype app viewport (`.ftd-screen` or `.fce-screen`) after the review controls have been excluded. Each capture records the same browser theme and viewport as its corresponding implementation image.
+
 | Surface | Checked-in source | Canonical source | Approval | Rendered review images |
 | --- | --- | --- | --- | --- |
 | Today | `today-orbital-command.html` | `flashie-today-directions.html` | A · Orbital Command only | `screenshots/today-orbital-command-{desktop,mobile}.png` |

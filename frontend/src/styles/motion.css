@@ -1,8 +1,6 @@
 @keyframes orbital-drift { 50% { transform: translate3d(2rem, -1rem, 0) rotate(8deg); } }
-@keyframes energy-pulse { 50% { transform: scale(1.06); opacity: .9; } }
 
 .ambient-background i:first-child { animation: orbital-drift var(--dur-ambient) ease-in-out infinite alternate; }
-.fixture-orb__core { animation: energy-pulse 3.4s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

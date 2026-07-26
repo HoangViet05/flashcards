@@ -1,3 +1,19 @@
-# Audio attribution
+# Flashie original audio pack
 
-Version one uses Web Audio feedback tones only; no music or external runtime audio CDN is loaded. Any future static asset must be original or licensed for redistribution, use a hashed filename, and be listed here before release.
+All files in this folder were generated on 2026-07-26 by
+`scripts/generate_original_audio.py`. They are original deterministic synthesis,
+contain no third-party samples, and are licensed to this project under the MIT
+License. They are intentionally short mono WAV assets to keep the first local
+pack small; they are only requested after a user-initiated audio action.
+
+| Asset | SHA-256 |
+| --- | --- |
+| `ambient-boss.wav` | `F4819325BB1B4F696D7A107A3B196C7FB61740F0ED6328E43DEE9DD0E5E78B4A` |
+| `ambient-focus.wav` | `9732F6C69A73609867966D746C13D816593D1543EE6AC228A22BBBB90D1B7C03` |
+| `ambient-reader.wav` | `F92D7D022889BD815559115E00917F68E2242F600514BD62EB273817B3F6EB90` |
+| `checkpoint.wav` | `9C620AC8E0B9375DE21AE0303464C4596FCF0F06E606070C738ECC54A8E39D8C` |
+| `combo.wav` | `458EF07B8130A69B30717EC88FB1548C02794A0985406C6F0AB7951AC510252C` |
+| `complete.wav` | `2888258A93AD57D3602BC05E8A062CCCD4C9DC86676C0C71249E12AF593936F4` |
+| `correct.wav` | `CBCD58631476974AD54B0E9571EFF5F7FA23DCABDDA4AE6763D006738EAB24DF` |
+| `ui.wav` | `DC9BE7C41A86C3785FE827D13C80933341CE6B9EB52A25AB14682538FEAD5099` |
+| `wrong.wav` | `914A0503F597E8AD1368B81AAFAC09B9695EF621AC146D760564FAA955FC6C82` |

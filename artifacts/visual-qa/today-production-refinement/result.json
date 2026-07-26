@@ -1,0 +1,67 @@
+{
+  "proofFlag": "unset",
+  "visualStates": {
+    "desktop-1920-light": {
+      "overflow": false,
+      "lowerBottom": 1081,
+      "viewportHeight": 1080,
+      "mobileClear": false,
+      "consoleErrors": [],
+      "pass": true
+    },
+    "desktop-1920-dark": {
+      "overflow": false,
+      "lowerBottom": 1081,
+      "viewportHeight": 1080,
+      "mobileClear": false,
+      "consoleErrors": [],
+      "pass": true
+    },
+    "desktop-1440-light": {
+      "overflow": false,
+      "lowerBottom": 884,
+      "viewportHeight": 900,
+      "mobileClear": false,
+      "consoleErrors": [],
+      "pass": true
+    },
+    "desktop-1440-dark": {
+      "overflow": false,
+      "lowerBottom": 884,
+      "viewportHeight": 900,
+      "mobileClear": false,
+      "consoleErrors": [],
+      "pass": true
+    },
+    "mobile-390-light": {
+      "overflow": false,
+      "lowerBottom": 926,
+      "viewportHeight": 844,
+      "mobileClear": true,
+      "consoleErrors": [],
+      "pass": true
+    },
+    "mobile-390-dark": {
+      "overflow": false,
+      "lowerBottom": 926,
+      "viewportHeight": 844,
+      "mobileClear": true,
+      "consoleErrors": [],
+      "pass": true
+    }
+  },
+  "orbMotion": {
+    "firstTransform": "matrix(0.913545, -0.406737, 0.406737, 0.913545, 0, 0)",
+    "secondTransform": "matrix(0.988463, -0.151466, 0.151466, 0.988463, 0, 0)",
+    "pass": true
+  },
+  "reducedMotion": "PASS",
+  "routes": {
+    "words": "/daily",
+    "remembered": "/stats",
+    "vocabulary": "/daily",
+    "reading": "/reader",
+    "speaking": "/shadowing"
+  },
+  "pass": true
+}

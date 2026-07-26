@@ -15,6 +15,7 @@ import { useDailySession } from '../hooks/useDailySession'
 import AiOrb from '../components/orb/AiOrb'
 import SessionTrajectory from '../components/study/SessionTrajectory'
 import StudyStage from '../components/study/StudyStage'
+import '../components/core/CoreExperiences.css'
 
 export default function DailyPage() {
   const [params] = useSearchParams()
@@ -23,15 +24,24 @@ export default function DailyPage() {
 
   if (daily.loading) {
     return (
-      <div className="flex justify-center py-24">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-      </div>
+      <main className="study-chamber study-chamber--loading" aria-busy="true">
+        <header className="study-chamber__header"><div><span>Study session</span><h2>Preparing your next recall</h2></div><div className="study-skeleton study-skeleton--metric" /></header>
+        <div className="study-chamber__orb"><AiOrb state="processing" compact /></div>
+        <div className="study-chamber__content">
+          <div className="daily-progress"><div><strong>Loading your session</strong><span>Your real learning queue is on its way.</span></div><i><b style={{ width: '16%' }} /></i></div>
+          <ol className="session-trajectory study-skeleton-list" aria-label="Loading session trajectory"><li /><li /><li /><li /></ol>
+          <section className="study-stage"><div className="study-stage__halo"><AiOrb state="processing" compact /></div><div className="study-skeleton study-skeleton--line" /><div className="study-skeleton study-skeleton--answer" /><div className="study-skeleton study-skeleton--button" /></section>
+        </div>
+      </main>
     )
   }
 
   if (daily.phase === 'empty') {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-12">
+      <main className="study-chamber">
+        <header className="study-chamber__header"><div><span>Study session</span><h2>Your learning chamber is ready</h2></div></header>
+        <div className="study-chamber__orb"><AiOrb state="idle" compact /></div>
+        <div className="study-chamber__content"><section className="study-stage"><div className="study-stage__halo"><AiOrb state="idle" compact /></div>
         <DailyStatusHero
           kind="empty"
           primaryTo="/reader"
@@ -39,7 +49,8 @@ export default function DailyPage() {
           secondaryTo="/"
           secondaryLabel="Về trang chủ"
         />
-      </div>
+        </section></div>
+      </main>
     )
   }
 

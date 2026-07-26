@@ -1,0 +1,31 @@
+{
+  "batch": "R3-R5",
+  "proofMode": false,
+  "surfaces": {
+    "study": {
+      "route": "/daily",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch\\study\\chromium\\implementation-desktop.png",
+      "reference": "core-study-active-desktop.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS"
+    },
+    "reader": {
+      "route": "/reader/article-qa",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch\\reader\\chromium\\implementation-desktop.png",
+      "reference": "core-reader-active-desktop.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS"
+    },
+    "shadowing": {
+      "route": "/shadowing",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch\\shadowing\\chromium\\implementation-desktop.png",
+      "reference": "core-shadowing-active-desktop.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS"
+    }
+  },
+  "status": "PASS"
+}

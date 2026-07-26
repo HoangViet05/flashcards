@@ -52,7 +52,7 @@
   },
   "orbMotion": {
     "firstTransform": "matrix(0.913545, -0.406737, 0.406737, 0.913545, 0, 0)",
-    "secondTransform": "matrix(0.988463, -0.151466, 0.151466, 0.988463, 0, 0)",
+    "secondTransform": "matrix(0.989386, -0.145308, 0.145308, 0.989386, 0, 0)",
     "pass": true
   },
   "reducedMotion": "PASS",

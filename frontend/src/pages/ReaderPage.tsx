@@ -12,6 +12,7 @@ import { useAuth } from '../auth/AuthContext'
 import { READING_LEVEL_LABELS, type Article, type ArticleHighlight, type ArticleTranslation, type WordState } from '../types'
 import { sentenceParts, splitSentences, stripTranscriptTimestamps } from '../utils/readerText'
 import { useActivityTimer } from '../hooks/useActivityTimer'
+import '../components/core/CoreExperiences.css'
 import ReadingCompanionDock from '../components/reader/ReadingCompanionDock'
 
 type SentenceTranslation = {
@@ -414,10 +415,18 @@ export default function ReaderPage() {
   )
 
   useEffect(() => {
-    const loadVoices = () => setVoices(window.speechSynthesis.getVoices())
+    const speech = window.speechSynthesis
+    if (!speech) return
+    const loadVoices = () => setVoices(speech.getVoices())
     loadVoices()
-    window.speechSynthesis.addEventListener('voiceschanged', loadVoices)
-    return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices)
+    // Older Safari exposes voiceschanged as an event property rather than an EventTarget listener.
+    if (typeof speech.addEventListener === 'function') {
+      speech.addEventListener('voiceschanged', loadVoices)
+      return () => speech.removeEventListener('voiceschanged', loadVoices)
+    }
+    const previous = speech.onvoiceschanged
+    speech.onvoiceschanged = loadVoices
+    return () => { speech.onvoiceschanged = previous }
   }, [])
 
   const stopSpeaking = () => {

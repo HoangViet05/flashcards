@@ -82,7 +82,7 @@ export default function WordPopup({ word, sentence, articleId, onClose }: Props)
   }
 
   return (
-    <div className="fixed inset-3 z-50 sm:inset-auto sm:right-6 sm:top-24 sm:w-[25rem]">
+    <div className="reader-word-popup fixed inset-3 z-50 sm:inset-auto sm:right-6 sm:top-24 sm:w-[25rem]">
       <div role="dialog" aria-modal="true" aria-label={`Tra từ ${word}`} className="flex max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900 shadow-[0_24px_70px_rgba(0,0,0,.48)] sm:max-h-[min(76vh,44rem)]">
         <header className="flex shrink-0 items-start justify-between border-b border-white/[.08] bg-slate-900 px-5 py-4">
           <div className="min-w-0">

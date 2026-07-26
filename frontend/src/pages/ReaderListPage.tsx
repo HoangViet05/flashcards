@@ -9,6 +9,7 @@ import CatalogTab from '../components/reader/CatalogTab'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import type { TranslationStatus } from '../types'
 import { stripTranscriptTimestamps } from '../utils/readerText'
+import '../components/core/CoreExperiences.css'
 
 type Tab = 'paste' | 'url'
 const BADGES: Record<string, string> = { paste: '📋 Dán', url: '🔗 Web', pdf: '📄 PDF', rss: '📰 RSS' }
@@ -150,6 +151,10 @@ export default function ReaderListPage() {
       </div>
 
       <p className="-mt-3 mb-6 text-xs text-slate-500">Bản dịch được worker local tạo ở nền và lưu kín trong tài khoản; nội dung tiếng Anh vẫn là màn hình đọc chính.</p>
+
+      {view === 'mine' && articles.length > 0 && <Link to={`/reader/${articles[0].id}`} className="reader-discovery__continue">
+        <span>Continue reading</span><strong>{articles[0].title}</strong><small>{articles[0].word_count} words · open your companion dock</small><b>Resume →</b>
+      </Link>}
 
       <div className="mb-5 flex gap-1 rounded-xl bg-black/30 p-1">
         {([['mine', 'Bài của tôi'], ['catalog', 'Thư viện theo cấp độ']] as ['mine' | 'catalog', string][]).map(([value, label]) => <button key={value} onClick={() => setView(value)} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold transition ${view === value ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-slate-200'}`}>{label}</button>)}

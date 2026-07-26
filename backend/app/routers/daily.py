@@ -19,11 +19,13 @@ from app.schemas.daily import (
     LatestArticleOut,
 )
 from app.services import daily as daily_service
+from app.services import weak_words as weak_service
 from app.services import word_search
 from app.services.security import get_current_user
 from app.services.sm2 import compute_sm2
 
 router = APIRouter(prefix="/api/daily", tags=["daily"])
+WEAK_PER_SESSION = 5
 
 
 def _close_stale_game_sessions(db: Session, user: User) -> None:
@@ -37,16 +39,18 @@ def _live_words(session: DailySession) -> list[DailySessionWord]:
     return [word for word in session.words if word.card is not None]
 
 
-def _word_out(word: DailySessionWord) -> DailyWordOut:
+def _word_out(word: DailySessionWord, weak_ids: set[str] | None = None) -> DailyWordOut:
     return DailyWordOut(id=word.id, card_id=word.card_id, is_new=word.is_new,
+                        is_weak=bool(weak_ids and word.card_id in weak_ids),
                         assigned_step=word.assigned_step, steps_done=json.loads(word.steps_done or "[]"),
                         wrong_count=word.wrong_count, card=CardOut.model_validate(word.card))
 
 
-def _session_out(session: DailySession) -> DailySessionOut:
+def _session_out(db: Session, user_id: str, session: DailySession) -> DailySessionOut:
     words = sorted(_live_words(session), key=lambda word: (word.is_new, word.id))
+    weak_ids = weak_service.weak_card_ids(db, user_id)
     return DailySessionOut(id=session.id, session_date=session.session_date, status=session.status,
-                           phase=session.phase, words=[_word_out(word) for word in words])
+                           phase=session.phase, words=[_word_out(word, weak_ids) for word in words])
 
 
 def _make_word(session: DailySession, card: Card, is_new: bool, assigned_step: str) -> DailySessionWord:
@@ -59,8 +63,18 @@ def _create_session(db: Session, user: User) -> DailySession | None:
     if db.query(DailySession).filter(DailySession.user_id == user.id, DailySession.session_date == date.today(), DailySession.status == "done").first():
         return None
     rng = random.Random()
-    review_cards, new_cards = daily_service.due_review_cards(db, user.id), daily_service.pick_new_cards(db, user.id, rng=rng)
-    if not review_cards and not new_cards:
+    review_cards = daily_service.due_review_cards(db, user.id)
+    new_cards = daily_service.pick_new_cards(db, user.id, rng=rng)
+    due_ids = {card.id for card in review_cards}
+    weak_items = [
+        item for item in weak_service.weak_words(db, user.id, rng)
+        if item.card_id not in due_ids
+    ][:WEAK_PER_SESSION]
+    weak_cards = {
+        card.id: card
+        for card in db.query(Card).filter(Card.id.in_([item.card_id for item in weak_items])).all()
+    } if weak_items else {}
+    if not review_cards and not new_cards and not weak_items:
         return None
     session = DailySession(user_id=user.id, session_date=date.today(), phase="review" if review_cards else "flip")
     db.add(session); db.flush()
@@ -68,6 +82,10 @@ def _create_session(db: Session, user: User) -> DailySession | None:
     rng.shuffle(sides)
     for card, side in zip(new_cards, sides): db.add(_make_word(session, card, True, side))
     for card in review_cards: db.add(_make_word(session, card, False, rng.choice(daily_service.STEPS_REVIEW)))
+    for item in weak_items:
+        card = weak_cards.get(item.card_id)
+        if card is not None:
+            db.add(_make_word(session, card, False, item.suggested_step))
     db.flush()
     return session
 
@@ -92,7 +110,7 @@ def get_session(db: Session = Depends(get_db), user: User = Depends(get_current_
     db.commit()
     if session is None: return DailySessionResponse(session=None)
     db.refresh(session)
-    return DailySessionResponse(session=_session_out(session))
+    return DailySessionResponse(session=_session_out(db, user.id, session))
 
 
 def _required_steps(word: DailySessionWord) -> list[str]:
@@ -124,7 +142,7 @@ def submit_answer(body: AnswerIn, db: Session = Depends(get_db), user: User = De
     else: word.wrong_count += 1
     session.phase = _current_phase(session)
     db.commit()
-    return _word_out(word)
+    return _word_out(word, weak_service.weak_card_ids(db, user.id))
 
 
 def _apply_sm2(word: DailySessionWord, quality: int) -> None:
@@ -170,7 +188,7 @@ def complete_learning(db: Session = Depends(get_db), user: User = Depends(get_cu
     _select_game_words(session, rng); _build_puzzle(session, rng)
     session.status, session.phase = "game", "game"
     db.commit(); db.refresh(session)
-    return DailySessionResponse(session=_session_out(session))
+    return DailySessionResponse(session=_session_out(db, user.id, session))
 
 
 def _game_session(db: Session, user: User) -> DailySession:

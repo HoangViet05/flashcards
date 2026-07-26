@@ -6,6 +6,7 @@ interface Props {
   article: LatestArticle | null
   /** `null` nghĩa là đang dò máy chấm, chưa biết bật hay tắt. */
   workerOnline: boolean | null
+  weakCount: number
 }
 
 function readingHint(article: LatestArticle | null) {
@@ -14,9 +15,9 @@ function readingHint(article: LatestArticle | null) {
   return 'Đã học hết từ đã lưu — đọc tiếp để lưu thêm'
 }
 
-export default function HomeSideTiles({ article, workerOnline }: Props) {
+export default function HomeSideTiles({ article, workerOnline, weakCount }: Props) {
   return (
-    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+    <div className="mt-4 grid gap-3 sm:grid-cols-3">
       <Link
         to={article ? `/reader/${article.id}` : '/reader'}
         className="rounded-2xl border border-subtle bg-surface-1 p-4 transition hover:bg-surface-2"
@@ -41,6 +42,14 @@ export default function HomeSideTiles({ article, workerOnline }: Props) {
           </p>
           <p className="mt-0.5 text-xs font-medium text-muted">Bật máy host để chấm điểm phát âm</p>
         </div>
+      )}
+
+      {weakCount > 0 && (
+        <Link to="/weak" className="rounded-2xl border border-warn/30 bg-warn/10 p-4 transition hover:bg-warn/15">
+          <p className="text-xs font-black uppercase tracking-wider text-warn">Từ đang yếu</p>
+          <p className="mt-1 text-sm font-bold text-strong-text">{weakCount} từ hay sai</p>
+          <p className="mt-0.5 text-xs font-medium text-muted">Luyện lại bằng dạng bài khác</p>
+        </Link>
       )}
     </div>
   )

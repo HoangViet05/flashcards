@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from app.schemas.card import CardOut
 
 class DailyWordOut(BaseModel):
-    id: str; card_id: str; is_new: bool; assigned_step: str; steps_done: list[str]; wrong_count: int; card: CardOut
+    id: str; card_id: str; is_new: bool; is_weak: bool = False; assigned_step: str; steps_done: list[str]; wrong_count: int; card: CardOut
 class DailySessionOut(BaseModel):
     id: str; session_date: date; status: str; phase: str; words: list[DailyWordOut]
 class DailySessionResponse(BaseModel): session: DailySessionOut | None

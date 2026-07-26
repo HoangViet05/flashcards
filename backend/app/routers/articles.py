@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
@@ -8,8 +9,10 @@ from app.database import get_db
 from app.models.article import Article
 from app.models.article_highlight import ArticleHighlight
 from app.models.article_translation import ArticleTranslation
+from app.models.card import Card
 from app.models.deck import Deck
 from app.models.document import Document
+from app.models.review import Review
 from app.models.translation_worker import TranslationWorker
 from app.models.user import User
 from app.schemas.article import (
@@ -17,6 +20,7 @@ from app.schemas.article import (
     HighlightCardMetadata, HighlightCardsCreate, HighlightCardsResult,
     ArticleTranslationOut, LocalWorkerCreate, LocalWorkerCreated, LocalWorkerOut, TranslationQueueResult,
     TranslationRequest, WorkerClaimOut, WorkerComplete, WorkerFailure,
+    WordStatesOut,
 )
 from app.schemas.card import CardOut
 from app.services.article_cards import create_article_card, ensure_article_deck, find_anki_entries, first_sentence_containing, normalize_word
@@ -24,6 +28,7 @@ from app.services.article_extractor import (
     ExtractionError, count_words, extract_from_html, extract_from_pdf_source, fetch_url, normalize_text,
 )
 from app.services.security import get_current_user
+from app.services import weak_words as weak_service
 
 router = APIRouter(prefix="/api/articles", tags=["articles"])
 
@@ -324,6 +329,39 @@ def list_highlights(article_id: str, db: Session = Depends(get_db), user: User =
         .all()
     )
     return serialize_highlights(highlights, user, db)
+
+
+@router.get("/{article_id}/word-states", response_model=WordStatesOut)
+def get_word_states(
+    article_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    article = get_owned_article(article_id, db, user)
+    present = {
+        normalize_word(token)
+        for token in re.findall(r"[A-Za-z']+", article.content)
+    }
+    weak_ids = weak_service.weak_card_ids(db, user.id)
+    rows = (
+        db.query(Card, Review)
+        .join(Review, Review.card_id == Card.id)
+        .join(Deck, Card.deck_id == Deck.id)
+        .filter(Deck.user_id == user.id, Review.repetitions >= 1)
+        .all()
+    )
+    states: dict[str, str] = {}
+    for card, review in rows:
+        word = normalize_word(card.front_text)
+        if word not in present:
+            continue
+        if card.id in weak_ids:
+            states[word] = "weak"
+        elif review.repetitions >= 3:
+            states[word] = "mastered"
+        else:
+            states[word] = "learning"
+    return WordStatesOut(states=states)
 
 
 @router.post("/{article_id}/highlights", response_model=ArticleHighlightOut)

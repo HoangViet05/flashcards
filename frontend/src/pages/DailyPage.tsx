@@ -7,7 +7,9 @@ import DailySummary from '../components/daily/DailySummary'
 import DictationStep from '../components/daily/steps/DictationStep'
 import FlipStep from '../components/daily/steps/FlipStep'
 import ReviewStep from '../components/daily/steps/ReviewStep'
+import SpeakStep from '../components/daily/steps/SpeakStep'
 import SplitStep from '../components/daily/steps/SplitStep'
+import WeakStep from '../components/daily/steps/WeakStep'
 import { useDailySession } from '../hooks/useDailySession'
 
 export default function DailyPage() {
@@ -51,6 +53,8 @@ export default function DailyPage() {
       )}
 
       {daily.phase === 'review' && <ReviewStep daily={daily} onCorrectStreak={setCombo} />}
+      {daily.phase === 'weak' && <WeakStep daily={daily} onCorrectStreak={setCombo} />}
+      {daily.phase === 'speak' && <SpeakStep words={daily.speakWords} onDone={daily.afterSpeak} />}
       {daily.phase === 'flip' && <FlipStep daily={daily} />}
       {daily.phase === 'dictation' && <DictationStep daily={daily} onCorrectStreak={setCombo} />}
       {daily.phase === 'split' && <SplitStep daily={daily} onCorrectStreak={setCombo} />}

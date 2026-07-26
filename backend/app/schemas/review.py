@@ -1,5 +1,10 @@
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel
 from datetime import date, datetime
+
+if TYPE_CHECKING:
+    from app.schemas.card import CardOut
 
 
 class ReviewSubmit(BaseModel):
@@ -50,3 +55,15 @@ class StatsOut(BaseModel):
 class HeatmapDay(BaseModel):
     date: str
     count: int
+
+
+class WeakWordOut(BaseModel):
+    card: "CardOut"
+    recent_wrong: int
+    total_reviews: int
+    last_step: str | None
+    suggested_step: str
+
+
+class WeakAnswerIn(BaseModel):
+    correct: bool

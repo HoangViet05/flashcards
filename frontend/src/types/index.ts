@@ -169,7 +169,7 @@ export interface ShadowingDayStat { date: string; count: number; avg_score: numb
 export interface ShadowingStats { total_attempts: number; attempts_7d: number; avg_score_7d: number | null; by_day: ShadowingDayStat[] }
 
 export type ExerciseStep = 'dictation' | 'vi_en' | 'en_vi'
-export interface DailyWord { id: string; card_id: string; is_new: boolean; assigned_step: ExerciseStep; steps_done: string[]; wrong_count: number; card: Card }
+export interface DailyWord { id: string; card_id: string; is_new: boolean; is_weak: boolean; assigned_step: ExerciseStep; steps_done: string[]; wrong_count: number; card: Card }
 export interface DailySession { id: string; session_date: string; status: 'learning' | 'game' | 'done'; phase: 'review' | 'flip' | 'dictation' | 'split' | 'game'; words: DailyWord[] }
 export interface DailyStatus { new_remaining: number; low_new_words: boolean; session_status: 'none' | 'learning' | 'game' | 'done'; session_date: string | null; new_count: number; due_count: number }
 export interface LatestArticle { id: string; title: string; unlearned_saved_words: number }
@@ -183,3 +183,13 @@ export interface GameMeaning { token: string; meaning: string; hint_level: numbe
 export interface GameChip { card_id: string; word: string; cells: number[][] | null }
 export interface DailyGame { size: number; grid: string[][]; meanings: GameMeaning[]; found: GameChip[]; total_words: number; status: string }
 export interface GameConfirmResult { card_id: string; word: string; meaning: string; correct: boolean; quality_after: number | null }
+
+export type WordState = 'learning' | 'mastered' | 'weak'
+
+export interface WeakWord {
+  card: Card
+  recent_wrong: number
+  total_reviews: number
+  last_step: ExerciseStep | null
+  suggested_step: ExerciseStep
+}

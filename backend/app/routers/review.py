@@ -11,11 +11,16 @@ from app.models.review import Review
 from app.models.review_log import ReviewLog
 from app.models.user import User
 from app.routers.cards import get_owned_card
-from app.schemas.review import HeatmapDay, ReviewOut, ReviewSubmit, StatsOut
+from app.schemas.card import CardOut
+from app.schemas.review import (
+    HeatmapDay, ReviewOut, ReviewSubmit, StatsOut, WeakAnswerIn, WeakWordOut,
+)
 from app.services.security import get_current_user
 from app.services.sm2 import compute_sm2
+from app.services import weak_words as weak_service
 
 router = APIRouter(prefix="/api/review", tags=["review"])
+WeakWordOut.model_rebuild(_types_namespace={"CardOut": CardOut})
 
 
 @router.get("/due", response_model=list[ReviewOut])
@@ -37,6 +42,47 @@ def get_heatmap(days: int = Query(default=365, ge=7, le=730), db: Session = Depe
               .filter(ReviewLog.user_id == user.id, ReviewLog.reviewed_at >= since)
               .group_by(func.date(ReviewLog.reviewed_at)).order_by(func.date(ReviewLog.reviewed_at)).all())
     return [HeatmapDay(date=str(day), count=int(count)) for day, count in rows]
+
+
+@router.get("/weak", response_model=list[WeakWordOut])
+def get_weak_words(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    items = weak_service.weak_words(db, user.id)
+    cards = {
+        card.id: card
+        for card in db.query(Card).filter(Card.id.in_([item.card_id for item in items])).all()
+    } if items else {}
+    return [
+        WeakWordOut(
+            card=CardOut.model_validate(cards[item.card_id]),
+            recent_wrong=item.recent_wrong,
+            total_reviews=item.total_reviews,
+            last_step=item.last_step,
+            suggested_step=item.suggested_step,
+        )
+        for item in items
+        if item.card_id in cards
+    ]
+
+
+@router.post("/weak/{card_id}")
+def answer_weak_word(
+    card_id: str,
+    body: WeakAnswerIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    card = get_owned_card(card_id, db, user)
+    db.add(
+        ReviewLog(
+            user_id=user.id,
+            card_id=card.id,
+            quality=4 if body.correct else 2,
+            rating_source="weak",
+            reviewed_at=datetime.utcnow(),
+        )
+    )
+    db.commit()
+    return {"ok": True}
 
 
 @router.post("/{card_id}", response_model=ReviewOut)

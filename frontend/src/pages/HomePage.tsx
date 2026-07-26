@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 
 import { getDailyHome } from '../api/daily'
 import { getWorkerHealth } from '../api/shadowingWorker'
+import { getWeakWords } from '../api/weak'
 import { useAuth } from '../auth/AuthContext'
 import HomeBanner from '../components/home/HomeBanner'
 import HomeEmptyGuide from '../components/home/HomeEmptyGuide'
@@ -13,6 +14,7 @@ import { useCachedQuery } from '../hooks/useCachedQuery'
 export default function HomePage() {
   const { user } = useAuth()
   const homeQuery = useCachedQuery(user ? `daily-home:${user.id}` : null, getDailyHome)
+  const weakQuery = useCachedQuery(user ? `weak:${user.id}` : null, getWeakWords)
   const [workerOnline, setWorkerOnline] = useState<boolean | null>(null)
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function HomePage() {
       ) : (
         <>
           <HomeHero home={home} />
-          <HomeSideTiles article={home.latest_article} workerOnline={workerOnline} />
+          <HomeSideTiles article={home.latest_article} workerOnline={workerOnline} weakCount={weakQuery.data?.length ?? 0} />
           <p className="mt-5 text-xs font-medium text-muted">
             Đã thuộc {home.mastered_cards}/{home.total_cards} từ · {home.deck_count} bộ thẻ ·{' '}
             <Link to="/library" className="font-bold text-accent-2 underline">quản lý bộ thẻ</Link>

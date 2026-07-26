@@ -3,10 +3,11 @@ import { Link, useParams } from 'react-router-dom'
 import { addArticleHighlightsToDeck, deleteArticleHighlight, getArticle, getArticleHighlights, getArticleTranslation, saveArticleHighlight } from '../api/articles'
 import { getAllCards } from '../api/cards'
 import { lookupEnDictionary, lookupViDictionary } from '../api/dictionary'
+import { getWordStates } from '../api/weak'
 import PhraseCardPopup from '../components/reader/PhraseCardPopup'
 import WordPopup from '../components/reader/WordPopup'
 import { useNotification } from '../components/NotificationProvider'
-import type { Article, ArticleHighlight, ArticleTranslation } from '../types'
+import type { Article, ArticleHighlight, ArticleTranslation, WordState } from '../types'
 import { sentenceParts, splitSentences, stripTranscriptTimestamps } from '../utils/readerText'
 
 type SentenceTranslation = {
@@ -23,6 +24,12 @@ type PhraseSelection = {
 const normalizedSentence = (sentence: string) => sentence.replace(/\s+/g, ' ').trim().toLowerCase()
 
 type TextRange = { start: number; end: number }
+
+const STATE_CLASS: Record<WordState, string> = {
+  learning: 'bg-accent-2/15 rounded-[3px]',
+  mastered: 'bg-correct/15 rounded-[3px]',
+  weak: 'bg-warn/20 rounded-[3px]',
+}
 
 function savedPhraseRanges(sentence: string, phrases: string[]): TextRange[] {
   const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -329,6 +336,8 @@ export default function ReaderPage() {
   const [picked, setPicked] = useState<{ word: string; sentence: string } | null>(null)
   const [phraseSelection, setPhraseSelection] = useState<PhraseSelection | null>(null)
   const [savedPhrases, setSavedPhrases] = useState<string[]>([])
+  const [wordStates, setWordStates] = useState<Record<string, WordState>>({})
+  const [highlightOn, setHighlightOn] = useState(() => localStorage.getItem('flashie:reader-highlight') !== 'off')
   const [rate, setRate] = useState(1)
   const [tts, setTts] = useState({ playing: false, sentence: -1 })
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
@@ -347,6 +356,11 @@ export default function ReaderPage() {
       window.speechSynthesis.cancel()
       if (wordClickTimer.current) window.clearTimeout(wordClickTimer.current)
     }
+  }, [id])
+
+  useEffect(() => {
+    if (!id) return
+    void getWordStates(id).then(setWordStates).catch(() => setWordStates({}))
   }, [id])
 
   useEffect(() => {
@@ -460,6 +474,12 @@ export default function ReaderPage() {
       setPicked({ word, sentence })
       wordClickTimer.current = null
     }, 180)
+  }
+
+  const stateClass = (token: string) => {
+    if (!highlightOn) return ''
+    const state = wordStates[cleanToken(token).toLowerCase()]
+    return state ? STATE_CLASS[state] : ''
   }
 
   const saveSelectedPhrase = () => {
@@ -604,6 +624,16 @@ export default function ReaderPage() {
         </aside>
 
         <article onMouseUp={() => window.setTimeout(saveSelectedPhrase)} className="min-w-0 max-w-3xl space-y-4 text-[17px] leading-8 text-slate-200">
+          {readerLanguage === 'original' && (
+            <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-muted">
+              <span className="inline-flex items-center gap-1.5"><i className="h-3 w-3 rounded-sm bg-accent-2/40" />đang học</span>
+              <span className="inline-flex items-center gap-1.5"><i className="h-3 w-3 rounded-sm bg-correct/40" />đã thuộc</span>
+              <span className="inline-flex items-center gap-1.5"><i className="h-3 w-3 rounded-sm bg-warn/50" />đang yếu</span>
+              <button onClick={() => { const next = !highlightOn; setHighlightOn(next); localStorage.setItem('flashie:reader-highlight', next ? 'on' : 'off') }} className="min-h-[36px] rounded-lg border border-subtle bg-surface-1 px-2 py-1 font-bold">
+                {highlightOn ? 'Tắt tô sáng' : 'Bật tô sáng'}
+              </button>
+            </div>
+          )}
           {readerLanguage === 'translated' && (hasCompleteSentenceTranslation ? sentenceTranslations : translatedParagraphs.map(translated => ({ translated }))).map((sentence, index) => (
             <p key={index} className="rounded-xl border border-emerald-300/[.08] bg-emerald-400/[.035] px-4 py-3 text-slate-100">{sentence.translated}</p>
           ))}
@@ -623,7 +653,7 @@ export default function ReaderPage() {
                       const isHighlighted = highlights.some(highlight => highlight.word === normalizedWord) || isSavedPhrase
                       return !word || /^\s+$/.test(token)
                         ? token
-                        : <span key={tokenIndex} onClick={() => openWordPopup(normalizedWord, sentence.trim())} onDoubleClick={event => { event.preventDefault(); toggleHighlight(normalizedWord) }} className={`cursor-pointer rounded-sm transition hover:bg-cyan-400/20 ${isHighlighted ? 'bg-amber-300/20 px-0.5 font-semibold text-amber-100 shadow-[inset_0_-2px_0_rgba(252,211,77,.72)] hover:bg-amber-300/30' : ''}`}>{token}</span>
+                        : <span key={tokenIndex} onClick={() => openWordPopup(normalizedWord, sentence.trim())} onDoubleClick={event => { event.preventDefault(); toggleHighlight(normalizedWord) }} className={`cursor-pointer rounded-sm transition hover:bg-cyan-400/20 ${stateClass(token)} ${isHighlighted ? 'bg-amber-300/20 px-0.5 font-semibold text-amber-100 shadow-[inset_0_-2px_0_rgba(252,211,77,.72)] hover:bg-amber-300/30' : ''}`}>{token}</span>
                     })}
                     <TranslationHint translated={sentenceTranslations[current]?.translated ?? null} />
                     {' '}

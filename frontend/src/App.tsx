@@ -15,6 +15,7 @@ const ReaderPage = lazy(() => import('./pages/ReaderPage'))
 const LibraryPage = lazy(() => import('./pages/LibraryPage'))
 const ShadowingPage = lazy(() => import('./pages/ShadowingPage'))
 const DailyPage = lazy(() => import('./pages/DailyPage'))
+const WeakWordsPage = lazy(() => import('./pages/WeakWordsPage'))
 
 function PageFallback() {
   return (
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="/library" element={<RequireAuth><LibraryPage /></RequireAuth>} />
             <Route path="/decks/:id" element={<RequireAuth><DeckDetailPage /></RequireAuth>} />
             <Route path="/daily" element={<RequireAuth><DailyPage /></RequireAuth>} />
+            <Route path="/weak" element={<RequireAuth><WeakWordsPage /></RequireAuth>} />
             <Route path="/stats" element={<RequireAuth><StatsPage /></RequireAuth>} />
             <Route path="/reader" element={<RequireAuth><ReaderListPage /></RequireAuth>} />
             <Route path="/reader/:id" element={<RequireAuth><ReaderPage /></RequireAuth>} />

@@ -13,6 +13,8 @@ interface Props {
 
 const PHASE_LABEL: Partial<Record<Phase, string>> = {
   review: 'Ôn tập',
+  weak: 'Từ đang yếu',
+  speak: 'Nói lại',
   flip: 'Lật thẻ & nghe',
   dictation: 'Nghe & điền',
   split: 'Chia đôi',

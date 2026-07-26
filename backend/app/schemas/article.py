@@ -148,3 +148,7 @@ class WorkerComplete(BaseModel):
 
 class WorkerFailure(BaseModel):
     error_message: str = Field(min_length=1, max_length=2000)
+
+
+class WordStatesOut(BaseModel):
+    states: dict[str, str]

@@ -1,0 +1,15 @@
+{
+  "proofFlag": "unset",
+  "startup": "PASS",
+  "failure": "PASS",
+  "recovery": "PASS",
+  "values": {
+    "due_count": 3,
+    "new_count": 2,
+    "streak": 7,
+    "study_minutes_today": 11
+  },
+  "fixtureValuesAbsent": true,
+  "consoleErrors": [],
+  "pass": true
+}

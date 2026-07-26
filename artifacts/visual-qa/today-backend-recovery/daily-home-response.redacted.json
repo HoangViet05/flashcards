@@ -1,0 +1,60 @@
+{
+  "new_count": 2,
+  "due_count": 3,
+  "session_status": "none",
+  "steps_total": 10,
+  "steps_done": 5,
+  "streak": 7,
+  "studied_today": true,
+  "mastered_cards": 19,
+  "total_cards": 25,
+  "deck_count": 2,
+  "low_new_words": false,
+  "new_remaining": 2,
+  "latest_article": null,
+  "progression": {
+    "streak": 7,
+    "study_minutes_today": 11,
+    "study_minutes_week": 41,
+    "remembered_cards": 19,
+    "retention": 0.9,
+    "skills": [],
+    "heatmap": {},
+    "unlocks": []
+  },
+  "missions": {
+    "daily": [
+      {
+        "id": "recover-mission",
+        "mission_key": "study_answers",
+        "skill": "vocabulary",
+        "target": 5,
+        "progress": 3,
+        "completed_at": null,
+        "rerolled": false
+      }
+    ],
+    "weekly": []
+  },
+  "journey": {
+    "week_start": "2026-07-20",
+    "timezone": "UTC",
+    "boss_available": false,
+    "lanes": [
+      {
+        "skill": "vocabulary",
+        "checkpoints": [
+          {
+            "date": "2026-07-20",
+            "active": true
+          },
+          {
+            "date": "2026-07-21",
+            "active": true
+          }
+        ]
+      }
+    ]
+  },
+  "server_time": "2026-07-26T18:30:00Z"
+}

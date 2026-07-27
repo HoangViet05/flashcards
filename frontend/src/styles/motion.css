@@ -2,6 +2,23 @@
 
 .ambient-background i:first-child { animation: orbital-drift var(--dur-ambient) ease-in-out infinite alternate; }
 
+@keyframes enter-rise {
+  from { opacity: 0; transform: translateY(var(--dist-enter)); }
+  to   { opacity: 1; transform: none; }
+}
+
+.enter { animation: enter-rise var(--dur-base) var(--ease-out) both; }
+
+.stagger > * { animation: enter-rise var(--dur-base) var(--ease-out) both; }
+.stagger > :nth-child(1) { animation-delay: 0ms; }
+.stagger > :nth-child(2) { animation-delay: var(--stagger-step); }
+.stagger > :nth-child(3) { animation-delay: calc(var(--stagger-step) * 2); }
+.stagger > :nth-child(4) { animation-delay: calc(var(--stagger-step) * 3); }
+.stagger > :nth-child(5) { animation-delay: calc(var(--stagger-step) * 4); }
+/* Từ phần tử 6 trở đi dùng chung một độ trễ: danh sách 20 mục mà trễ dần đều
+   sẽ mất gần một giây mới hiện xong — đó là chậm chạp, không phải sang trọng. */
+.stagger > :nth-child(n + 6) { animation-delay: calc(var(--stagger-step) * 5); }
+
 /* Bấm được: nâng nhẹ, sáng một bậc, viền rõ hơn. */
 .tap {
   transition: transform var(--dur-fast) var(--ease-out),

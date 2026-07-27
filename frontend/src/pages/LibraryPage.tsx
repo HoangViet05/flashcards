@@ -106,7 +106,7 @@ export default function LibraryPage() {
           ))}
         </div>
       ) : decks.length ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {decks.map((deck, index) => (
             <DeckCard
               key={deck.id}

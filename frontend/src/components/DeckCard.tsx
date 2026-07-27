@@ -59,8 +59,7 @@ export default function DeckCard({ deck, dueCount = 0, newCount = 0, cardCount =
 
   return (
       <div
-        className={`tap group relative rounded-[2rem] p-[1px] cursor-pointer animate-fade-in-up`}
-        style={{ animationDelay: `${index * 60}ms` }}
+        className={`tap group relative rounded-[2rem] p-[1px] cursor-pointer`}
       >
         <div className={`absolute inset-0 bg-gradient-to-br ${DECK_GRADIENTS[i]} opacity-80 rounded-[2rem] pointer-events-none group-hover:opacity-100 transition-opacity duration-[var(--dur-base)]`} />
         <div className={`relative h-full flex flex-col gap-4 bg-black/40 backdrop-blur-xl rounded-[2rem] p-5 sm:p-6 border ${DECK_ACCENTS[i]} transition-colors duration-[var(--dur-base)] overflow-hidden`}>

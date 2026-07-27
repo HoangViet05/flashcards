@@ -166,7 +166,7 @@ export default function ReaderListPage() {
 
       {view === 'catalog' ? <CatalogTab onAdopted={() => void articlesQuery.refresh()} /> : articlesQuery.loading ? <div className="grid gap-3 sm:grid-cols-2">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-24 animate-pulse rounded-2xl bg-white/[.05]" />)}</div>
         : articles.length === 0 ? <DailyStatusHero kind="reader" primaryTo="/reader" primaryLabel="Add a reading" onPrimary={() => setShow(true)} secondaryTo="/" secondaryLabel="Return to Today" />
-          : <div className="reader-discovery__library grid gap-3 sm:grid-cols-2">{articles.map(article => {
+          : <div className="reader-discovery__library stagger grid gap-3 sm:grid-cols-2">{articles.map(article => {
             const translation = article.translation_status ? TRANSLATION_BADGES[article.translation_status] : null
             return <div key={article.id} className="reader-discovery__card group relative flex flex-col rounded-2xl border border-white/[.07] bg-white/[.03] p-4 hover:border-cyan-300/20">
               <Link to={`/reader/${article.id}`} className="reader-discovery__card-link block"><h3 className="line-clamp-2 font-bold text-slate-100">{article.title}</h3><p className="mt-2 text-xs text-slate-500">{BADGES[article.source_type]} · {article.word_count} từ · {new Date(article.created_at).toLocaleDateString('vi-VN')}</p>{translation && <span className={`mt-3 inline-flex rounded-full border px-2 py-1 text-[11px] font-bold ${translation.className}`}>{translation.text}</span>}</Link>

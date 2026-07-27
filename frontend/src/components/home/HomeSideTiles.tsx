@@ -17,7 +17,7 @@ function readingHint(article: LatestArticle | null) {
 
 export default function HomeSideTiles({ article, workerOnline, weakCount }: Props) {
   return (
-    <div className="mt-4 grid gap-3 sm:grid-cols-3">
+    <div className="stagger mt-4 grid gap-3 sm:grid-cols-3">
       <Link
         to={article ? `/reader/${article.id}` : '/reader'}
         className="tap rounded-2xl border border-subtle bg-surface-1 p-4"

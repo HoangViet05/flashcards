@@ -4,8 +4,12 @@
 .ai-orb__core { position: relative; z-index: 2; display: grid; width: var(--orb-size); aspect-ratio: 1; place-items: center; overflow: hidden; border: 1px solid var(--orb-edge); border-radius: 50%; background: radial-gradient(circle at 32% 27%, var(--orb-highlight), var(--accent-secondary) 25%, var(--accent-primary) 59%, var(--orb-depth)); box-shadow: 0 0 0 .7rem var(--accent-soft), 0 0 44px var(--accent-shadow); }
 .ai-orb__core::before { position: absolute; width: 35%; height: 35%; border-radius: 50%; background: rgba(255,255,255,.62); content: ''; filter: blur(4px); transform: translate(-45%, -48%); }
 .ai-orb__core::after { position: absolute; inset: 14%; border: 1px solid rgba(255,255,255,.3); border-radius: inherit; content: ''; }
-.ai-orb__orbit { position: absolute; z-index: 1; width: calc(var(--orb-size) * 1.38); height: calc(var(--orb-size) * .58); border: 1px solid var(--ring-line); border-radius: 50%; transform: rotate(-24deg); }
-.ai-orb__orbit--outer { width: calc(var(--orb-size) * 1.12); height: calc(var(--orb-size) * 1.12); transform: rotate(23deg); }
+.ai-orb__orbit { position: absolute; z-index: 1; width: calc(var(--orb-size) * 1.26); aspect-ratio: 1; border: 1px solid var(--ring-line); border-radius: 50%; }
+.ai-orb__orbit--outer { width: calc(var(--orb-size) * 1.58); }
+.ai-orb__satellite { position: absolute; top: 8%; left: 17%; width: calc(var(--orb-size) * .105); aspect-ratio: 1; border: 1px solid rgba(255,255,255,.7); border-radius: 50%; background: var(--accent-secondary); box-shadow: 0 0 .7rem color-mix(in srgb, var(--accent-secondary) 80%, transparent); }
+.ai-orb__satellite--amber { width: calc(var(--orb-size) * .075); background: #ffc46b; box-shadow: 0 0 .65rem rgba(255,196,107,.72); }
+.ai-orb__satellite--blue { top: auto; right: 8%; bottom: 16%; left: auto; width: calc(var(--orb-size) * .06); background: #93d5ff; }
+.ai-orb__satellite--mint { top: auto; bottom: 7%; left: 31%; width: calc(var(--orb-size) * .085); background: #79f2ce; box-shadow: 0 0 .75rem rgba(121,242,206,.72); }
 .ai-orb__signal { position: absolute; z-index: 3; display: flex; height: 28%; align-items: center; gap: .16rem; }
 .ai-orb__signal i { display: block; width: .18rem; height: var(--h); border-radius: 999px; background: var(--text-on-accent); box-shadow: 0 0 8px rgba(255,255,255,.5); }
 .ai-orb p { max-width: 20rem; margin: 0; font-size: .88rem; line-height: 1.45; }

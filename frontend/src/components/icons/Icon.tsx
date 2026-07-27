@@ -3,10 +3,10 @@ import type { ReactNode, SVGProps } from 'react'
 export type IconName = 'today' | 'read' | 'speak' | 'progress' | 'more' | 'settings' | 'account' | 'library' | 'weak' | 'sound' | 'silent' | 'sun' | 'moon' | 'play' | 'bolt' | 'flame' | 'check' | 'mic'
 
 const paths: Record<IconName, ReactNode> = {
-  today: <><path d="m12 2 1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7L12 2Z" /><path d="m19 16 .7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16Z" /></>,
-  read: <><path d="M4 4.8A2.8 2.8 0 0 1 6.8 2H20v17.5H6.8A2.8 2.8 0 0 0 4 22V4.8Z" /><path d="M4 19.5A2.8 2.8 0 0 1 6.8 17H20" /></>,
-  speak: <><rect x="8.3" y="2" width="7.4" height="12" rx="3.7" /><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8" /></>,
-  progress: <><path d="M4 19V9M10 19V4M16 19v-6M22 19V7" /><path d="m3 15 6-5 5 3 7-8" /></>,
+  today: <><circle cx="12" cy="12" r="8.5" /><path d="m12 6 1.5 4.5L18 12l-4.5 1.5L12 18l-1.5-4.5L6 12l4.5-1.5L12 6Z" /></>,
+  read: <><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v16H6.5A2.5 2.5 0 0 0 4 21V5.5Z" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v16h5.5A2.5 2.5 0 0 1 20 21V5.5Z" /><path d="M7 7h2.5M14.5 7H17" /></>,
+  speak: <><rect x="8.3" y="2.5" width="7.4" height="11.5" rx="3.7" /><path d="M5.25 10.5a6.75 6.75 0 0 0 13.5 0M12 17.25V21M8.5 21h7" /></>,
+  progress: <><path d="M4 19.5V5.5M4 19.5h16" /><path d="m7 15 3.2-3.4 2.8 1.8L18 7" /><circle cx="18" cy="7" r="1.2" fill="currentColor" stroke="none" /></>,
   more: <><circle cx="5" cy="12" r="1" fill="currentColor" /><circle cx="12" cy="12" r="1" fill="currentColor" /><circle cx="19" cy="12" r="1" fill="currentColor" /></>,
   settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.06 2.06-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.05 1.56V20h-2.9v-.1a1.7 1.7 0 0 0-1.05-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-2.06-2.06.06-.06A1.7 1.7 0 0 0 7.2 14.7a1.7 1.7 0 0 0-1.56-1.05h-.1v-2.9h.1A1.7 1.7 0 0 0 7.2 9.7a1.7 1.7 0 0 0-.34-1.88L6.8 7.76 8.86 5.7l.06.06a1.7 1.7 0 0 0 1.88.34 1.7 1.7 0 0 0 1.05-1.56v-.1h2.9v.1a1.7 1.7 0 0 0 1.05 1.56 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.06 2.06-.06.06a1.7 1.7 0 0 0-.34 1.88 1.7 1.7 0 0 0 1.56 1.05h.1v2.9H21a1.7 1.7 0 0 0-1.6 1.35Z" /></>,
   account: <><circle cx="12" cy="8" r="3.5" /><path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></>,

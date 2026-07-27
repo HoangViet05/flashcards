@@ -1,21 +1,21 @@
 :root[data-theme='dark'] #flashie-today-directions { --background: rgb(24 24 24); --foreground: rgb(255 255 255); --card: color-mix(in oklab, var(--foreground) 5%, transparent); --card-foreground: rgb(255 255 255); --primary: rgb(131 195 255); --primary-foreground: rgb(13 13 13); --secondary: rgb(54 54 54 / 96%); --secondary-foreground: rgb(255 255 255); --muted: color-mix(in srgb, var(--foreground) 10%, transparent); --muted-foreground: rgb(255 255 255 / 49.8%); --accent: rgb(13 39 63); --accent-foreground: rgb(131 195 255); --border: rgb(255 255 255 / 8.2%); --input: color-mix(in oklab, rgb(0 0 0) 10%, transparent); --viz-series-2: rgb(245 154 86); --viz-series-3: rgb(116 213 139); background: var(--background); }
 
 /* Production Today refinement: use the viewport vertically without reducing the global type scale. */
-#flashie-today-directions { min-height: 100vh; min-height: 100dvh; font-size: 16px; line-height: 1.5; }
+#flashie-today-directions { min-height: 100vh; min-height: 100dvh; font-size: 17px; line-height: 1.55; }
 #flashie-today-directions .ftd-screen { box-sizing: border-box; min-height: 100vh; min-height: 100dvh; }
 #flashie-today-directions .ftd-main { display: flex; box-sizing: border-box; min-height: 100vh; min-height: 100dvh; flex-direction: column; padding: clamp(1.25rem, 2vw, 2rem); }
-#flashie-today-directions .ftd-header h2, #flashie-today-directions .ftd-section-title h3 { font-size: clamp(1.38rem, 1.55vw, 1.75rem); line-height: 1.18; }
-#flashie-today-directions .ftd-overline { font-size: .75rem; line-height: 1.35; }
+#flashie-today-directions .ftd-header h2, #flashie-today-directions .ftd-section-title h3 { font-size: clamp(1.58rem, 1.8vw, 2rem); line-height: 1.16; }
+#flashie-today-directions .ftd-overline { font-size: .8rem; line-height: 1.35; }
 #flashie-today-directions .ftd-concept { display: grid; min-height: 0; flex: 1; grid-template-rows: minmax(clamp(18rem, 32vh, 23rem), auto) minmax(clamp(20rem, calc(100dvh - 28rem), 38rem), 1fr); gap: 1rem; margin: 1.25rem 0 1.25rem; padding-bottom: clamp(1.25rem, 2vw, 2rem); }
 #flashie-today-directions .ftd-core-hero { min-height: clamp(18rem, 32vh, 23rem); gap: clamp(1.25rem, 2vw, 2.5rem); padding: clamp(1.25rem, 2vw, 2rem); }
-#flashie-today-directions .ftd-core-copy h3 { font-size: clamp(1.38rem, 1.65vw, 1.8rem); line-height: 1.2; }
-#flashie-today-directions .ftd-core-copy p { max-width: 39rem; font-size: .94rem; line-height: 1.55; }
+#flashie-today-directions .ftd-core-copy h3 { font-size: clamp(1.6rem, 1.95vw, 2.2rem); line-height: 1.16; }
+#flashie-today-directions .ftd-core-copy p { max-width: 39rem; font-size: 1.02rem; line-height: 1.55; }
 #flashie-today-directions .btn { min-height: 44px; padding: 0 1rem; border-radius: .85rem; font-size: .9rem; transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease; }
 #flashie-today-directions .btn:hover { box-shadow: 0 .45rem 1.2rem color-mix(in srgb, var(--foreground) 12%, transparent); transform: translateY(-1px); }
 #flashie-today-directions .btn:active { transform: translateY(0) scale(.98); }
 #flashie-today-directions .btn:focus-visible, #flashie-today-directions a:focus-visible, #flashie-today-directions button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 62%, transparent); outline-offset: 3px; }
 #flashie-today-directions .ftd-orb-zone { min-height: 14rem; }
-#flashie-today-directions .ftd-orb-zone .ai-orb { --orb-size: clamp(7rem, 9vw, 9.5rem); color: var(--muted-foreground); }
+#flashie-today-directions .ftd-orb-zone .ai-orb { --orb-size: clamp(7.5rem, 10vw, 10.5rem); color: var(--muted-foreground); }
 #flashie-today-directions .ftd-orb-zone .ai-orb p { max-width: 15rem; font-size: .78rem; line-height: 1.35; }
 #flashie-today-directions .ftd-orb-zone > b { font-size: 1.25rem; }
 #flashie-today-directions .ftd-orb-caption { font-size: .78rem !important; }
@@ -45,9 +45,13 @@
 #flashie-today-directions .ftd-skill-strips > a:hover { background: color-mix(in srgb, var(--ftd-glow) 8%, transparent); transform: translateX(2px); }
 #flashie-today-directions .ftd-skeleton-grid { grid-template-rows: 1fr; }
 #flashie-today-directions .ftd-skeleton-card > i { height: clamp(2.5rem, 5vh, 4rem); }
-#flashie-today-directions .ftd-rail a, #flashie-today-directions .ftd-rail button { width: 44px; min-height: 44px; }
-#flashie-today-directions .ftd-rail a span, #flashie-today-directions .ftd-rail button span, #flashie-today-directions .ftd-mobile-nav a span, #flashie-today-directions .ftd-mobile-nav button span { font-size: .7rem; }
-#flashie-today-directions .ftd-rail a, #flashie-today-directions .ftd-mobile-nav a { transition: background 180ms ease, box-shadow 180ms ease, color 180ms ease; }
+#flashie-today-directions .ftd-rail a, #flashie-today-directions .ftd-rail button { display: grid; width: 52px; min-height: 58px; place-items: center; gap: .25rem; border-radius: 1rem; color: var(--muted-foreground); text-decoration: none; }
+#flashie-today-directions .ftd-rail a svg, #flashie-today-directions .ftd-rail button svg { width: 1.5rem; height: 1.5rem; stroke-width: 1.7; }
+#flashie-today-directions .ftd-rail a span, #flashie-today-directions .ftd-rail button span, #flashie-today-directions .ftd-mobile-nav a span, #flashie-today-directions .ftd-mobile-nav button span { font-size: .72rem; font-weight: 600; letter-spacing: .01em; }
+#flashie-today-directions .ftd-rail a.is-active { position: relative; color: var(--primary-foreground); background: linear-gradient(145deg, var(--primary), color-mix(in srgb, var(--primary) 64%, var(--viz-series-2))); box-shadow: 0 .55rem 1.35rem color-mix(in srgb, var(--ftd-glow) 32%, transparent), inset 0 1px rgba(255,255,255,.28); }
+#flashie-today-directions .ftd-rail a.is-active::before { position: absolute; left: -.75rem; width: .18rem; height: 1.55rem; border-radius: 999px; background: var(--primary); content: ''; box-shadow: 0 0 .75rem var(--primary); }
+#flashie-today-directions .ftd-rail a:hover, #flashie-today-directions .ftd-mobile-nav a { transition: background 180ms ease, box-shadow 180ms ease, color 180ms ease, transform 180ms ease; }
+#flashie-today-directions .ftd-rail a:hover:not(.is-active) { color: var(--foreground); background: color-mix(in srgb, var(--ftd-glow) 12%, transparent); transform: translateY(-2px); }
 @keyframes ftd-progress { from { transform: scaleX(0); } }
 @keyframes ftd-halo { 50% { box-shadow: 0 0 0 .5rem color-mix(in srgb, var(--ftd-glow) 10%, transparent), 0 0 1.8rem color-mix(in srgb, var(--ftd-glow) 36%, transparent); } }
 @media (prefers-reduced-motion: reduce) { #flashie-today-directions .ftd-mission em, #flashie-today-directions .ftd-skill-strips b i, #flashie-today-directions .ftd-week-path .is-current { animation: none; } }

@@ -8,6 +8,7 @@ from app.models.learning_event import LearningEvent
 from app.models.skill_progress import SkillProgress
 from app.models.review import Review
 from app.models.review_log import ReviewLog
+from app.models.article import Article
 from app.models.card import Card
 from app.models.deck import Deck
 from app.models.user_preference import UserPreference
@@ -147,6 +148,43 @@ def calendar_data(db: Session, user_id: str, days: int) -> list[dict]:
          "active": value["seconds"] > 0 or value["reviews"] > 0}
         for day, value in sorted(buckets.items())
     ]
+
+
+def day_detail_data(db: Session, user_id: str, day: date) -> dict:
+    tz = user_timezone(db, user_id)
+    start, end = local_day_bounds(day, tz)
+    events = db.query(LearningEvent).filter(
+        LearningEvent.user_id == user_id,
+        LearningEvent.occurred_at >= start, LearningEvent.occurred_at < end,
+    ).all()
+
+    by_skill: dict[str, dict] = {}
+    for event in events:
+        bucket = by_skill.setdefault(event.skill, {"skill": event.skill, "seconds": 0, "events": 0})
+        bucket["seconds"] += int(event.duration_seconds or 0)
+        bucket["events"] += 1
+
+    article_ids = {event.source_id for event in events if event.source_type == "article" and event.source_id}
+    articles = []
+    if article_ids:
+        rows = db.query(Article.id, Article.title).filter(Article.id.in_(article_ids), Article.user_id == user_id).all()
+        # A deleted article is skipped rather than shown as an empty row.
+        articles = [{"id": row_id, "title": title} for row_id, title in rows]
+
+    reviews = db.query(func.count(ReviewLog.id)).filter(
+        ReviewLog.user_id == user_id, ReviewLog.reviewed_at >= start, ReviewLog.reviewed_at < end,
+    ).scalar() or 0
+    new_words = db.query(func.count(Card.id)).join(Deck).filter(
+        Deck.user_id == user_id, Card.created_at >= start, Card.created_at < end,
+    ).scalar() or 0
+
+    return {
+        "date": day.isoformat(),
+        "seconds": sum(bucket["seconds"] for bucket in by_skill.values()),
+        "reviews": int(reviews), "new_words": int(new_words),
+        "skills": sorted(by_skill.values(), key=lambda item: item["skill"]),
+        "articles": articles,
+    }
 
 
 def overview_data(db: Session, user_id: str) -> dict:

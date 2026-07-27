@@ -50,3 +50,47 @@ def test_the_calendar_agrees_with_the_streak_on_the_same_day(client, db):
     assert calendar[-1]["date"] == overview["effective_date"]
     assert calendar[-1]["active"] is True
     assert overview["streak"] == 1
+
+
+def test_day_detail_lists_articles_and_skill_breakdown(client, db):
+    article = client.post("/api/articles", json={"title": "Ozone layer", "text": "word " * 120}).json()
+    user = db.query(User).filter(User.email == "usera@test.com").one()
+    db.add(LearningEvent(
+        user_id=user.id, event_type="reading_complete", skill="reading",
+        source_type="article", source_id=article["id"], idempotency_key="day-detail-0001",
+        duration_seconds=420, payload={}, occurred_at=datetime.now(timezone.utc),
+    ))
+    db.commit()
+
+    today = client.get("/api/progress/overview").json()["effective_date"]
+    body = client.get(f"/api/progress/day/{today}").json()
+    assert body["date"] == today
+    assert body["seconds"] == 420
+    assert {"skill": "reading", "seconds": 420, "events": 1} in body["skills"]
+    assert body["articles"] == [{"id": article["id"], "title": "Ozone layer"}]
+
+
+def test_a_quiet_day_is_a_valid_answer_not_an_error(client):
+    today = client.get("/api/progress/overview").json()["effective_date"]
+    quiet = (datetime.fromisoformat(today) - timedelta(days=5)).date().isoformat()
+    response = client.get(f"/api/progress/day/{quiet}")
+    assert response.status_code == 200
+    assert response.json()["seconds"] == 0 and response.json()["articles"] == []
+
+
+def test_day_detail_rejects_a_future_date(client):
+    today = client.get("/api/progress/overview").json()["effective_date"]
+    future = (datetime.fromisoformat(today) + timedelta(days=1)).date().isoformat()
+    assert client.get(f"/api/progress/day/{future}").status_code == 400
+
+
+def test_day_detail_does_not_leak_another_learner(client, user_b_client, db):
+    user = db.query(User).filter(User.email == "usera@test.com").one()
+    db.add(LearningEvent(
+        user_id=user.id, event_type="duration", skill="vocabulary",
+        source_type="full", source_id="s1", idempotency_key="day-scope-0001",
+        duration_seconds=900, payload={}, occurred_at=datetime.now(timezone.utc),
+    ))
+    db.commit()
+    today = client.get("/api/progress/overview").json()["effective_date"]
+    assert user_b_client.get(f"/api/progress/day/{today}").json()["seconds"] == 0

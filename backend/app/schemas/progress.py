@@ -51,6 +51,26 @@ class CalendarDay(BaseModel):
     active: bool
 
 
+class DaySkillBreakdown(BaseModel):
+    skill: str
+    seconds: int
+    events: int
+
+
+class DayArticle(BaseModel):
+    id: str
+    title: str
+
+
+class DayDetail(BaseModel):
+    date: str
+    seconds: int
+    reviews: int
+    new_words: int
+    skills: list[DaySkillBreakdown]
+    articles: list[DayArticle]
+
+
 class ProgressOverview(BaseModel):
     server_time: datetime
     effective_date: str

@@ -18,7 +18,8 @@ interface AuthContextValue {
   setUser: (user: User) => void
 }
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined)
+/** Export để test dựng được cây provider mà không phải gọi API đăng nhập thật. */
+export const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 function readStoredUser(): User | null {
   if (typeof window === 'undefined') return null

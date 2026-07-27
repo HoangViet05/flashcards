@@ -600,7 +600,8 @@ export default function ReaderPage() {
 
       <div className="reader-focus__grid grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_13.5rem] lg:gap-8">
         <ReadingCompanionDock>
-          <section className="rounded-2xl border border-cyan-300/[.12] bg-slate-950/70 p-3 shadow-[0_18px_45px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+          {picked ? <WordPopup word={picked.word} sentence={picked.sentence} articleId={article.id} onClose={() => setPicked(null)} variant="dock" /> : <>
+            <section className="rounded-2xl border border-cyan-300/[.12] bg-slate-950/70 p-3 shadow-[0_18px_45px_rgba(0,0,0,0.18)] backdrop-blur-xl">
             <div className="mb-3 flex items-center gap-2 px-1">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-400/10 text-sm text-cyan-300">◖</span>
               <div><p className="text-[10px] font-black uppercase tracking-[.14em] text-cyan-300/80">Audio reader</p><p className="text-xs font-bold text-slate-200">Listen to this reading</p></div>
@@ -633,10 +634,11 @@ export default function ReaderPage() {
             </div>
             <Link to={`/shadowing?article=${id}`} className="mt-3 block rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-3 py-2 text-center text-xs font-bold text-cyan-200 hover:bg-cyan-400/20">🎤 Shadow</Link>
             <p className="mt-3 rounded-xl bg-white/[.035] px-2.5 py-2 text-[11px] leading-4 text-slate-500">{tts.playing ? `Reading sentence ${tts.sentence + 1}/${sentences.length}` : 'Select a word to look it up; select a phrase or sentence to save it as a card.'}</p>
-          </section>
-          <div className="mt-4">
-            <HighlightPanel highlights={highlights} onRemove={removeHighlight} onUpdate={updateHighlightMeaning} onAddAll={addAllHighlights} adding={addingHighlights} />
-          </div>
+            </section>
+            <div className="mt-4">
+              <HighlightPanel highlights={highlights} onRemove={removeHighlight} onUpdate={updateHighlightMeaning} onAddAll={addAllHighlights} adding={addingHighlights} />
+            </div>
+          </>}
         </ReadingCompanionDock>
 
         <article onMouseUp={() => window.setTimeout(saveSelectedPhrase)} className="reader-focus__article min-w-0 max-w-3xl space-y-4 text-[17px] leading-8 text-slate-200">
@@ -693,7 +695,6 @@ export default function ReaderPage() {
           {article.source_type === 'catalog' && <SourceAttribution sourceUrl={article.source_url} />}
         </article>
       </div>
-      {picked && <WordPopup word={picked.word} sentence={picked.sentence} articleId={article.id} onClose={() => setPicked(null)} />}
       {phraseSelection && <PhraseCardPopup phrase={phraseSelection.phrase} sentence={phraseSelection.sentence} sentenceTranslation={phraseSelection.translation} articleId={article.id} onSaved={phrase => setSavedPhrases(current => current.includes(phrase) ? current : [...current, phrase])} onClose={() => setPhraseSelection(null)} />}
     </div>
   )

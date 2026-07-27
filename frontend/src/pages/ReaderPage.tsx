@@ -104,7 +104,7 @@ function TranslationHint({ translated }: { translated: string | null }) {
           <circle cx="12" cy="12" r="9" />
         </svg>
       </button>
-      <span role="tooltip" className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-max max-w-xs -translate-x-1/2 rounded-lg border border-emerald-300/20 bg-slate-950 px-3 py-2 text-left text-xs font-medium leading-5 text-emerald-50 opacity-0 shadow-xl transition duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+      <span role="tooltip" className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-max max-w-xs -translate-x-1/2 rounded-lg border border-emerald-300/20 bg-slate-950 px-3 py-2 text-left text-xs font-medium leading-5 text-emerald-50 opacity-0 shadow-xl transition duration-[var(--dur-fast)] group-hover:opacity-100 group-focus-within:opacity-100">
         {translated}
       </span>
     </span>

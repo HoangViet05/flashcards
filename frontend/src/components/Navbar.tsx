@@ -157,7 +157,7 @@ export default function Navbar() {
               <Link
                 key={to}
                 to={to}
-                className={`group relative flex h-12 min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 text-[11px] font-bold transition duration-200 sm:h-10 sm:min-w-[7.25rem] sm:flex-row sm:gap-2 sm:px-4 sm:text-sm ${
+                className={`group relative flex h-12 min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 text-[11px] font-bold transition duration-[var(--dur-snap)] sm:h-10 sm:min-w-[7.25rem] sm:flex-row sm:gap-2 sm:px-4 sm:text-sm ${
                   active
                     ? 'border border-cyan-300/25 bg-white/[0.09] text-white shadow-[0_8px_24px_rgba(6,182,212,0.12)]'
                     : 'border border-transparent text-slate-400 hover:bg-white/[0.05] hover:text-slate-100'

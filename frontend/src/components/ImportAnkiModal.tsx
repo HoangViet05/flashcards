@@ -60,7 +60,7 @@ export default function ImportAnkiModal({ open, onClose, onImported }: Props) {
             </div>
             <div className="h-2 rounded-full bg-white/10 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-400 transition-[width] duration-300"
+                className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-400 transition-[width] duration-[var(--dur-base)]"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>

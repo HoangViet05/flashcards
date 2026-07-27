@@ -348,7 +348,7 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
                 <button
                   key={r.quality}
                   onClick={() => handleManualRate(r.quality, 'typed-answer', answerIsCorrect, typedAnswerAssessment?.quality ?? null)}
-                  className={`group relative flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] hover:shadow-lg overflow-hidden bg-black/20 backdrop-blur-md ${r.bg}`}
+                  className={`group relative flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border transition-all duration-[var(--dur-base)] hover:scale-[1.03] active:scale-[0.97] hover:shadow-lg overflow-hidden bg-black/20 backdrop-blur-md ${r.bg}`}
                   style={{ animationDelay: `${(i * 50) + 100}ms` }}
                   title={r.hint}
                 >
@@ -373,7 +373,7 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
         onClick={handleCardFlip}
       >
         <div
-          className="relative w-full transition-all duration-600"
+          className="relative w-full transition-all duration-[var(--dur-celebrate)]"
           style={{
             display: 'grid',
             transformStyle: 'preserve-3d',
@@ -507,7 +507,7 @@ export default function FlipCard({ card, variant = 'standard', onRate, onNext, o
                   <button
                     key={r.quality}
                     onClick={() => handleManualRate(r.quality, 'self-check', null, selfCheckAssessment.quality)}
-                    className={`group relative flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] hover:shadow-lg overflow-hidden bg-black/20 backdrop-blur-md ${r.bg}`}
+                    className={`group relative flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border transition-all duration-[var(--dur-base)] hover:scale-[1.03] active:scale-[0.97] hover:shadow-lg overflow-hidden bg-black/20 backdrop-blur-md ${r.bg}`}
                     style={{ animationDelay: `${(i * 50) + 100}ms` }}
                     title={r.hint}
                   >

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createArticleCard } from '../../api/articles'
 import { lookupEnDictionary, lookupViDictionary } from '../../api/dictionary'
+import { useFeedback } from '../../hooks/useFeedback'
 import type { DictionaryResult, EnDictResult } from '../../types'
 import { useNotification } from '../NotificationProvider'
 
@@ -34,6 +35,7 @@ function VietnameseDefinition({ content }: { content: string }) {
 
 export default function WordPopup({ word, sentence, articleId, onClose }: Props) {
   const { toast } = useNotification()
+  const fb = useFeedback()
   const [vi, setVi] = useState<DictionaryResult | null | 'loading'>('loading')
   const [en, setEn] = useState<EnDictResult | null | 'loading'>('loading')
   const [backText, setBackText] = useState('')
@@ -77,6 +79,7 @@ export default function WordPopup({ word, sentence, articleId, onClose }: Props)
         definition: en?.meanings[0]?.definitions[0],
         audio_url: en?.audioUrl ?? undefined,
       })
+      fb.saved()
       toast(`Saved “${word}” to this reading.`, 'success')
       onClose()
     } catch (error: any) {

@@ -8,6 +8,7 @@ import { animate, flyUp, pop } from '../lib/motion'
 export type Skill = 'vocabulary' | 'reading' | 'listening' | 'speaking'
 
 const STREAK_MILESTONES = [7, 30, 100]
+const COMBO_THRESHOLD = 3
 
 /**
  * API duy nhất để phát phản hồi. Nơi gọi phát ra một sự kiện có ý nghĩa; hook tự
@@ -32,6 +33,10 @@ export function useFeedback() {
 
   return useMemo(() => ({
     correct: (el?: Element | null) => fire('correct', 10, el, 'tool'),
+    // Chuỗi trả lời đúng liên tiếp là khoảnh khắc thưởng có thật trong buổi học,
+    // tách khỏi streakKept (đó là chuỗi ngày, không phải chuỗi câu).
+    combo: (count: number, el?: Element | null) =>
+      count >= COMBO_THRESHOLD ? fire('combo', [12, 24, 12], el, 'reward') : fire('correct', 10, el, 'tool'),
     wrong: (el?: Element | null) => fire('wrong', [15, 40, 15], el, 'tool'),
     saved: (el?: Element | null) => fire('ui', null, el, 'tool'),
     streakKept: (days: number, el?: Element | null) =>

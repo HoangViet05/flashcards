@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import type { Card, ExerciseStep } from '../../types'
-import { useAudio } from '../../providers/AudioProvider'
+import { useFeedback } from '../../hooks/useFeedback'
 import { playCardAudio } from '../../utils/audio'
 
 interface Props { card: Card; mode: ExerciseStep; onResult: (correct: boolean) => void; onCorrectStreak?: (streak: number) => void }
@@ -13,17 +13,18 @@ const prompts: Record<ExerciseStep, string> = { dictation: 'Listen and type the 
 
 /** One real SM-2 answer surface; feedback remains visible before advancing. */
 export default function ExerciseCard({ card, mode, onResult, onCorrectStreak }: Props) {
-  const { feedback } = useAudio()
+  const fb = useFeedback()
   const [typed, setTyped] = useState('')
   const [state, setState] = useState<State>('answering')
   const streak = useRef(0)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
   useEffect(() => { setTyped(''); setState('answering'); if (mode === 'dictation') playCardAudio(card); return () => { window.speechSynthesis.cancel(); if (timer.current) clearTimeout(timer.current) } }, [card.id, mode])
-  const succeed = () => { streak.current += 1; onCorrectStreak?.(streak.current); feedback(streak.current >= 3 ? 'combo' : 'correct'); setState('correct'); timer.current = setTimeout(() => onResult(true), CORRECT_HOLD_MS) }
-  const fail = (next: 'wrong' | 'self_confirm') => { streak.current = 0; onCorrectStreak?.(0); feedback('wrong'); setState(next) }
+  const succeed = () => { streak.current += 1; onCorrectStreak?.(streak.current); fb.combo(streak.current, cardRef.current); setState('correct'); timer.current = setTimeout(() => onResult(true), CORRECT_HOLD_MS) }
+  const fail = (next: 'wrong' | 'self_confirm') => { streak.current = 0; onCorrectStreak?.(0); fb.wrong(cardRef.current); setState(next) }
   const check = () => { if (mode === 'en_vi') { const answer = normalizeVi(typed); const expected = normalizeVi(card.back_text); if (answer.length >= 2 && (expected.includes(answer) || answer.includes(expected))) succeed(); else fail('self_confirm'); return } if (normalizeEn(typed) === normalizeEn(card.front_text)) succeed(); else fail('wrong') }
   const answer = mode === 'en_vi' ? card.back_text : card.front_text
-  return <div className={`exercise-card exercise-card--${state}`} data-state={state}>
+  return <div ref={cardRef} className={`exercise-card exercise-card--${state}`} data-state={state}>
     <p className="exercise-card__prompt">{prompts[mode]}</p>
     {mode === 'dictation' && <button onClick={() => playCardAudio(card)} className="exercise-card__sound" aria-label="Play prompt">Play again</button>}
     {mode === 'vi_en' && <p className="exercise-card__cue">{card.back_text}</p>}

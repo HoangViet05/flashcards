@@ -54,6 +54,14 @@ it('plays the correct sound and a short buzz on a right answer', () => {
   expect(vibrated).toEqual([10])
 })
 
+it('escalates to the combo asset only from the third answer in a row', () => {
+  const api = mount(makeUser({}))
+  api.combo(2)
+  expect(played.some(src => src.includes('combo.wav'))).toBe(false)
+  api.combo(3)
+  expect(played.some(src => src.includes('combo.wav'))).toBe(true)
+})
+
 it('plays the level-up asset on level up', () => {
   mount(makeUser({})).levelUp('vocabulary', 3)
   expect(played.some(src => src.includes('levelup.wav'))).toBe(true)

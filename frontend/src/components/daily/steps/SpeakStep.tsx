@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { createShadowAttempt } from '../../../api/shadowing'
 import { scoreRecording } from '../../../api/shadowingWorker'
+import { useFeedback } from '../../../hooks/useFeedback'
 import type { DailyWord, ShadowScore } from '../../../types'
 import { useNotification } from '../../NotificationProvider'
 import ScoreDisplay from '../../shadowing/ScoreDisplay'
@@ -13,10 +14,15 @@ interface Props {
   onDone: () => void
 }
 
+/** Ngưỡng đạt của một lần nói. Cùng mốc mà ScoreDisplay dùng để tô màu xanh. */
+const PASS_SCORE = 80
+
 export default function SpeakStep({ words, onDone }: Props) {
   const { toast } = useNotification()
+  const fb = useFeedback()
   const recorder = useRecorder()
   const playerRef = useRef<PlayerHandle | null>(null)
+  const scoreRef = useRef<HTMLDivElement>(null)
   const [index, setIndex] = useState(0)
   const [result, setResult] = useState<ShadowScore | null>(null)
   const [scoring, setScoring] = useState(false)
@@ -30,6 +36,8 @@ export default function SpeakStep({ words, onDone }: Props) {
       .then(score => {
         setResult(score)
         if (!score.no_speech) {
+          if (score.score >= PASS_SCORE) fb.correct(scoreRef.current)
+          else fb.wrong(scoreRef.current)
           void createShadowAttempt({
             source_type: 'card', card_id: word.card_id, article_id: null, video_id: null,
             segment_index: null, target_text: target, transcript: score.transcript,
@@ -39,7 +47,7 @@ export default function SpeakStep({ words, onDone }: Props) {
       })
       .catch(() => toast('Không chấm được điểm — kiểm tra máy chấm', 'error'))
       .finally(() => setScoring(false))
-  }, [recorder.blob, target, toast, word])
+  }, [fb, recorder.blob, target, toast, word])
 
   if (!word) return null
 
@@ -69,7 +77,7 @@ export default function SpeakStep({ words, onDone }: Props) {
         {recorder.error && <p className="mt-3 text-sm text-wrong">{recorder.error}</p>}
       </div>
       {scoring && <div className="h-20 animate-pulse rounded-2xl bg-surface-2" />}
-      {result && !scoring && <ScoreDisplay result={result} />}
+      {result && !scoring && <div ref={scoreRef}><ScoreDisplay result={result} /></div>}
       <button onClick={next} className="min-h-[44px] w-full rounded-xl border border-subtle bg-surface-2 text-sm font-bold text-body">{index + 1 < words.length ? 'Câu tiếp' : 'Xong phần nói'}</button>
     </section>
   )

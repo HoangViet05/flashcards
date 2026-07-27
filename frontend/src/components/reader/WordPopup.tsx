@@ -88,8 +88,8 @@ export default function WordPopup({ word, sentence, articleId, onClose }: Props)
           <div className="min-w-0">
             <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-cyan-300/80">Word in context</p>
             <div className="flex items-center gap-2">
-              <h3 className="truncate text-2xl font-black tracking-tight text-white">{word}</h3>
-              <button onClick={playAudio} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-400/10 text-sm text-cyan-200 transition hover:bg-cyan-400/20" title="Hear pronunciation" aria-label={`Hear pronunciation for ${word}`}>Listen</button>
+              <h3 className="min-w-0 flex-1 truncate text-2xl font-black tracking-tight text-white">{word}</h3>
+              <button onClick={playAudio} className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-cyan-300/20 bg-cyan-400/10 text-sm text-cyan-200 transition hover:bg-cyan-400/20" title="Hear pronunciation" aria-label={`Hear pronunciation for ${word}`}>🔊</button>
             </div>
             {ipa && <p className="mt-0.5 text-sm font-medium text-cyan-300">{ipa}</p>}
           </div>

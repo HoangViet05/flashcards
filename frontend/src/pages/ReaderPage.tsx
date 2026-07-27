@@ -622,8 +622,8 @@ export default function ReaderPage() {
               <div className="grid grid-cols-3 gap-1 rounded-xl bg-black/20 p-1">
                 {([
                   ['original', 'Anh'],
-                  ['bilingual', 'English–Vietnamese'],
-                  ['translated', 'Vietnamese'],
+                  ['bilingual', 'Cả hai'],
+                  ['translated', 'Việt'],
                 ] as const).map(([value, label]) => <button key={value} onClick={() => setReaderLanguage(value)} className={`rounded-lg px-1 py-2 text-[10px] font-bold transition ${readerLanguage === value ? 'bg-emerald-400/15 text-emerald-100 shadow-sm' : 'text-slate-500 hover:bg-white/[.05] hover:text-slate-300'}`}>{label}</button>)}
               </div>
               <p className="mt-1.5 px-1 text-[10px] leading-4 text-slate-600">Use the marker at the end of a sentence to view its translation.</p>

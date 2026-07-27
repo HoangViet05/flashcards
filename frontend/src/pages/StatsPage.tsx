@@ -1,17 +1,53 @@
-import { useMemo } from 'react'
-import { getProgressOverview } from '../api/progress'
+import { useEffect, useState } from 'react'
+import { getCalendar, getProgressOverview } from '../api/progress'
+import { getWeakWords } from '../api/weak'
 import { useAuth } from '../auth/AuthContext'
-import AiOrb from '../components/orb/AiOrb'
+import DayDetailPanel from '../components/stats/DayDetailPanel'
+import DayHeatmap from '../components/stats/DayHeatmap'
+import LibraryStrip from '../components/stats/LibraryStrip'
+import MotivationRing from '../components/stats/MotivationRing'
+import RhythmPanel from '../components/stats/RhythmPanel'
+import WeakWordsPanel from '../components/stats/WeakWordsPanel'
+import { LoadingRegion } from '../components/shell/Skeleton'
+import { useOrbitalShell } from '../components/shell/OrbitalShellContext'
 import { useCachedQuery } from '../hooks/useCachedQuery'
+import '../components/stats/Stats.css'
 
-function ProgressContent() {
-  const { user } = useAuth(); const query = useCachedQuery(user ? `progress:${user.id}` : null, getProgressOverview); const progress = query.data
-  if (!progress) return <div className="page-center"><AiOrb state="loading" /></div>
-  const days = useMemo(() => Object.entries(progress.heatmap).sort(([left], [right]) => left.localeCompare(right)).slice(-28), [progress.heatmap])
-  const kpis = [{ label: 'Current streak', value: `${progress.streak} days`, detail: 'Consecutive active days' }, { label: 'Focus today', value: `${progress.study_minutes_today} min`, detail: 'Visible, active study time' }, { label: 'This week', value: `${progress.study_minutes_week} min`, detail: `${progress.reviews_week} reviews completed` }, { label: 'Retention', value: progress.retention === null ? 'Building signal' : `${progress.retention}%`, detail: progress.retention_samples ? `${progress.retention_samples} recent reviews sampled` : 'Need 3 recent reviews' }]
-  const library = [{ label: 'Cards in learning', value: progress.learning_cards, detail: '1–2 successful recalls' }, { label: 'Remembered', value: progress.remembered_cards, detail: '3+ successful recalls' }, { label: 'Due now', value: progress.due_cards, detail: 'Ready for review' }, { label: 'Library', value: progress.total_cards, detail: `${progress.deck_count} decks · ${progress.reviews_total} reviews total` }]
-  return <main className="progress-page"><header><p className="eyebrow">Progress</p><h1>Learning, made visible.</h1><p>Your return rhythm, time invested, and durable recall.</p></header><section className="kpi-grid">{kpis.map(item => <article className="glass-panel" key={item.label}><span>{item.label}</span><strong>{item.value}</strong><small>{item.detail}</small></article>)}</section><section className="glass-panel progress-library"><div className="section-heading"><h2>Your learning library</h2><span>{progress.reviews_today} reviews today</span></div><div className="progress-library__grid">{library.map(item => <article key={item.label}><span>{item.label}</span><strong>{item.value}</strong><small>{item.detail}</small></article>)}</div></section><section className="glass-panel"><div className="section-heading"><h2>Skill paths</h2><span>Level only moves forward</span></div><div className="skill-grid">{progress.skills.map(skill => <article className="skill-card" key={skill.skill}><p>{skill.skill}</p><strong>Level {skill.level}</strong><span>{skill.mastery === null ? 'Building signal' : `${skill.mastery}% mastery`}</span><div className="skill-meter"><i style={{ width: `${skill.mastery ?? Math.min(90, skill.xp % 100)}%` }} /></div></article>)}</div></section><section className="glass-panel heatmap-panel"><div className="section-heading"><h2>Last 28 days</h2><span>{progress.active_days_28} active days</span></div><div className="progress-heatmap" role="img" aria-label="Focused study time during the last 28 days">{days.map(([day, seconds]) => <i className={seconds ? 'is-active' : 'is-idle'} key={day} title={`${day}: ${Math.round(seconds / 60)} minutes`} style={seconds ? { opacity: Math.max(.22, Math.min(1, seconds / 900)) } : undefined} />)}</div><p>Every calendar day is shown. Colour indicates focused study time; a quiet day is not a score of zero.</p></section></main>
+export default function StatsPage() {
+  const { user } = useAuth()
+  const { setHeader } = useOrbitalShell()
+  const key = user ? user.id : null
+  const overview = useCachedQuery(key && `progress:${key}`, getProgressOverview)
+  const calendar = useCachedQuery(key && `progress-calendar:${key}`, () => getCalendar(84))
+  const weak = useCachedQuery(key && `progress-weak:${key}`, getWeakWords)
+  const [selected, setSelected] = useState<string | null>(null)
+
+  useEffect(() => { setHeader({ eyebrow: 'TIẾN ĐỘ', title: 'Việc học của bạn', streak: overview.data?.streak ?? null }) }, [overview.data, setHeader])
+
+  if (!overview.data || !calendar.data) {
+    return <main className="progress-page"><LoadingRegion label="Đang tải tiến độ của bạn" lines={6} /></main>
+  }
+
+  const days = calendar.data
+  const today = days[days.length - 1]?.date ?? new Date().toISOString().slice(0, 10)
+  const active = selected ?? today
+
+  return (
+    <main className="progress-page">
+      <MotivationRing overview={overview.data} />
+      <RhythmPanel days={days} />
+      <WeakWordsPanel words={weak.data ?? []} />
+      <section className="stats-calendar glass-panel enter">
+        <div className="section-heading">
+          <h2>84 ngày gần đây</h2>
+          <span>{days.filter(day => day.active).length} ngày có học</span>
+        </div>
+        <div className="stats-calendar__split">
+          <DayHeatmap days={days} onSelect={setSelected} selected={active} />
+          <DayDetailPanel date={active} />
+        </div>
+      </section>
+      <LibraryStrip overview={overview.data} />
+    </main>
+  )
 }
-
-export function LearningStats() { return <ProgressContent /> }
-export default function StatsPage() { return <ProgressContent /> }

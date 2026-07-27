@@ -14,9 +14,9 @@ export default function WeakStep({ daily, onCorrectStreak }: Props) {
   if (!queue.length) {
     return (
       <div className="text-center">
-        <p className="mb-4 text-sm font-bold text-correct">Xong phần từ yếu — tiếp theo là từ mới.</p>
+        <p className="mb-4 text-sm font-bold text-correct">Weak-word practice is complete — new material is next.</p>
         <button onClick={daily.beginNew} className="min-h-[44px] rounded-xl bg-accent px-6 text-sm font-bold text-white">
-          Tiếp tục
+          Continue
         </button>
       </div>
     )
@@ -26,7 +26,7 @@ export default function WeakStep({ daily, onCorrectStreak }: Props) {
   return (
     <div className="mx-auto max-w-2xl">
       <p className="mb-3 text-sm font-medium text-warn">
-        Từ đang yếu · còn {queue.length} từ · hỏi bằng dạng khác lần trước
+        Weak words · {queue.length} remaining · use a different prompt from last time
       </p>
       <ExerciseCard
         key={`${word.card_id}-${daily.presented}`}

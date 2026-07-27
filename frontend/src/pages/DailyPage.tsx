@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import DailyGamePanel from '../components/daily/DailyGamePanel'
@@ -15,12 +15,15 @@ import { useDailySession } from '../hooks/useDailySession'
 import AiOrb from '../components/orb/AiOrb'
 import SessionTrajectory from '../components/study/SessionTrajectory'
 import StudyStage from '../components/study/StudyStage'
+import { useOrbitalShell } from '../components/shell/OrbitalShellContext'
 import '../components/core/CoreExperiences.css'
 
 export default function DailyPage() {
+  const { setHeader } = useOrbitalShell()
   const [params] = useSearchParams()
   const daily = useDailySession(params.get('mode') === 'quick' ? 'quick' : 'full')
   const [combo, setCombo] = useState(0)
+  useEffect(() => { setHeader({ eyebrow: 'FULL SESSION', title: 'Signal calibration', streak: null }) }, [setHeader])
 
   if (daily.loading) {
     return (

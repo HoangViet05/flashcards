@@ -19,7 +19,9 @@ export function useRecorder(maxSeconds = 20) {
   const start = useCallback(async () => {
     setError(null); setBlob(null); setLiveTranscript(''); partialBusyRef.current = false; partialLastAtRef.current = 0; partialVersionRef.current = 0; chunksRef.current = []
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true }), type = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : undefined, recorder = new MediaRecorder(stream, type ? { mimeType: type } : undefined)
+      const testApi = window as typeof window & { __flashieRecorderApi?: { getUserMedia: () => Promise<MediaStream>; MediaRecorder: typeof MediaRecorder } }
+      const media = testApi.__flashieRecorderApi ?? { getUserMedia: () => navigator.mediaDevices.getUserMedia({ audio: true }), MediaRecorder }
+      const stream = await media.getUserMedia(), type = media.MediaRecorder.isTypeSupported?.('audio/webm') ? 'audio/webm' : undefined, recorder = new media.MediaRecorder(stream, type ? { mimeType: type } : undefined)
       recorder.ondataavailable = event => {
         if (!event.data.size) return
         chunksRef.current.push(event.data)

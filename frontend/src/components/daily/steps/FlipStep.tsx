@@ -14,7 +14,7 @@ export default function FlipStep({ daily }: Props) {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <p className="mb-3 text-sm font-medium text-muted">Lật thẻ &amp; nghe · còn {queue.length} từ</p>
+      <p className="mb-3 text-sm font-medium text-muted">Turn the card and listen · {queue.length} remaining</p>
       <FlipCard
         key={word.card_id}
         card={word.card}

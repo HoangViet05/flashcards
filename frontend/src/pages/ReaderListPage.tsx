@@ -10,14 +10,15 @@ import { useCachedQuery } from '../hooks/useCachedQuery'
 import type { TranslationStatus } from '../types'
 import { stripTranscriptTimestamps } from '../utils/readerText'
 import '../components/core/CoreExperiences.css'
+import { useOrbitalShell } from '../components/shell/OrbitalShellContext'
 
 type Tab = 'paste' | 'url'
-const BADGES: Record<string, string> = { paste: '📋 Dán', url: '🔗 Web', pdf: '📄 PDF', rss: '📰 RSS' }
+const BADGES: Record<string, string> = { paste: 'Pasted text', url: 'Web article', pdf: 'PDF', rss: 'RSS' }
 const TRANSLATION_BADGES: Record<TranslationStatus, { text: string; className: string }> = {
-  queued: { text: 'Chờ dịch local', className: 'border-amber-300/20 bg-amber-300/10 text-amber-200' },
-  processing: { text: 'Máy đang dịch', className: 'border-cyan-300/20 bg-cyan-300/10 text-cyan-200' },
-  completed: { text: 'Đã có bản dịch', className: 'border-emerald-300/20 bg-emerald-300/10 text-emerald-200' },
-  failed: { text: 'Dịch lỗi — thử lại', className: 'border-rose-300/20 bg-rose-300/10 text-rose-200' },
+  queued: { text: 'Translation queued', className: 'border-amber-300/20 bg-amber-300/10 text-amber-200' },
+  processing: { text: 'Translating', className: 'border-cyan-300/20 bg-cyan-300/10 text-cyan-200' },
+  completed: { text: 'Translation ready', className: 'border-emerald-300/20 bg-emerald-300/10 text-emerald-200' },
+  failed: { text: 'Translation failed — retry', className: 'border-rose-300/20 bg-rose-300/10 text-rose-200' },
 }
 
 function isRecentlyOnline(lastSeen: string | null) {
@@ -25,6 +26,7 @@ function isRecentlyOnline(lastSeen: string | null) {
 }
 
 export default function ReaderListPage() {
+  const { setHeader } = useOrbitalShell()
   const { user } = useAuth()
   const navigate = useNavigate()
   const { toast, confirm } = useNotification()
@@ -41,6 +43,8 @@ export default function ReaderListPage() {
   const [pairingToken, setPairingToken] = useState<string | null>(null)
   const [pairing, setPairing] = useState(false)
   const [view, setView] = useState<'mine' | 'catalog'>('mine')
+
+  useEffect(() => { setHeader({ eyebrow: 'FOCUS READER', title: 'Your reading library', streak: null }) }, [setHeader])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -64,19 +68,19 @@ export default function ReaderListPage() {
       await articlesQuery.refresh()
       navigate(`/reader/${article.id}`)
     } catch (error: any) {
-      toast(error?.response?.data?.detail ?? 'Không tạo được bài đọc', 'error')
+      toast(error?.response?.data?.detail ?? 'The reading could not be created.', 'error')
     } finally {
       setCreating(false)
     }
   }
 
   const remove = (id: string, name: string) => confirm({
-    title: 'Xóa bài đọc?',
-    message: `“${name}” sẽ bị xóa vĩnh viễn.`,
+    title: 'Delete this reading?',
+    message: `“${name}” will be removed permanently.`,
     variant: 'danger',
-    confirmText: 'Xóa',
+    confirmText: 'Delete',
     onConfirm: () => {
-      void deleteArticle(id).then(() => articlesQuery.refresh()).catch(() => toast('Không xóa được bài đọc', 'error'))
+      void deleteArticle(id).then(() => articlesQuery.refresh()).catch(() => toast('The reading could not be deleted.', 'error'))
     },
   })
 
@@ -85,9 +89,9 @@ export default function ReaderListPage() {
     try {
       const result = await queueUntranslatedArticles()
       await articlesQuery.refresh()
-      toast(result.queued_count ? `Đã đưa ${result.queued_count} bài vào hàng dịch local.` : 'Không có bài mới cần dịch.', 'success')
+      toast(result.queued_count ? `Queued ${result.queued_count} readings for local translation.` : 'There are no new readings to translate.', 'success')
     } catch (error: any) {
-      toast(error?.response?.data?.detail ?? 'Không thể tạo hàng dịch', 'error')
+      toast(error?.response?.data?.detail ?? 'The translation queue could not be created.', 'error')
     } finally {
       setQueuingAll(false)
     }
@@ -98,9 +102,9 @@ export default function ReaderListPage() {
     try {
       await queueArticleTranslation(id, force)
       await articlesQuery.refresh()
-      toast(force ? 'Đã yêu cầu dịch lại bài này.' : 'Đã đưa bài vào hàng dịch local.', 'success')
+      toast(force ? 'Requested a new translation for this reading.' : 'Queued this reading for local translation.', 'success')
     } catch (error: any) {
-      toast(error?.response?.data?.detail ?? 'Không thể đưa bài vào hàng dịch', 'error')
+      toast(error?.response?.data?.detail ?? 'This reading could not be queued for translation.', 'error')
     } finally {
       setQueuingArticle(null)
     }
@@ -113,7 +117,7 @@ export default function ReaderListPage() {
       setPairingToken(worker.token)
       await workersQuery.refresh()
     } catch (error: any) {
-      toast(error?.response?.data?.detail ?? 'Không tạo được mã kết nối máy local', 'error')
+      toast(error?.response?.data?.detail ?? 'A local-worker pairing code could not be created.', 'error')
     } finally {
       setPairing(false)
     }
@@ -121,7 +125,7 @@ export default function ReaderListPage() {
 
   const openWorkerPairing = () => {
     if (workersQuery.data?.length) {
-      toast('Máy này đã được ghép. Hãy chạy start_worker.bat khi muốn bật công tắc dịch.', 'success')
+      toast('This device is already paired. Run start_worker.bat when you want to enable translation.', 'success')
       return
     }
     void pairWorker()
@@ -135,33 +139,33 @@ export default function ReaderListPage() {
     <div className="reader-discovery mx-auto max-w-5xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-white">📖 Tech Reader</h1>
-          <p className="mt-1 text-sm text-slate-400">Đọc, tra từ và lưu thẻ ngay trong ngữ cảnh.</p>
+          <h1 className="text-2xl font-black text-white">Reading library</h1>
+          <p className="mt-1 text-sm text-slate-400">Read, look up language, and save context without leaving the idea.</p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
           <button onClick={openWorkerPairing} disabled={pairing} className={`rounded-xl border px-3 py-2 text-sm font-bold ${workerOnline ? 'border-emerald-300/25 bg-emerald-400/10 text-emerald-200' : 'border-white/10 bg-white/[.04] text-slate-300'}`}>
             <span className={`mr-1.5 inline-block h-2 w-2 rounded-full ${workerOnline ? 'bg-emerald-300' : 'bg-slate-500'}`} />
-            {pairing ? 'Đang tạo mã…' : workerOnline ? 'Máy dịch đang bật' : 'Kết nối máy dịch'}
+            {pairing ? 'Creating connection…' : workerOnline ? 'Translation worker online' : 'Connect translation worker'}
           </button>
           {view === 'mine' && <>
-            <button onClick={() => void queueAll()} disabled={queuingAll || articles.length === 0} className="rounded-xl border border-violet-300/25 bg-violet-400/10 px-3 py-2 text-sm font-bold text-violet-200 disabled:opacity-50">{queuingAll ? 'Đang xếp hàng…' : '⚡ Dịch tất cả bài mới'}</button>
-            <button onClick={() => setShow(true)} className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-200">+ Bài mới</button>
+            <button onClick={() => void queueAll()} disabled={queuingAll || articles.length === 0} className="rounded-xl border border-violet-300/25 bg-violet-400/10 px-3 py-2 text-sm font-bold text-violet-200 disabled:opacity-50">{queuingAll ? 'Queueing…' : 'Translate new readings'}</button>
+            <button onClick={() => setShow(true)} className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-200">New reading</button>
           </>}
         </div>
       </div>
 
-      <p className="-mt-3 mb-6 text-xs text-slate-500">Bản dịch được worker local tạo ở nền và lưu kín trong tài khoản; nội dung tiếng Anh vẫn là màn hình đọc chính.</p>
+      <p className="-mt-3 mb-6 text-xs text-slate-500">Translations run privately in the background. The original English reading remains the primary surface.</p>
 
       {view === 'mine' && articles.length > 0 && <Link to={`/reader/${articles[0].id}`} className="reader-discovery__continue">
         <span>Continue reading</span><strong>{articles[0].title}</strong><small>{articles[0].word_count} words · open your companion dock</small><b>Resume →</b>
       </Link>}
 
       <div className="mb-5 flex gap-1 rounded-xl bg-black/30 p-1">
-        {([['mine', 'Bài của tôi'], ['catalog', 'Thư viện theo cấp độ']] as ['mine' | 'catalog', string][]).map(([value, label]) => <button key={value} onClick={() => setView(value)} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold transition ${view === value ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-slate-200'}`}>{label}</button>)}
+        {([['mine', 'My readings'], ['catalog', 'Level library']] as ['mine' | 'catalog', string][]).map(([value, label]) => <button key={value} onClick={() => setView(value)} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold transition ${view === value ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-slate-200'}`}>{label}</button>)}
       </div>
 
       {view === 'catalog' ? <CatalogTab onAdopted={() => void articlesQuery.refresh()} /> : articlesQuery.loading ? <div className="grid gap-3 sm:grid-cols-2">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-24 animate-pulse rounded-2xl bg-white/[.05]" />)}</div>
-        : articles.length === 0 ? <DailyStatusHero kind="reader" primaryTo="/reader" primaryLabel="Thêm bài đọc" onPrimary={() => setShow(true)} secondaryTo="/" secondaryLabel="Về trang chủ" />
+        : articles.length === 0 ? <DailyStatusHero kind="reader" primaryTo="/reader" primaryLabel="Add a reading" onPrimary={() => setShow(true)} secondaryTo="/" secondaryLabel="Return to Today" />
           : <div className="reader-discovery__library grid gap-3 sm:grid-cols-2">{articles.map(article => {
             const translation = article.translation_status ? TRANSLATION_BADGES[article.translation_status] : null
             return <div key={article.id} className="reader-discovery__card group relative rounded-2xl border border-white/[.07] bg-white/[.03] p-4 hover:border-cyan-300/20">
@@ -175,19 +179,19 @@ export default function ReaderListPage() {
 
       {show && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setShow(false)}>
         <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl" onClick={event => event.stopPropagation()}>
-          <h2 className="mb-4 text-lg font-black text-white">Bài đọc mới</h2>
+          <h2 className="mb-4 text-lg font-black text-white">New reading</h2>
           <div className="mb-4 flex gap-1 rounded-xl bg-black/30 p-1">
-            {([['paste', '📋 Dán text'], ['url', '🔗 URL']] as [Tab, string][]).map(([value, label]) => <button key={value} onClick={() => setTab(value)} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${tab === value ? 'bg-white/10 text-white' : 'text-slate-400'}`}>{label}</button>)}
+            {([['paste', 'Paste text'], ['url', 'URL']] as [Tab, string][]).map(([value, label]) => <button key={value} onClick={() => setTab(value)} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${tab === value ? 'bg-white/10 text-white' : 'text-slate-400'}`}>{label}</button>)}
           </div>
-          <input value={title} onChange={event => setTitle(event.target.value)} placeholder="Tiêu đề (tùy chọn)" className="mb-3 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
+          <input value={title} onChange={event => setTitle(event.target.value)} placeholder="Title (optional)" className="mb-3 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
           {tab === 'paste' && <>
-            <textarea value={text} onChange={event => setText(stripTranscriptTimestamps(event.target.value))} rows={8} placeholder="Dán bài báo, JD, tài liệu..." className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
-            <p className="mt-2 text-xs text-slate-500">Timestamp video dạng 00:00 sẽ tự được bỏ.</p>
+            <textarea value={text} onChange={event => setText(stripTranscriptTimestamps(event.target.value))} rows={8} placeholder="Paste an article, job description, or document…" className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
+            <p className="mt-2 text-xs text-slate-500">Video timestamps such as 00:00 are removed automatically.</p>
           </>}
           {tab === 'url' && <input value={url} onChange={event => setUrl(event.target.value)} placeholder="https://example.com/..." className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500" />}
           <div className="mt-4 flex justify-end gap-2">
-            <button onClick={() => setShow(false)} className="rounded-xl px-4 py-2 text-sm font-bold text-slate-400">Hủy</button>
-            <button onClick={() => void create()} disabled={creating || (tab === 'paste' ? !text.trim() : !url.trim())} className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-200 disabled:opacity-50">{creating ? 'Đang xử lý…' : 'Tạo bài đọc'}</button>
+            <button onClick={() => setShow(false)} className="rounded-xl px-4 py-2 text-sm font-bold text-slate-400">Cancel</button>
+            <button onClick={() => void create()} disabled={creating || (tab === 'paste' ? !text.trim() : !url.trim())} className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-200 disabled:opacity-50">{creating ? 'Creating…' : 'Create reading'}</button>
           </div>
         </div>
       </div>}

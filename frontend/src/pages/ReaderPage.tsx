@@ -14,6 +14,7 @@ import { sentenceParts, splitSentences, stripTranscriptTimestamps } from '../uti
 import { useActivityTimer } from '../hooks/useActivityTimer'
 import '../components/core/CoreExperiences.css'
 import ReadingCompanionDock from '../components/reader/ReadingCompanionDock'
+import { useOrbitalShell } from '../components/shell/OrbitalShellContext'
 
 type SentenceTranslation = {
   source: string
@@ -96,7 +97,7 @@ function TranslationHint({ translated }: { translated: string | null }) {
       <button
         type="button"
         className="inline-flex h-5 w-5 translate-y-0.5 items-center justify-center rounded-full border border-emerald-300/25 bg-emerald-400/10 text-emerald-200 transition hover:border-emerald-200/50 hover:bg-emerald-400/20 focus:outline-none focus:ring-2 focus:ring-emerald-300/60"
-        aria-label="Xem bản dịch của câu này"
+        aria-label="Show this sentence translation"
       >
         <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M9.09 9a3 3 0 1 1 5.83 1c-.83.55-1.42 1.03-1.42 2.25v.5" />
@@ -168,7 +169,7 @@ const cleanToken = (token: string) => token.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g
 const shortVietnameseMeaning = (content: string) => (
   content.split('\n').find(line => line.trim().startsWith('-'))?.replace(/^\s*-\s*/, '')
   ?? content.split('\n').find(line => line.trim() && !line.trim().startsWith('*') && !line.trim().startsWith('='))?.trim()
-  ?? 'Chưa có nghĩa Việt'
+  ?? 'No saved meaning'
 )
 
 function HighlightItem({ highlight, onRemove, onUpdate }: {
@@ -203,12 +204,12 @@ function HighlightItem({ highlight, onRemove, onUpdate }: {
         </div>
         {editing ? (
           <div className="mt-1.5 flex gap-1.5">
-            <input value={meaning} onChange={event => setMeaning(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void save(); if (event.key === 'Escape') { setMeaning(highlight.meaning ?? ''); setEditing(false) } }} autoFocus className="min-w-0 flex-1 rounded-lg border border-amber-300/30 bg-black/30 px-2 py-1 text-xs text-white outline-none focus:border-amber-200/70" aria-label={`Nghĩa tiếng Việt của ${highlight.word}`} />
-            <button onClick={() => void save()} disabled={saving || !meaning.trim()} className="rounded-lg bg-amber-300/15 px-2 text-xs font-bold text-amber-100 disabled:opacity-50">{saving ? '…' : 'Lưu'}</button>
+            <input value={meaning} onChange={event => setMeaning(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void save(); if (event.key === 'Escape') { setMeaning(highlight.meaning ?? ''); setEditing(false) } }} autoFocus className="min-w-0 flex-1 rounded-lg border border-amber-300/30 bg-black/30 px-2 py-1 text-xs text-white outline-none focus:border-amber-200/70" aria-label={`Meaning for ${highlight.word}`} />
+            <button onClick={() => void save()} disabled={saving || !meaning.trim()} className="rounded-lg bg-amber-300/15 px-2 text-xs font-bold text-amber-100 disabled:opacity-50">{saving ? '…' : 'Save'}</button>
           </div>
-        ) : <div className="mt-0.5 flex items-start gap-1"><p className="min-w-0 flex-1 text-xs leading-4 text-slate-400">{highlight.meaning ?? 'Đang tra nghĩa Việt…'}</p><button onClick={() => setEditing(true)} className="shrink-0 rounded-md px-1 text-xs text-slate-500 opacity-100 transition hover:bg-amber-300/10 hover:text-amber-200 sm:opacity-0 sm:group-hover:opacity-100" aria-label={`Sửa nghĩa ${highlight.word}`}>✎</button></div>}
+        ) : <div className="mt-0.5 flex items-start gap-1"><p className="min-w-0 flex-1 text-xs leading-4 text-slate-400">{highlight.meaning ?? 'Looking up the meaning…'}</p><button onClick={() => setEditing(true)} className="shrink-0 rounded-md px-1 text-xs text-slate-500 opacity-100 transition hover:bg-amber-300/10 hover:text-amber-200 sm:opacity-0 sm:group-hover:opacity-100" aria-label={`Edit meaning for ${highlight.word}`}>Edit</button></div>}
       </div>
-      <button onClick={() => onRemove(highlight.word)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-600 opacity-100 transition hover:bg-rose-400/10 hover:text-rose-300 sm:opacity-0 sm:group-hover:opacity-100" aria-label={`Bỏ đánh dấu ${highlight.word}`}>×</button>
+      <button onClick={() => onRemove(highlight.word)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-600 opacity-100 transition hover:bg-rose-400/10 hover:text-rose-300 sm:opacity-0 sm:group-hover:opacity-100" aria-label={`Remove ${highlight.word}`}>×</button>
     </div>
   )
 }
@@ -223,12 +224,12 @@ function HighlightPanel({ highlights, onRemove, onUpdate, onAddAll, adding }: {
   return (
     <section className="overflow-hidden rounded-2xl border border-amber-300/[.16] bg-slate-950/80 shadow-[0_18px_45px_rgba(0,0,0,.22)] backdrop-blur-xl">
       <div className="flex items-center justify-between border-b border-white/[.07] px-4 py-3">
-        <div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-300/20 bg-amber-300/10 text-sm text-amber-200">✦</span><div><p className="text-[10px] font-black uppercase tracking-[.14em] text-amber-200/85">Từ cần nhớ</p><p className="text-xs font-bold text-slate-200">Đánh dấu trong bài</p></div></div>
+        <div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-300/20 bg-amber-300/10 text-sm text-amber-200">Saved</span><div><p className="text-[10px] font-black uppercase tracking-[.14em] text-amber-200/85">Words to remember</p><p className="text-xs font-bold text-slate-200">Marked in this reading</p></div></div>
         <span className="rounded-full bg-white/[.07] px-2 py-0.5 text-xs font-bold text-slate-400">{highlights.length}</span>
       </div>
       {highlights.length
-        ? <><div className="px-3 pt-3"><button onClick={onAddAll} disabled={adding} className="w-full rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs font-bold text-amber-100 transition hover:bg-amber-300/15 disabled:cursor-not-allowed disabled:opacity-50">{adding ? 'Đang thêm…' : `＋ Thêm ${highlights.length} từ vào bộ thẻ`}</button></div><div className="max-h-[min(55dvh,32rem)] divide-y divide-white/[.06] overflow-y-auto px-2 py-2">{highlights.map(highlight => <HighlightItem key={highlight.id} highlight={highlight} onRemove={onRemove} onUpdate={onUpdate} />)}</div></>
-        : <div className="px-4 py-5"><p className="text-sm font-semibold text-slate-300">Chưa có từ nào</p><p className="mt-1 text-xs leading-5 text-slate-500">Nháy đúp vào một từ trong bài để đánh dấu và lưu nghĩa Việt ngắn gọn ở đây.</p></div>}
+        ? <><div className="px-3 pt-3"><button onClick={onAddAll} disabled={adding} className="w-full rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs font-bold text-amber-100 transition hover:bg-amber-300/15 disabled:cursor-not-allowed disabled:opacity-50">{adding ? 'Adding…' : `Add ${highlights.length} words to cards`}</button></div><div className="max-h-[min(55dvh,32rem)] divide-y divide-white/[.06] overflow-y-auto px-2 py-2">{highlights.map(highlight => <HighlightItem key={highlight.id} highlight={highlight} onRemove={onRemove} onUpdate={onUpdate} />)}</div></>
+        : <div className="px-4 py-5"><p className="text-sm font-semibold text-slate-300">No saved words</p><p className="mt-1 text-xs leading-5 text-slate-500">Double-click a word in the article to save it with a short meaning.</p></div>}
     </section>
   )
 }
@@ -257,14 +258,14 @@ function VoicePicker({
     setOpen(false)
   }
 
-  const selectedName = selectedVoice?.name ?? 'Mặc định của trình duyệt'
-  const selectedLanguage = selectedVoice?.lang ?? 'Tự động chọn'
+  const selectedName = selectedVoice?.name ?? 'Browser default'
+  const selectedLanguage = selectedVoice?.lang ?? 'Automatic selection'
 
   return (
     <div className="relative">
       <div className="mb-2 flex items-center justify-between px-1">
-        <label className="text-[10px] font-black uppercase tracking-[.12em] text-slate-500">Giọng đọc</label>
-        {voices.length > 0 && <span className="text-[10px] font-bold text-cyan-300/75">{voices.length} giọng</span>}
+        <label className="text-[10px] font-black uppercase tracking-[.12em] text-slate-500">Voice</label>
+        {voices.length > 0 && <span className="text-[10px] font-bold text-cyan-300/75">{voices.length} voices</span>}
       </div>
       <button
         type="button"
@@ -274,7 +275,7 @@ function VoicePicker({
         className={`flex w-full items-center gap-2 rounded-xl border px-2.5 py-2.5 text-left transition focus:outline-none focus:ring-2 focus:ring-cyan-300/35 ${
           open ? 'border-cyan-300/50 bg-cyan-400/[.09] shadow-[0_0_0_3px_rgba(34,211,238,.06)]' : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[.045]'
         }`}
-        title="Chọn giọng đọc có sẵn trên thiết bị"
+        title="Choose a voice available on this device"
       >
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-400/10 text-cyan-200" aria-hidden="true">◖</span>
         <span className="min-w-0 flex-1">
@@ -289,10 +290,10 @@ function VoicePicker({
       {open && (
         <div className="absolute left-0 z-30 mt-2 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-cyan-300/20 bg-[#0b1020]/[.98] p-1.5 shadow-[0_24px_56px_rgba(0,0,0,.55)] backdrop-blur-2xl">
           <div className="flex items-center justify-between px-2.5 pb-2 pt-1.5">
-            <p className="text-[10px] font-black uppercase tracking-[.13em] text-slate-500">Chọn giọng đọc</p>
-            <span className="text-[10px] font-medium text-slate-600">Trên thiết bị này</span>
+            <p className="text-[10px] font-black uppercase tracking-[.13em] text-slate-500">Choose a voice</p>
+            <span className="text-[10px] font-medium text-slate-600">On this device</span>
           </div>
-          <div role="listbox" aria-label="Danh sách giọng đọc" className="max-h-64 space-y-1 overflow-y-auto pr-0.5">
+          <div role="listbox" aria-label="Voice list" className="max-h-64 space-y-1 overflow-y-auto pr-0.5">
             <button
               type="button"
               role="option"
@@ -301,8 +302,8 @@ function VoicePicker({
               className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition ${!selectedVoice ? 'bg-cyan-400/[.13] text-cyan-50' : 'text-slate-300 hover:bg-white/[.06]'}`}
             >
               <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-xs ${!selectedVoice ? 'border-cyan-300/30 bg-cyan-400/10 text-cyan-200' : 'border-white/10 bg-white/[.04] text-slate-500'}`}>A</span>
-              <span className="min-w-0 flex-1"><span className="block text-xs font-bold">Mặc định của trình duyệt</span><span className="mt-0.5 block text-[10px] text-slate-500">Tự động chọn giọng phù hợp</span></span>
-              {!selectedVoice && <span className="text-cyan-200" aria-label="Đang chọn">✓</span>}
+              <span className="min-w-0 flex-1"><span className="block text-xs font-bold">Browser default</span><span className="mt-0.5 block text-[10px] text-slate-500">Choose a suitable voice automatically</span></span>
+              {!selectedVoice && <span className="text-cyan-200" aria-label="Selected">✓</span>}
             </button>
             {voices.map(voice => {
               const isSelected = selectedVoice?.voiceURI === voice.voiceURI
@@ -317,20 +318,21 @@ function VoicePicker({
                 >
                   <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-xs ${isSelected ? 'border-cyan-300/30 bg-cyan-400/10 text-cyan-200' : 'border-white/10 bg-white/[.04] text-slate-500'}`} aria-hidden="true">◖</span>
                   <span className="min-w-0 flex-1"><span className="block truncate text-xs font-bold">{voice.name}</span><span className="mt-0.5 block text-[10px] font-medium text-slate-500">{voice.lang}</span></span>
-                  {isSelected && <span className="text-cyan-200" aria-label="Đang chọn">✓</span>}
+                  {isSelected && <span className="text-cyan-200" aria-label="Selected">✓</span>}
                 </button>
               )
             })}
           </div>
-          <p className="border-t border-white/[.06] px-2.5 pb-1 pt-2 text-[10px] leading-4 text-slate-600">Danh sách giọng do trình duyệt và thiết bị của bạn cung cấp.</p>
+          <p className="border-t border-white/[.06] px-2.5 pb-1 pt-2 text-[10px] leading-4 text-slate-600">This list is provided by your browser and device.</p>
         </div>
       )}
-      {!voices.length && <p className="mt-1.5 px-1 text-[10px] leading-4 text-slate-600">Đang tải các giọng có sẵn…</p>}
+      {!voices.length && <p className="mt-1.5 px-1 text-[10px] leading-4 text-slate-600">Loading available voices…</p>}
     </div>
   )
 }
 
 export default function ReaderPage() {
+  const { setHeader } = useOrbitalShell()
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
   const { toast } = useNotification()
@@ -348,6 +350,8 @@ export default function ReaderPage() {
   const [tts, setTts] = useState({ playing: false, sentence: -1 })
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
   const [voiceURI, setVoiceURI] = useState(() => window.localStorage.getItem(VOICE_STORAGE_KEY) ?? '')
+
+  useEffect(() => { setHeader({ eyebrow: 'FOCUS READER', title: 'Reading focus', streak: null }) }, [setHeader])
   const speechRun = useRef(0)
   const wordClickTimer = useRef<ReturnType<typeof window.setTimeout> | null>(null)
   useActivityTimer({ event_type: 'duration', skill: 'reading', source_type: 'article', source_id: id })
@@ -551,7 +555,7 @@ export default function ReaderPage() {
       const saved = await saveArticleHighlight(article.id, word, meaning)
       setHighlights(current => current.map(highlight => highlight.word === word ? saved : highlight))
     } catch (error: any) {
-      toast(error?.response?.data?.detail ?? 'Không thể cập nhật nghĩa tiếng Việt', 'error')
+      toast(error?.response?.data?.detail ?? 'The saved meaning could not be updated.', 'error')
       throw error
     }
   }
@@ -571,10 +575,10 @@ export default function ReaderPage() {
         }
       }))
       const result = await addArticleHighlightsToDeck(article.id, cards)
-      const details = result.anki_matches ? `, ${result.anki_matches} từ dùng dữ liệu Anki` : ''
-      toast(`Đã thêm ${result.cards_created} thẻ${result.cards_skipped ? `, bỏ qua ${result.cards_skipped} thẻ đã có` : ''}${details}`, 'success')
+      const details = result.anki_matches ? `, ${result.anki_matches} matched Anki data` : ''
+      toast(`Added ${result.cards_created} cards${result.cards_skipped ? `, skipped ${result.cards_skipped} existing cards` : ''}${details}`, 'success')
     } catch (error: any) {
-      toast(error?.response?.data?.detail ?? 'Không thể thêm từ vào bộ thẻ', 'error')
+      toast(error?.response?.data?.detail ?? 'The words could not be added to cards.', 'error')
     } finally {
       setAddingHighlights(false)
     }
@@ -586,11 +590,11 @@ export default function ReaderPage() {
   return (
     <div className="reader-focus mx-auto max-w-6xl px-4 py-8 pb-40 sm:px-6">
       <header className="reader-focus__header mx-auto max-w-3xl lg:ml-60">
-        <Link to="/reader" className="text-sm text-slate-400 hover:text-cyan-300">← Danh sách bài đọc</Link>
+        <Link to="/reader" className="text-sm text-slate-400 hover:text-cyan-300">← Reading library</Link>
         <h1 className="mt-2 text-2xl font-black text-white">{article.title}</h1>
-        {article.level && article.level > (user?.preferred_level ?? 1) && <p className="mt-2 inline-flex rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-[11px] font-bold text-amber-100">Bài này ở mức {READING_LEVEL_LABELS[article.level]} — cao hơn mức bạn đang chọn</p>}
+        {article.level && article.level > (user?.preferred_level ?? 1) && <p className="mt-2 inline-flex rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-[11px] font-bold text-amber-100">This reading is {READING_LEVEL_LABELS[article.level]} — above your selected level</p>}
         <p className="mb-6 mt-1 text-xs text-slate-500">
-          {article.word_count} từ {article.source_url && <>· <a href={article.source_url} target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline">nguồn</a></>}
+          {article.word_count} words {article.source_url && <>· <a href={article.source_url} target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline">source</a></>}
         </p>
       </header>
 
@@ -599,36 +603,36 @@ export default function ReaderPage() {
           <section className="rounded-2xl border border-cyan-300/[.12] bg-slate-950/70 p-3 shadow-[0_18px_45px_rgba(0,0,0,0.18)] backdrop-blur-xl">
             <div className="mb-3 flex items-center gap-2 px-1">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-400/10 text-sm text-cyan-300">◖</span>
-              <div><p className="text-[10px] font-black uppercase tracking-[.14em] text-cyan-300/80">Audio reader</p><p className="text-xs font-bold text-slate-200">Nghe bài viết</p></div>
+              <div><p className="text-[10px] font-black uppercase tracking-[.14em] text-cyan-300/80">Audio reader</p><p className="text-xs font-bold text-slate-200">Listen to this reading</p></div>
             </div>
             {tts.playing
-              ? <button onClick={stopSpeaking} className="w-full rounded-xl border border-rose-300/20 bg-rose-400/10 px-3 py-2.5 text-sm font-bold text-rose-200 transition hover:bg-rose-400/15">⏹ Dừng đọc</button>
-              : <button onClick={() => speakFrom(0)} className="w-full rounded-xl border border-cyan-300/20 bg-cyan-400/10 px-3 py-2.5 text-sm font-bold text-cyan-200 transition hover:bg-cyan-400/15">▶ Đọc từ đầu</button>}
+              ? <button onClick={stopSpeaking} className="w-full rounded-xl border border-rose-300/20 bg-rose-400/10 px-3 py-2.5 text-sm font-bold text-rose-200 transition hover:bg-rose-400/15">Stop reading</button>
+              : <button onClick={() => speakFrom(0)} className="w-full rounded-xl border border-cyan-300/20 bg-cyan-400/10 px-3 py-2.5 text-sm font-bold text-cyan-200 transition hover:bg-cyan-400/15">Read from start</button>}
             <div className="mt-3 border-t border-white/[.07] pt-3">
-              <p className="mb-2 px-1 text-[10px] font-black uppercase tracking-[.12em] text-slate-500">Tốc độ đọc</p>
+              <p className="mb-2 px-1 text-[10px] font-black uppercase tracking-[.12em] text-slate-500">Reading speed</p>
               <div className="grid grid-cols-3 gap-1 rounded-xl bg-black/20 p-1">
                 {[.75, 1, 1.25].map(value => <button key={value} onClick={() => setRate(value)} className={`rounded-lg px-1 py-2 text-xs font-bold transition ${rate === value ? 'bg-white/[.12] text-white shadow-sm' : 'text-slate-500 hover:bg-white/[.05] hover:text-slate-300'}`}>{value}x</button>)}
               </div>
             </div>
             {hasTranslation && <div className="mt-3 border-t border-white/[.07] pt-3">
               <div className="mb-2 flex items-center justify-between px-1">
-                <p className="text-[10px] font-black uppercase tracking-[.12em] text-emerald-300/85">Bản dịch</p>
-                <span className="rounded-full bg-emerald-400/10 px-1.5 py-0.5 text-[9px] font-bold text-emerald-300">Sẵn sàng</span>
+                <p className="text-[10px] font-black uppercase tracking-[.12em] text-emerald-300/85">Translation</p>
+                <span className="rounded-full bg-emerald-400/10 px-1.5 py-0.5 text-[9px] font-bold text-emerald-300">Ready</span>
               </div>
               <div className="grid grid-cols-3 gap-1 rounded-xl bg-black/20 p-1">
                 {([
                   ['original', 'Anh'],
-                  ['bilingual', 'Anh–Việt'],
-                  ['translated', 'Việt'],
+                  ['bilingual', 'English–Vietnamese'],
+                  ['translated', 'Vietnamese'],
                 ] as const).map(([value, label]) => <button key={value} onClick={() => setReaderLanguage(value)} className={`rounded-lg px-1 py-2 text-[10px] font-bold transition ${readerLanguage === value ? 'bg-emerald-400/15 text-emerald-100 shadow-sm' : 'text-slate-500 hover:bg-white/[.05] hover:text-slate-300'}`}>{label}</button>)}
               </div>
-              <p className="mt-1.5 px-1 text-[10px] leading-4 text-slate-600">Rê chuột biểu tượng cuối câu để xem bản dịch.</p>
+              <p className="mt-1.5 px-1 text-[10px] leading-4 text-slate-600">Use the marker at the end of a sentence to view its translation.</p>
             </div>}
             <div className="mt-3 border-t border-white/[.07] pt-3">
               <VoicePicker voices={availableVoices} selectedVoice={selectedVoice} onSelect={selectVoice} />
             </div>
             <Link to={`/shadowing?article=${id}`} className="mt-3 block rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-3 py-2 text-center text-xs font-bold text-cyan-200 hover:bg-cyan-400/20">🎤 Shadow</Link>
-            <p className="mt-3 rounded-xl bg-white/[.035] px-2.5 py-2 text-[11px] leading-4 text-slate-500">{tts.playing ? `Đang đọc câu ${tts.sentence + 1}/${sentences.length}` : 'Bấm một từ để tra nghĩa; bôi đen cụm/câu để lưu thành thẻ.'}</p>
+            <p className="mt-3 rounded-xl bg-white/[.035] px-2.5 py-2 text-[11px] leading-4 text-slate-500">{tts.playing ? `Reading sentence ${tts.sentence + 1}/${sentences.length}` : 'Select a word to look it up; select a phrase or sentence to save it as a card.'}</p>
           </section>
           <div className="mt-4">
             <HighlightPanel highlights={highlights} onRemove={removeHighlight} onUpdate={updateHighlightMeaning} onAddAll={addAllHighlights} adding={addingHighlights} />
@@ -638,11 +642,11 @@ export default function ReaderPage() {
         <article onMouseUp={() => window.setTimeout(saveSelectedPhrase)} className="reader-focus__article min-w-0 max-w-3xl space-y-4 text-[17px] leading-8 text-slate-200">
           {readerLanguage === 'original' && (
             <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-muted">
-              <span className="inline-flex items-center gap-1.5"><i className="h-3 w-3 rounded-sm bg-accent-2/40" />đang học</span>
-              <span className="inline-flex items-center gap-1.5"><i className="h-3 w-3 rounded-sm bg-correct/40" />đã thuộc</span>
-              <span className="inline-flex items-center gap-1.5"><i className="h-3 w-3 rounded-sm bg-warn/50" />đang yếu</span>
+              <span className="inline-flex items-center gap-1.5"><i className="h-3 w-3 rounded-sm bg-accent-2/40" />learning</span>
+              <span className="inline-flex items-center gap-1.5"><i className="h-3 w-3 rounded-sm bg-correct/40" />mastered</span>
+              <span className="inline-flex items-center gap-1.5"><i className="h-3 w-3 rounded-sm bg-warn/50" />needs review</span>
               <button onClick={() => { const next = !highlightOn; setHighlightOn(next); localStorage.setItem('flashie:reader-highlight', next ? 'on' : 'off') }} className="min-h-[36px] rounded-lg border border-subtle bg-surface-1 px-2 py-1 font-bold">
-                {highlightOn ? 'Tắt tô sáng' : 'Bật tô sáng'}
+                {highlightOn ? 'Hide highlights' : 'Show highlights'}
               </button>
             </div>
           )}

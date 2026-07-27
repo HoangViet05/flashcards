@@ -14,7 +14,7 @@ export default function DictationStep({ daily, onCorrectStreak }: Props) {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <p className="mb-3 text-sm font-medium text-muted">Nghe &amp; điền · còn {queue.length} từ</p>
+      <p className="mb-3 text-sm font-medium text-muted">Listen and type · {queue.length} remaining</p>
       <ExerciseCard
         key={`${word.card_id}-${daily.presented}`}
         card={word.card}

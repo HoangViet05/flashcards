@@ -1,0 +1,189 @@
+{
+  "batch": "R3-R5",
+  "proofMode": false,
+  "browser": "webkit",
+  "surfaces": {
+    "study:dark-desktop:webkit": {
+      "route": "/daily",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\dark-desktop\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\dark-desktop\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\dark-desktop\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "reader:dark-desktop:webkit": {
+      "route": "/reader/article-qa",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\dark-desktop\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\dark-desktop\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\dark-desktop\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "shadowing:dark-desktop:webkit": {
+      "route": "/shadowing",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\dark-desktop\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\dark-desktop\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\dark-desktop\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "study:light-desktop:webkit": {
+      "route": "/daily",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\light-desktop\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\light-desktop\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\light-desktop\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "reader:light-desktop:webkit": {
+      "route": "/reader/article-qa",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\light-desktop\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\light-desktop\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\light-desktop\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "shadowing:light-desktop:webkit": {
+      "route": "/shadowing",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\light-desktop\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\light-desktop\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\light-desktop\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "study:dark-desktop-reduced-motion:webkit": {
+      "route": "/daily",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\dark-desktop-reduced-motion\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\dark-desktop-reduced-motion\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\dark-desktop-reduced-motion\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "reader:dark-desktop-reduced-motion:webkit": {
+      "route": "/reader/article-qa",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\dark-desktop-reduced-motion\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\dark-desktop-reduced-motion\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\dark-desktop-reduced-motion\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "shadowing:dark-desktop-reduced-motion:webkit": {
+      "route": "/shadowing",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\dark-desktop-reduced-motion\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\dark-desktop-reduced-motion\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\dark-desktop-reduced-motion\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "study:dark-mobile:webkit": {
+      "route": "/daily",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\dark-mobile\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\dark-mobile\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\dark-mobile\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "reader:dark-mobile:webkit": {
+      "route": "/reader/article-qa",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\dark-mobile\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\dark-mobile\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\dark-mobile\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "shadowing:dark-mobile:webkit": {
+      "route": "/shadowing",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\dark-mobile\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\dark-mobile\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\dark-mobile\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "study:light-mobile:webkit": {
+      "route": "/daily",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\light-mobile\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\light-mobile\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\light-mobile\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "reader:light-mobile:webkit": {
+      "route": "/reader/article-qa",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\light-mobile\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\light-mobile\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\light-mobile\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "shadowing:light-mobile:webkit": {
+      "route": "/shadowing",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\light-mobile\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\light-mobile\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\light-mobile\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "study:compact-320:webkit": {
+      "route": "/daily",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\compact-320\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\compact-320\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\study\\compact-320\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "reader:compact-320:webkit": {
+      "route": "/reader/article-qa",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\compact-320\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\compact-320\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\reader\\compact-320\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    },
+    "shadowing:compact-320:webkit": {
+      "route": "/shadowing",
+      "implementation": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\compact-320\\webkit\\implementation.png",
+      "reference": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\compact-320\\webkit\\reference.png",
+      "contactSheet": "C:\\D_old\\Projects\\flashcards\\artifacts\\visual-qa\\r3-r5-core-batch-v2\\shadowing\\compact-320\\webkit\\contact-sheet.png",
+      "layout": "PASS",
+      "console": "PASS",
+      "overflow": "PASS",
+      "visualAcceptance": "OWNER_REVIEW_REQUIRED"
+    }
+  },
+  "status": "OWNER_REVIEW_REQUIRED",
+  "reason": "All captured production routes have automated layout evidence; visual acceptance is intentionally not inferred from a selector check."
+}

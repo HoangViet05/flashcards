@@ -8,8 +8,8 @@ interface Props {
 }
 
 const SIDES: { name: QueueName; step: ExerciseStep; label: string }[] = [
-  { name: 'left', step: 'vi_en', label: 'Việt → Anh' },
-  { name: 'right', step: 'en_vi', label: 'Anh → Việt' },
+  { name: 'left', step: 'vi_en', label: 'Vietnamese → English' },
+  { name: 'right', step: 'en_vi', label: 'English → Vietnamese' },
 ]
 
 /** Hai panel cạnh nhau trên màn rộng. Dưới `md` chỉ hiện một panel: bên trái
@@ -24,7 +24,7 @@ export default function SplitStep({ daily, onCorrectStreak }: Props) {
         return (
           <div key={name} className={`${hiddenOnMobile ? 'hidden' : ''} md:block`}>
             <p className="mb-2 text-center text-xs font-black uppercase tracking-wider text-muted">
-              {label} · còn {queue.length}
+              {label} · {queue.length} remaining
             </p>
             {queue.length ? (
               <ExerciseCard
@@ -35,7 +35,7 @@ export default function SplitStep({ daily, onCorrectStreak }: Props) {
                 onCorrectStreak={onCorrectStreak}
               />
             ) : (
-              <p className="text-center text-sm font-bold text-correct">Xong bên này</p>
+              <p className="text-center text-sm font-bold text-correct">This side is complete</p>
             )}
           </div>
         )

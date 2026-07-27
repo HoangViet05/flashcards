@@ -44,7 +44,7 @@ Ba vấn đề chủ sản phẩm nêu — "quá ít/khô khan", "phản hồi t
 | Chất chuyển động | Hai tầng: **A · điềm đạm** cho thao tác lặp lại, **B · nảy** cho khoảnh khắc thưởng | Chỉ A thì vẫn khô; chỉ B thì lặp vài chục lần mỗi buổi sẽ thành ồn |
 | Kỹ thuật | **CSS token + Web Animations API** | Thư viện `motion` tốn ~34 KB gzip và tạo hai hệ chuyển động song song — đúng cái đang muốn sửa |
 | Kênh phản hồi | Chuyển động + **âm thanh** + **rung** | Chuẩn hoá toast bị loại khỏi phạm vi đợt này |
-| Nguồn âm thanh | **Tổng hợp WebAudio**, không đóng gói file | 0 KB asset, không vướng bản quyền, chạy offline, chỉnh bằng code |
+| Nguồn âm thanh | **Dùng lại bộ wav đã có** trong `public/audio/`, thêm `levelup.wav` bằng script đã có | Bộ tổng hợp WebAudio từng được đề xuất là thừa — xem "Sửa đổi sau khi rà code" |
 | Mục đích dashboard | Động lực + chẩn đoán + lịch sử | "Kho từ của tôi" bị loại |
 | Chẩn đoán | "Từ nào tôi hay quên nhất" + "Tôi có đang học đều không" | "Kỹ năng nào tụt lại" và "trí nhớ lên hay xuống" bị loại |
 | Lịch sử | Heatmap bấm được **+** panel chi tiết bên cạnh | |
@@ -52,6 +52,27 @@ Ba vấn đề chủ sản phẩm nêu — "quá ít/khô khan", "phản hồi t
 
 Chủ sản phẩm chưa nêu được "vài trải nghiệm khác" nên phần đó **nằm ngoài phạm
 vi** đợt này; sẽ bổ sung sau khi dùng thử.
+
+## Sửa đổi sau khi rà code (2026-07-27, đã chốt)
+
+Ba giả định trong bản đầu của spec này sai. Bản hiện tại đã sửa; ghi lại ở đây
+để không ai khôi phục lại hướng cũ.
+
+1. **Không xây bộ tổng hợp WebAudio.** `frontend/public/audio/` đã có
+   `correct.wav`, `wrong.wav`, `combo.wav`, `complete.wav`, `checkpoint.wav`,
+   `ui.wav` (tạo 2026-07-26), kèm `ATTRIBUTION.md` xác nhận là synthesis gốc,
+   MIT, và script sinh ra chúng ở `frontend/scripts/generate_original_audio.py`.
+   `AudioProvider.feedback()` đã phát chúng; `ExerciseCard` đã gọi. Viết engine
+   mới sẽ vứt bỏ tài sản có sẵn để đổi lấy chất tiếng kém hơn.
+2. **Không thêm setting mới, nhưng cũng không nối vào `silent`/`reduceEffects`.**
+   `UserPreference` đã có sẵn `sfx_enabled`, `haptic_enabled`, `feedback_enabled`,
+   `sfx_volume`, `master_volume`. `AudioProvider` đang bỏ qua toàn bộ và hardcode
+   `volume = .28`. Phải nối vào đúng các trường này.
+3. **`/api/review/heatmap` không dùng được cho vùng Nhịp học.** Endpoint đó chỉ
+   đếm `ReviewLog`, trong khi `streak` tính theo `learning_events ∪ ReviewLog`.
+   Dùng nó sẽ khiến hai con số trên cùng một trang mâu thuẫn: ngày chỉ đọc bài
+   hoặc chỉ shadowing hiện là ngày nghỉ trong khi streak vẫn tính. Cần endpoint
+   `GET /api/progress/calendar` riêng.
 
 ## Kiến trúc
 
@@ -231,25 +252,32 @@ Các nơi gọi cần chuyển sang dùng hook: `FlipStep`, `ReviewStep`, `Dicta
 
 ## 2.3 Âm thanh
 
-Một `AudioContext` dùng chung, `OscillatorNode` + `GainNode`, envelope ADSR
-ngắn. Không có file audio nào được thêm vào repo.
+Dùng lại bộ wav sẵn có trong `frontend/public/audio/`. Ánh xạ sự kiện → asset:
 
-| Sự kiện | Nốt | Thời lượng | Dạng sóng |
-|---|---|---|---|
-| `correct` | C6 → E6 | 90ms | sine |
-| `wrong` | A3 | 140ms | triangle |
-| `levelUp` | C6 – E6 – G6 rải | 320ms | sine |
-| `sessionComplete` | C6 – E6 – G6 – C7 | 520ms | sine |
+| Sự kiện | Asset | Trạng thái |
+|---|---|---|
+| `correct` | `correct.wav` | đã có |
+| `wrong` | `wrong.wav` | đã có |
+| `saved` | `ui.wav` | đã có |
+| `streakKept` (mốc) | `checkpoint.wav` | đã có |
+| `xpGained` (`final: true`) | `combo.wav` | đã có |
+| `sessionComplete` | `complete.wav` | đã có |
+| `levelUp` | `levelup.wav` | **cần sinh mới** |
 
-`wrong` cố ý trầm và ngắn. Âm báo sai gay gắt sẽ khiến người học ngại trả lời.
+`levelup.wav` sinh bằng chính `frontend/scripts/generate_original_audio.py` —
+thêm một dòng `effect(...)` dùng cùng hàm synthesis đã có, rồi cập nhật bảng
+SHA-256 trong `ATTRIBUTION.md`. Không thêm asset từ nguồn ngoài.
 
-Đánh đổi đã chấp nhận: âm sắc điện tử chứ không phải nhạc cụ thật. Với âm báo
-dưới 300ms thì khác biệt gần như không nhận ra, và đổi lại là 0 KB asset.
+`xpGained` giữa buổi **không phát tiếng** — chỉ có chuyển động và số đếm. Phát
+tiếng ở mỗi câu đúng đã đủ; thêm một tiếng nữa cho XP sẽ thành chồng tiếng.
 
-**Ràng buộc trình duyệt:** `AudioContext` bị chặn cho tới lần tương tác đầu tiên
-của người dùng. Khởi tạo lười ở lần `pointerdown` đầu tiên, không khởi tạo lúc
-app khởi động. Mọi lệnh phát tiếng phải im lặng bỏ qua nếu context chưa mở —
-không ném lỗi, không ghi console.
+Hai lỗi hiện có trong `AudioProvider` phải sửa cùng lúc:
+
+- `play()` hardcode `audio.volume = .28`, bỏ qua `sfx_volume` và `master_volume`
+  trong `UserPreference`. Phải đổi thành `sfx_volume * master_volume`.
+- `new Audio(...)` tạo một đối tượng mới mỗi lần phát. Với nhịp trả lời nhanh sẽ
+  sinh hàng chục đối tượng. Dùng một `Map<string, HTMLAudioElement>` cache theo
+  tên asset, phát lại bằng `currentTime = 0; play()`.
 
 ## 2.4 Rung
 
@@ -265,11 +293,21 @@ có thuộc tính này nhưng ném lỗi khi gọi.
 
 ## 2.5 Công tắc
 
-- Âm thanh nối vào `silent` sẵn có trong `AudioProvider`.
-- Rung nối vào `reduceEffects` trong `AppearanceProvider`.
+`UserPreference` **đã có sẵn** bốn trường cho việc này, nhưng `AudioProvider`
+đang bỏ qua toàn bộ. Nối đúng:
 
-Không thêm setting mới. Nhưng nhãn ở `SettingsPage` phải viết lại: "Silent mode"
-hiện chỉ nói về nhạc nền và phát âm, giờ nó còn tắt cả âm báo học.
+| Trường | Điều khiển |
+|---|---|
+| `sfx_enabled` | Âm báo học (correct/wrong/levelUp/…) |
+| `haptic_enabled` | Rung |
+| `sfx_volume` × `master_volume` | Âm lượng phát |
+| `feedback_enabled` | Toàn bộ phản hồi thưởng, kể cả phần hình |
+
+`silent_mode` giữ nguyên vai trò cũ: tắt tất cả, kể cả nhạc nền. Kiểm tra theo
+thứ tự `silent_mode` → `feedback_enabled` → `sfx_enabled`.
+
+`SettingsPage` hiện **không có control nào** cho bốn trường trên — phải thêm.
+Nhãn "Silent mode" cũng phải viết lại vì hiện chỉ nói về nhạc nền và phát âm.
 
 ---
 
@@ -285,7 +323,11 @@ sang `streak`, `heatmap`, `active_days_28`, `study_minutes_today` và
 
 Cách sửa: quy đổi mốc ngày theo `user.preferences.timezone` (mặc định
 `Asia/Ho_Chi_Minh`) trước khi so sánh, thay vì dùng `datetime.min.time()` với
-`timezone.utc`. Áp cho cả `overview_data` và endpoint `/api/review/heatmap`.
+`timezone.utc`. Áp cho `overview_data`, cho endpoint `/api/review/heatmap` đang
+có (cũng đang gom theo UTC), và cho hai endpoint mới ở 3.2.4 và 3.2.5.
+
+Đặt một hàm dùng chung trong `progression.py` thay vì lặp phép quy đổi ở từng
+chỗ — đây là nguyên nhân gốc khiến lỗi lan ra nhiều chỉ số cùng lúc.
 
 Phải có test bao trường hợp sự kiện lúc 23:30 UTC ngày N (tức 06:30 giờ VN ngày
 N+1) rơi đúng vào ngày N+1.
@@ -305,9 +347,11 @@ Cần thêm hai trường vào `ProgressOverview`: `total_xp` (tổng XP cả 4 
 ### Vùng 2 · Nhịp học
 
 Trả lời "tôi có đang học đều không". Dữ liệu lấy từ
-`GET /api/review/heatmap?days=56` — **endpoint này đã tồn tại** và nhận tới 730
-ngày; `overview_data` chỉ trả 28 ngày nên không dùng được cho việc này. Toàn bộ
-tính toán ở frontend, không thêm endpoint.
+`GET /api/progress/calendar?days=84` (endpoint mới, xem 3.2.5) — **không** dùng
+`/api/review/heatmap`, vì endpoint đó chỉ đếm `ReviewLog` còn `streak` tính theo
+`learning_events ∪ ReviewLog`; hai con số trên cùng một trang sẽ mâu thuẫn.
+
+Một lần gọi phục vụ cả vùng 2 và vùng 4. Vùng 2 dùng 56 ngày cuối của dãy 84.
 
 Ba thông tin:
 
@@ -331,7 +375,12 @@ bảng số.
 
 ### Vùng 4 · Lịch + chi tiết ngày
 
-Heatmap bên trái, mở rộng từ 28 lên **84 ngày**. Mỗi ô là một `<button>` thật —
+Heatmap bên trái, **84 ngày**, lấy từ cùng một lần gọi
+`GET /api/progress/calendar?days=84` với vùng 2. Trường `heatmap` trong
+`ProgressOverview` giữ nguyên 28 ngày — không đổi, vì test hiện có khẳng định
+đúng con số đó và `StudyHeatmap` đang dùng nó.
+
+Mỗi ô là một `<button>` thật —
 bấm được bằng chuột, tới được bằng `Tab`, chọn được bằng phím mũi tên trong một
 roving tabindex. Ô đang chọn có viền rõ, không chỉ khác màu nền.
 
@@ -339,7 +388,7 @@ Panel bên phải đổi nội dung theo ngày được chọn; mặc định ch
 số phút, số lượt ôn, số từ mới, chia theo 4 kỹ năng, và danh sách bài đọc đã đọc
 trong ngày.
 
-**Cần endpoint mới:** `GET /api/progress/day/{date}`.
+**Cần endpoint mới (1/2):** `GET /api/progress/day/{date}`.
 
 - Tham số `date` dạng `YYYY-MM-DD`, hiểu theo múi giờ người dùng.
 - Đọc `learning_events` của đúng ngày đó — index `ix_learning_events_user_occurred`
@@ -350,6 +399,26 @@ trong ngày.
 - Ngày không có dữ liệu trả 200 với các số bằng 0, **không** trả 404 — ngày nghỉ
   là một câu trả lời hợp lệ, không phải lỗi.
 - Từ chối ngày ở tương lai bằng 400.
+
+### 3.2.5 · Endpoint lịch
+
+**Cần endpoint mới (2/2):** `GET /api/progress/calendar?days=N`
+(`N` trong khoảng 7–365, mặc định 84).
+
+Trả về `list[CalendarDay]`, một phần tử cho **mỗi ngày dương lịch** trong cửa sổ
+kể cả ngày không có dữ liệu — giống cách `overview_data` đã làm với `heatmap`:
+
+```python
+class CalendarDay(BaseModel):
+    date: str        # YYYY-MM-DD theo múi giờ người dùng
+    seconds: int     # tổng duration_seconds của learning_events trong ngày
+    reviews: int     # số ReviewLog trong ngày
+    active: bool     # seconds > 0 hoặc reviews > 0
+```
+
+`active` phải dùng đúng định nghĩa mà `overview_data` dùng cho `streak`
+(`learning_events ∪ ReviewLog`), không phải chỉ `ReviewLog`. Nếu hai chỗ lệch
+nhau thì dashboard sẽ tự mâu thuẫn.
 
 ### Dải phụ cuối trang
 
@@ -386,12 +455,19 @@ Mỗi thành phần nhận dữ liệu đã tính sẵn qua props và không t�
   qua ranh giới nửa đêm giờ VN.
 - `/api/progress/day/{date}`: ngày có dữ liệu, ngày rỗng trả 200 số 0, ngày
   tương lai trả 400, ngày của người dùng khác không lộ dữ liệu.
-- `ProgressOverview` có `total_xp` và `level` đúng.
+- `/api/progress/calendar`: trả đúng `days` phần tử kể cả khi không có dữ liệu;
+  `active` bật cho ngày chỉ có `LearningEvent` mà không có `ReviewLog` — đây là
+  chính xác trường hợp `/api/review/heatmap` bỏ sót.
+- `ProgressOverview` có `total_xp` và `level` đúng, và `heatmap` **vẫn 28 phần
+  tử** (test hiện có khẳng định điều này).
 
 **Frontend** (`vitest` + Testing Library — đã có sẵn):
 
-- `useFeedback` gọi đúng ba kênh cho từng sự kiện, và **không** gọi kênh nào khi
-  cờ tắt tương ứng bật.
+- `useFeedback` gọi đúng ba kênh cho từng sự kiện; không phát tiếng khi
+  `sfx_enabled` tắt; không rung khi `haptic_enabled` tắt; không làm gì khi
+  `feedback_enabled` hoặc `silent_mode` tắt.
+- `AudioProvider` phát đúng âm lượng `sfx_volume * master_volume`, và dùng lại
+  cùng một `HTMLAudioElement` khi phát cùng một asset hai lần.
 - Helper WAAPI trả animation đã hoàn thành ngay khi `prefers-reduced-motion` bật.
 - Số đếm tăng dừng đúng ở giá trị cuối (không lệch do làm tròn).
 - Heatmap: điều hướng bàn phím chọn được ô, `aria-label` nêu đúng ngày và số phút.

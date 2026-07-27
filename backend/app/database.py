@@ -78,6 +78,14 @@ USER_EXTRA_COLUMNS = {
     "preferred_level": "INTEGER",
 }
 
+# started_at không có mặc định hằng nên phải thêm dạng nullable rồi backfill;
+# SQLite từ chối DEFAULT không hằng trong ALTER TABLE ADD COLUMN.
+DAILY_SESSION_EXTRA_COLUMNS = {
+    "mode": "VARCHAR(10) NOT NULL DEFAULT 'full'",
+    "duration_seconds": "INTEGER NOT NULL DEFAULT 0",
+    "started_at": "DATETIME",
+}
+
 
 def ensure_card_columns(engine_) -> None:
     """Lightweight migration: add new nullable Card columns to existing DBs."""
@@ -143,4 +151,24 @@ def ensure_user_columns(engine_) -> None:
         for name, ddl in USER_EXTRA_COLUMNS.items():
             if name not in existing:
                 conn.execute(text(f'ALTER TABLE users ADD COLUMN "{name}" {ddl}'))
+        conn.commit()
+
+
+def ensure_daily_session_columns(engine_) -> None:
+    """Add session mode and timing columns to databases created before them.
+
+    Without this the whole daily flow fails: /api/daily/session and
+    /api/daily/home both raise `no such column: daily_sessions.mode`.
+    """
+    inspector = inspect(engine_)
+    if not inspector.has_table("daily_sessions"):
+        return
+    existing = {column["name"] for column in inspector.get_columns("daily_sessions")}
+    with engine_.connect() as conn:
+        for name, ddl in DAILY_SESSION_EXTRA_COLUMNS.items():
+            if name not in existing:
+                conn.execute(text(f'ALTER TABLE daily_sessions ADD COLUMN "{name}" {ddl}'))
+        if "started_at" not in existing:
+            # Hàng cũ không có mốc bắt đầu; created_at là xấp xỉ đúng nhất.
+            conn.execute(text("UPDATE daily_sessions SET started_at = created_at WHERE started_at IS NULL"))
         conn.commit()

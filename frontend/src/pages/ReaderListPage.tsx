@@ -168,11 +168,11 @@ export default function ReaderListPage() {
         : articles.length === 0 ? <DailyStatusHero kind="reader" primaryTo="/reader" primaryLabel="Add a reading" onPrimary={() => setShow(true)} secondaryTo="/" secondaryLabel="Return to Today" />
           : <div className="reader-discovery__library grid gap-3 sm:grid-cols-2">{articles.map(article => {
             const translation = article.translation_status ? TRANSLATION_BADGES[article.translation_status] : null
-            return <div key={article.id} className="reader-discovery__card group relative rounded-2xl border border-white/[.07] bg-white/[.03] p-4 hover:border-cyan-300/20">
-              <Link to={`/reader/${article.id}`} className="block pr-20"><h3 className="line-clamp-2 font-bold text-slate-100">{article.title}</h3><p className="mt-2 text-xs text-slate-500">{BADGES[article.source_type]} · {article.word_count} từ · {new Date(article.created_at).toLocaleDateString('vi-VN')}</p>{translation && <span className={`mt-3 inline-flex rounded-full border px-2 py-1 text-[11px] font-bold ${translation.className}`}>{translation.text}</span>}</Link>
-              <div className="absolute right-3 top-3 flex gap-1 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
-                <button onClick={event => { event.preventDefault(); void queueOne(article.id, article.translation_status === 'completed') }} disabled={queuingArticle === article.id} className="rounded-lg px-2 py-1 text-xs text-violet-200 hover:bg-violet-500/10 disabled:opacity-50">{queuingArticle === article.id ? '…' : article.translation_status === 'completed' ? 'Dịch lại' : 'Dịch'}</button>
-                <button onClick={() => remove(article.id, article.title)} className="rounded-lg px-2 py-1 text-xs text-rose-300 hover:bg-rose-500/10">Xóa</button>
+            return <div key={article.id} className="reader-discovery__card group relative flex flex-col rounded-2xl border border-white/[.07] bg-white/[.03] p-4 hover:border-cyan-300/20">
+              <Link to={`/reader/${article.id}`} className="reader-discovery__card-link block"><h3 className="line-clamp-2 font-bold text-slate-100">{article.title}</h3><p className="mt-2 text-xs text-slate-500">{BADGES[article.source_type]} · {article.word_count} từ · {new Date(article.created_at).toLocaleDateString('vi-VN')}</p>{translation && <span className={`mt-3 inline-flex rounded-full border px-2 py-1 text-[11px] font-bold ${translation.className}`}>{translation.text}</span>}</Link>
+              <div className="reader-discovery__card-actions mt-auto flex flex-wrap items-center gap-1 pt-4">
+                <button onClick={() => void queueOne(article.id, article.translation_status === 'completed')} disabled={queuingArticle === article.id} className="whitespace-nowrap rounded-lg px-2 py-1 text-xs text-violet-200 hover:bg-violet-500/10 disabled:opacity-50">{queuingArticle === article.id ? '…' : article.translation_status === 'completed' ? 'Dịch lại' : 'Dịch'}</button>
+                <button onClick={() => remove(article.id, article.title)} className="whitespace-nowrap rounded-lg px-2 py-1 text-xs text-rose-300 hover:bg-rose-500/10">Xóa</button>
               </div>
             </div>
           })}</div>}

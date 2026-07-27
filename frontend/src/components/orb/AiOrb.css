@@ -19,14 +19,14 @@
 .ai-orb--listening .ai-orb__core, .ai-orb--recording .ai-orb__core, .ai-orb--processing .ai-orb__core { animation: orb-breathe 1.45s ease-in-out infinite; }
 .ai-orb--recording .ai-orb__core { background: radial-gradient(circle at 32% 27%, #fff2f5, #fb7185 30%, #a21c4a 68%, #4a1029); box-shadow: 0 0 0 .8rem color-mix(in srgb, var(--error) 18%, transparent), 0 0 48px color-mix(in srgb, var(--error) 48%, transparent); }
 .ai-orb--correct .ai-orb__core, .ai-orb--success .ai-orb__core, .ai-orb--combo .ai-orb__core { background: radial-gradient(circle at 46% 36%, rgba(9,69,52,.75) 0 5%, transparent 16%), radial-gradient(circle at 39% 30%, #effff8 0 16%, #a9efd1 46%, #52bd91 100%); }
-.ai-orb--wrong .ai-orb__core { background: radial-gradient(circle at 46% 36%, rgba(100,20,39,.82) 0 5%, transparent 16%), radial-gradient(circle at 39% 30%, #fff0f4 0 16%, #ffb0c1 46%, #c43c5b 100%); animation: orb-wrong 280ms ease both; }
+.ai-orb--wrong .ai-orb__core { background: radial-gradient(circle at 46% 36%, rgba(100,20,39,.82) 0 5%, transparent 16%), radial-gradient(circle at 39% 30%, #fff0f4 0 16%, #ffb0c1 46%, #c43c5b 100%); animation: orb-wrong var(--dur-base) var(--ease-out) both; }
 .ai-orb--offline { filter: saturate(.35); }.ai-orb--offline .ai-orb__core { box-shadow: 0 0 0 .7rem rgba(120,134,164,.14), 0 0 32px rgba(120,134,164,.18); }
 .ai-orb--idle .ai-orb__core, .ai-orb--thinking .ai-orb__core, .ai-orb--loading .ai-orb__core { animation: orb-breathe-slow 7s ease-in-out infinite, orb-sheen 14s ease-in-out infinite; }
 .ai-orb--thinking .ai-orb__core { animation-duration: 5s, 10s; }
 .ai-orb--loading .ai-orb__core { animation-duration: 4s, 8s; }
 .ai-orb--idle .ai-orb__orbit, .ai-orb--thinking .ai-orb__orbit, .ai-orb--loading .ai-orb__orbit { animation: orb-orbit 18s linear infinite; }
 .ai-orb--idle .ai-orb__orbit--outer, .ai-orb--thinking .ai-orb__orbit--outer, .ai-orb--loading .ai-orb__orbit--outer { animation-direction: reverse; animation-duration: 12s; }
-.ai-orb--interactive .ai-orb__button { transition: transform 180ms ease, filter 180ms ease; }
+.ai-orb--interactive .ai-orb__button { transition: transform var(--dur-snap) var(--ease-out), filter var(--dur-snap) var(--ease-out); }
 .ai-orb--interactive .ai-orb__button:hover { filter: brightness(1.07); transform: translateY(-3px); }
 .ai-orb--interactive .ai-orb__button:active { transform: translateY(0) scale(.97); }
 @keyframes orb-breathe { 50% { transform: translateZ(1.2rem) scale(1.075); filter: saturate(1.25); } }

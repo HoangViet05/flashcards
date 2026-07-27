@@ -37,6 +37,18 @@
   --orb-highlight: #edf4ff; --orb-edge: rgba(255, 255, 255, .75); --orb-depth: #4b3bb5;
   --track: rgba(77, 90, 150, .16); --blur-glass: 18px; --radius-xl: 1.5rem; --rail-width: 4.75rem;
   --dur-fast: 150ms; --dur-base: 250ms; --dur-slow: 400ms; --dur-ambient: 26s;
+
+  /* Tầng A — công cụ. Mọi thao tác lặp lại. */
+  --dur-instant: 90ms; --dur-snap: 180ms;
+  --ease-out: cubic-bezier(.2, .8, .2, 1); --ease-inout: cubic-bezier(.4, 0, .2, 1);
+  --dist-hover: 2px; --dist-enter: 8px; --scale-press: .97;
+
+  /* Tầng B — thưởng. Chỉ khoảnh khắc đáng ăn mừng. */
+  --dur-reward: 320ms; --dur-celebrate: 520ms;
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1); --scale-pop: 1.18;
+
+  /* Nhịp xếp lớp */
+  --stagger-step: 45ms;
 }
 
 :root[data-theme='dark'] {

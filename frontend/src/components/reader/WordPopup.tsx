@@ -9,8 +9,6 @@ interface Props {
   sentence: string
   articleId: string
   onClose: () => void
-  /** Render inside the Reader's persistent companion dock. */
-  variant?: 'popup' | 'dock'
 }
 
 function primaryDefinition(content: string) {
@@ -34,7 +32,7 @@ function VietnameseDefinition({ content }: { content: string }) {
   )
 }
 
-export default function WordPopup({ word, sentence, articleId, onClose, variant = 'popup' }: Props) {
+export default function WordPopup({ word, sentence, articleId, onClose }: Props) {
   const { toast } = useNotification()
   const [vi, setVi] = useState<DictionaryResult | null | 'loading'>('loading')
   const [en, setEn] = useState<EnDictResult | null | 'loading'>('loading')
@@ -89,8 +87,8 @@ export default function WordPopup({ word, sentence, articleId, onClose, variant 
   }
 
   return (
-    <div className={variant === 'dock' ? 'reader-word-popup reader-word-popup--dock' : 'reader-word-popup fixed inset-3 z-50 sm:inset-auto sm:right-6 sm:top-24 sm:w-[25rem]'}>
-      <div role="dialog" aria-modal={variant === 'popup' ? true : undefined} aria-label={`Word in context: ${word}`} className="flex max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900 shadow-[0_24px_70px_rgba(0,0,0,.48)] sm:max-h-[min(76vh,44rem)]">
+    <div className="reader-word-popup fixed inset-3 z-50 sm:inset-auto sm:right-6 sm:top-24 sm:w-[25rem]">
+      <div role="dialog" aria-modal="true" aria-label={`Word in context: ${word}`} className="flex max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900 shadow-[0_24px_70px_rgba(0,0,0,.48)] sm:max-h-[min(76vh,44rem)]">
         <header className="flex shrink-0 items-start justify-between border-b border-white/[.08] bg-slate-900 px-5 py-4">
           <div className="min-w-0">
             <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-cyan-300/80">Word in context</p>

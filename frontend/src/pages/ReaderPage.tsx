@@ -222,7 +222,7 @@ function HighlightPanel({ highlights, onRemove, onUpdate, onAddAll, adding }: {
   adding: boolean
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-amber-300/[.16] bg-slate-950/80 shadow-[0_18px_45px_rgba(0,0,0,.22)] backdrop-blur-xl">
+    <section className="reader-highlights-panel overflow-hidden">
       <div className="flex items-center justify-between border-b border-white/[.07] px-4 py-3">
         <div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-300/20 bg-amber-300/10 text-sm text-amber-200">Saved</span><div><p className="text-[10px] font-black uppercase tracking-[.14em] text-amber-200/85">Words to remember</p><p className="text-xs font-bold text-slate-200">Marked in this reading</p></div></div>
         <span className="rounded-full bg-white/[.07] px-2 py-0.5 text-xs font-bold text-slate-400">{highlights.length}</span>
@@ -634,7 +634,7 @@ export default function ReaderPage() {
             <Link to={`/shadowing?article=${id}`} className="mt-3 block rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-3 py-2 text-center text-xs font-bold text-cyan-200 hover:bg-cyan-400/20">🎤 Shadow</Link>
             <p className="mt-3 rounded-xl bg-white/[.035] px-2.5 py-2 text-[11px] leading-4 text-slate-500">{tts.playing ? `Reading sentence ${tts.sentence + 1}/${sentences.length}` : 'Select a word to look it up; select a phrase or sentence to save it as a card.'}</p>
           </section>
-          <div className="mt-4">
+          <div className="reader-focus__saved-words mt-4">
             <HighlightPanel highlights={highlights} onRemove={removeHighlight} onUpdate={updateHighlightMeaning} onAddAll={addAllHighlights} adding={addingHighlights} />
           </div>
         </ReadingCompanionDock>

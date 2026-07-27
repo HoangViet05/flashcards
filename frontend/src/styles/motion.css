@@ -2,6 +2,30 @@
 
 .ambient-background i:first-child { animation: orbital-drift var(--dur-ambient) ease-in-out infinite alternate; }
 
+/* Bấm được: nâng nhẹ, sáng một bậc, viền rõ hơn. */
+.tap {
+  transition: transform var(--dur-fast) var(--ease-out),
+              background-color var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out);
+}
+@media (hover: hover) {
+  .tap:hover { transform: translateY(calc(-1 * var(--dist-hover))); background-color: var(--color-surface-2); border-color: var(--color-strong); }
+}
+.tap:active { transform: scale(var(--scale-press)); transition-duration: var(--dur-instant); }
+.tap:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Có thông tin phụ: tooltip trượt vào, phần tử không nâng. */
+.hint { position: relative; }
+.hint > [data-tip] {
+  position: absolute; bottom: 100%; left: 50%;
+  opacity: 0; pointer-events: none;
+  transform: translate(-50%, var(--dist-hover));
+  transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+@media (hover: hover) {
+  .hint:hover > [data-tip], .hint:focus-visible > [data-tip] { opacity: 1; transform: translate(-50%, calc(-1 * var(--dist-hover))); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

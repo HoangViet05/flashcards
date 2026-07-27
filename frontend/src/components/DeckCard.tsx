@@ -59,11 +59,11 @@ export default function DeckCard({ deck, dueCount = 0, newCount = 0, cardCount =
 
   return (
       <div
-        className={`group relative rounded-[2rem] p-[1px] cursor-pointer animate-fade-in-up transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(124,58,237,0.3)]`}
+        className={`tap group relative rounded-[2rem] p-[1px] cursor-pointer animate-fade-in-up`}
         style={{ animationDelay: `${index * 60}ms` }}
       >
-        <div className={`absolute inset-0 bg-gradient-to-br ${DECK_GRADIENTS[i]} opacity-80 rounded-[2rem] pointer-events-none group-hover:opacity-100 transition-opacity duration-300`} />
-        <div className={`relative h-full flex flex-col gap-4 bg-black/40 backdrop-blur-xl rounded-[2rem] p-5 sm:p-6 border ${DECK_ACCENTS[i]} transition-colors duration-300 overflow-hidden`}>
+        <div className={`absolute inset-0 bg-gradient-to-br ${DECK_GRADIENTS[i]} opacity-80 rounded-[2rem] pointer-events-none group-hover:opacity-100 transition-opacity duration-[var(--dur-base)]`} />
+        <div className={`relative h-full flex flex-col gap-4 bg-black/40 backdrop-blur-xl rounded-[2rem] p-5 sm:p-6 border ${DECK_ACCENTS[i]} transition-colors duration-[var(--dur-base)] overflow-hidden`}>
           
           {/* Subtle background glow effect */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-[40px] pointer-events-none -translate-y-1/2 translate-x-1/2 group-hover:bg-white/10 transition-colors" />
@@ -86,7 +86,7 @@ export default function DeckCard({ deck, dueCount = 0, newCount = 0, cardCount =
           <Link to={`/decks/${deck.id}`} className="flex-1 flex flex-col gap-4 relative z-10">
             {/* Icon + name */}
             <div className="flex items-start gap-4 pr-6">
-              <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 border ${DECK_BADGE[i]} shadow-inner group-hover:scale-110 transition-transform duration-300`}>
+              <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 border ${DECK_BADGE[i]} shadow-inner group-hover:scale-110 transition-transform duration-[var(--dur-base)]`}>
                 📚
                 {flyingCards.map(fc => (
                   <div key={fc.id} className="absolute inset-0 m-auto w-7 h-9 bg-gradient-to-br from-white to-gray-200 rounded shadow-xl text-violet-600 font-extrabold flex items-center justify-center border border-white z-50 animate-fly-into-deck pointer-events-none">
@@ -104,7 +104,7 @@ export default function DeckCard({ deck, dueCount = 0, newCount = 0, cardCount =
         )}
 
             {/* Stats row */}
-            <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between gap-2 mt-auto pt-4 border-t border-white/5 group-hover:border-white/10 transition-colors duration-300">
+            <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between gap-2 mt-auto pt-4 border-t border-white/5 group-hover:border-white/10 transition-colors duration-[var(--dur-base)]">
               <span className="text-gray-400 text-sm font-medium bg-white/[0.03] px-3 py-1 rounded-full border border-white/5">{cardCount} thẻ</span>
               
               {cardCount === 0 ? (

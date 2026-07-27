@@ -6,7 +6,7 @@
 .brand-orb { position: relative; color: var(--text-on-accent); background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); box-shadow: 0 0 0 .3rem var(--accent-soft), 0 10px 28px var(--accent-shadow); }
 .brand-orb::after { position: absolute; width: .5rem; height: .5rem; border: 1px solid currentColor; border-radius: 50%; content: ''; transform: translate(.72rem, -.65rem); opacity: .85; }
 .rail-nav { display: grid; gap: .45rem; width: 100%; }
-.rail-link:hover, .rail-icon-button:hover { color: var(--text-primary); border-color: var(--glass-border); background: var(--surface-hover); transform: translateY(-1px); }
+@media (hover: hover){.rail-link:hover, .rail-icon-button:hover { color: var(--text-primary); border-color: var(--glass-border); background: var(--surface-hover); transform: translateY(-1px); }}
 .rail-link.active { color: var(--text-on-accent); border-color: color-mix(in srgb, var(--accent-primary) 60%, var(--glass-border)); background: linear-gradient(145deg, var(--accent-primary), var(--accent-secondary)); box-shadow: 0 8px 22px var(--accent-shadow); }
 .rail-footer { display: grid; gap: .45rem; margin-top: auto; }
 .rail-icon-button { padding: 0; background: transparent; }

@@ -27,7 +27,7 @@
 .ai-orb--idle .ai-orb__orbit, .ai-orb--thinking .ai-orb__orbit, .ai-orb--loading .ai-orb__orbit { animation: orb-orbit 18s linear infinite; }
 .ai-orb--idle .ai-orb__orbit--outer, .ai-orb--thinking .ai-orb__orbit--outer, .ai-orb--loading .ai-orb__orbit--outer { animation-direction: reverse; animation-duration: 12s; }
 .ai-orb--interactive .ai-orb__button { transition: transform var(--dur-snap) var(--ease-out), filter var(--dur-snap) var(--ease-out); }
-.ai-orb--interactive .ai-orb__button:hover { filter: brightness(1.07); transform: translateY(-3px); }
+@media (hover: hover){.ai-orb--interactive .ai-orb__button:hover { filter: brightness(1.07); transform: translateY(-3px); }}
 .ai-orb--interactive .ai-orb__button:active { transform: translateY(0) scale(.97); }
 @keyframes orb-breathe { 50% { transform: translateZ(1.2rem) scale(1.075); filter: saturate(1.25); } }
 @keyframes orb-breathe-slow { 50% { transform: translateZ(1.45rem) scale(1.045); filter: saturate(1.12); } }

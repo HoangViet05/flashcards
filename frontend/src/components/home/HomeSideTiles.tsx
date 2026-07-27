@@ -20,7 +20,7 @@ export default function HomeSideTiles({ article, workerOnline, weakCount }: Prop
     <div className="mt-4 grid gap-3 sm:grid-cols-3">
       <Link
         to={article ? `/reader/${article.id}` : '/reader'}
-        className="rounded-2xl border border-subtle bg-surface-1 p-4 transition hover:bg-surface-2"
+        className="tap rounded-2xl border border-subtle bg-surface-1 p-4"
       >
         <p className="text-xs font-black uppercase tracking-wider text-muted">Đang đọc</p>
         <p className="mt-1 truncate text-sm font-bold text-strong-text">{article?.title ?? 'Chưa có bài đọc'}</p>
@@ -28,7 +28,7 @@ export default function HomeSideTiles({ article, workerOnline, weakCount }: Prop
       </Link>
 
       {workerOnline ? (
-        <Link to="/shadowing" className="rounded-2xl border border-subtle bg-surface-1 p-4 transition hover:bg-surface-2">
+        <Link to="/shadowing" className="tap rounded-2xl border border-subtle bg-surface-1 p-4">
           <p className="text-xs font-black uppercase tracking-wider text-muted">Luyện nói</p>
           <p className="mt-1 text-sm font-bold text-strong-text">Máy chấm đang bật</p>
           <p className="mt-0.5 text-xs font-medium text-muted">Nghe câu, nói lại và được chấm điểm từng từ</p>
@@ -45,7 +45,7 @@ export default function HomeSideTiles({ article, workerOnline, weakCount }: Prop
       )}
 
       {weakCount > 0 && (
-        <Link to="/weak" className="rounded-2xl border border-warn/30 bg-warn/10 p-4 transition hover:bg-warn/15">
+        <Link to="/weak" className="tap rounded-2xl border border-warn/30 bg-warn/10 p-4">
           <p className="text-xs font-black uppercase tracking-wider text-warn">Từ đang yếu</p>
           <p className="mt-1 text-sm font-bold text-strong-text">{weakCount} từ hay sai</p>
           <p className="mt-0.5 text-xs font-medium text-muted">Luyện lại bằng dạng bài khác</p>

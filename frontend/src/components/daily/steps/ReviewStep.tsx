@@ -4,10 +4,11 @@ import ExerciseCard from '../ExerciseCard'
 
 interface Props {
   daily: ReturnType<typeof useDailySession>
+  streak: number
   onCorrectStreak?: (streak: number) => void
 }
 
-export default function ReviewStep({ daily, onCorrectStreak }: Props) {
+export default function ReviewStep({ daily, streak, onCorrectStreak }: Props) {
   const queue = daily.queues.review
 
   if (!queue.length) {
@@ -24,6 +25,7 @@ export default function ReviewStep({ daily, onCorrectStreak }: Props) {
       key={`${word.card_id}-${daily.presented}`}
       card={word.card}
       mode={word.assigned_step as ExerciseStep}
+      streak={streak}
       onResult={correct => daily.answer('review', word.assigned_step, correct)}
       onCorrectStreak={onCorrectStreak}
     />

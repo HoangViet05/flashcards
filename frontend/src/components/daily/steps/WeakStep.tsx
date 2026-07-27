@@ -4,11 +4,12 @@ import ExerciseCard from '../ExerciseCard'
 
 interface Props {
   daily: ReturnType<typeof useDailySession>
+  streak: number
   onCorrectStreak?: (streak: number) => void
 }
 
 /** Từ hay sai được kéo lên trước phần từ mới và hỏi bằng dạng khác lần trước. */
-export default function WeakStep({ daily, onCorrectStreak }: Props) {
+export default function WeakStep({ daily, streak, onCorrectStreak }: Props) {
   const queue = daily.queues.weak
 
   if (!queue.length) {
@@ -32,6 +33,7 @@ export default function WeakStep({ daily, onCorrectStreak }: Props) {
         key={`${word.card_id}-${daily.presented}`}
         card={word.card}
         mode={word.assigned_step as ExerciseStep}
+        streak={streak}
         onResult={correct => daily.answer('weak', word.assigned_step, correct)}
         onCorrectStreak={onCorrectStreak}
       />

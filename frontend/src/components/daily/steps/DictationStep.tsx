@@ -3,10 +3,11 @@ import ExerciseCard from '../ExerciseCard'
 
 interface Props {
   daily: ReturnType<typeof useDailySession>
+  streak: number
   onCorrectStreak?: (streak: number) => void
 }
 
-export default function DictationStep({ daily, onCorrectStreak }: Props) {
+export default function DictationStep({ daily, streak, onCorrectStreak }: Props) {
   const queue = daily.queues.dictation
   if (!queue.length) return null
 
@@ -19,6 +20,7 @@ export default function DictationStep({ daily, onCorrectStreak }: Props) {
         key={`${word.card_id}-${daily.presented}`}
         card={word.card}
         mode="dictation"
+        streak={streak}
         onResult={correct => daily.answer('dictation', 'dictation', correct)}
         onCorrectStreak={onCorrectStreak}
       />

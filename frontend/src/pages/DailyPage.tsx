@@ -83,12 +83,12 @@ export default function DailyPage() {
       {showProgress && <SessionTrajectory completed={daily.stepsDone} total={daily.stepsTotal} combo={combo} />}
 
       {stageTitles[daily.phase] && <StudyStage eyebrow={`${daily.phase} module`} title={stageTitles[daily.phase]!} state={stageState}>
-        {daily.phase === 'review' && <ReviewStep daily={daily} onCorrectStreak={setCombo} />}
-        {daily.phase === 'weak' && <WeakStep daily={daily} onCorrectStreak={setCombo} />}
+        {daily.phase === 'review' && <ReviewStep daily={daily} streak={combo} onCorrectStreak={setCombo} />}
+        {daily.phase === 'weak' && <WeakStep daily={daily} streak={combo} onCorrectStreak={setCombo} />}
         {daily.phase === 'speak' && <SpeakStep words={daily.speakWords} onDone={daily.afterSpeak} />}
         {daily.phase === 'flip' && <FlipStep daily={daily} />}
-        {daily.phase === 'dictation' && <DictationStep daily={daily} onCorrectStreak={setCombo} />}
-        {daily.phase === 'split' && <SplitStep daily={daily} onCorrectStreak={setCombo} />}
+        {daily.phase === 'dictation' && <DictationStep daily={daily} streak={combo} onCorrectStreak={setCombo} />}
+        {daily.phase === 'split' && <SplitStep daily={daily} streak={combo} onCorrectStreak={setCombo} />}
       </StudyStage>}
 
       {daily.phase === 'game' && (

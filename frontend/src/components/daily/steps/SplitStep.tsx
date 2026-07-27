@@ -4,6 +4,7 @@ import ExerciseCard from '../ExerciseCard'
 
 interface Props {
   daily: ReturnType<typeof useDailySession>
+  streak: number
   onCorrectStreak?: (streak: number) => void
 }
 
@@ -14,7 +15,7 @@ const SIDES: { name: QueueName; step: ExerciseStep; label: string }[] = [
 
 /** Hai panel cạnh nhau trên màn rộng. Dưới `md` chỉ hiện một panel: bên trái
  *  làm trước, xong mới đến bên phải — tránh phải cuộn qua lại khi học trên điện thoại. */
-export default function SplitStep({ daily, onCorrectStreak }: Props) {
+export default function SplitStep({ daily, streak, onCorrectStreak }: Props) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {SIDES.map(({ name, step, label }) => {
@@ -31,6 +32,7 @@ export default function SplitStep({ daily, onCorrectStreak }: Props) {
                 key={`${queue[0].card_id}-${daily.presented}`}
                 card={queue[0].card}
                 mode={step}
+                streak={streak}
                 onResult={correct => daily.answer(name, step, correct)}
                 onCorrectStreak={onCorrectStreak}
               />

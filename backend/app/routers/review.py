@@ -17,6 +17,7 @@ from app.schemas.review import (
 )
 from app.services.security import get_current_user
 from app.services.sm2 import compute_sm2
+from app.services import progression
 from app.services import weak_words as weak_service
 
 router = APIRouter(prefix="/api/review", tags=["review"])
@@ -37,11 +38,15 @@ def get_due_cards(db: Session = Depends(get_db), user: User = Depends(get_curren
 
 @router.get("/heatmap", response_model=list[HeatmapDay])
 def get_heatmap(days: int = Query(default=365, ge=7, le=730), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    since = datetime.combine(date.today() - timedelta(days=days - 1), datetime.min.time())
-    rows = (db.query(func.date(ReviewLog.reviewed_at), func.count(ReviewLog.id))
-              .filter(ReviewLog.user_id == user.id, ReviewLog.reviewed_at >= since)
-              .group_by(func.date(ReviewLog.reviewed_at)).order_by(func.date(ReviewLog.reviewed_at)).all())
-    return [HeatmapDay(date=str(day), count=int(count)) for day, count in rows]
+    # Bucket in Python: SQLite's date() ignores the learner's timezone, which
+    # is what put early-morning study on the wrong calendar day.
+    tz = progression.user_timezone(db, user.id)
+    since, _ = progression.local_day_bounds(progression.today_local(tz) - timedelta(days=days - 1), tz)
+    counts: dict[str, int] = {}
+    for (moment,) in db.query(ReviewLog.reviewed_at).filter(ReviewLog.user_id == user.id, ReviewLog.reviewed_at >= since).all():
+        key = progression.local_date(moment, tz).isoformat()
+        counts[key] = counts.get(key, 0) + 1
+    return [HeatmapDay(date=day, count=count) for day, count in sorted(counts.items())]
 
 
 @router.get("/weak", response_model=list[WeakWordOut])

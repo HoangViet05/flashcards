@@ -194,7 +194,7 @@ export interface DailyHome {
   progression?: ProgressOverview; missions?: { daily: Mission[]; weekly: Mission[] }; journey?: Journey; server_time?: string
 }
 export interface SkillProgressOverview { skill: 'vocabulary' | 'reading' | 'listening' | 'speaking'; xp: number; level: number; mastery: number | null; building_signal: boolean }
-export interface ProgressOverview { streak: number; study_minutes_today: number; study_minutes_week: number; remembered_cards: number; retention: number | null; retention_samples: number; reviews_today: number; reviews_week: number; reviews_total: number; total_cards: number; learning_cards: number; due_cards: number; deck_count: number; active_days_28: number; skills: SkillProgressOverview[]; heatmap: Record<string, number>; unlocks: string[] }
+export interface ProgressOverview { streak: number; total_xp: number; level: number; study_minutes_today: number; study_minutes_week: number; remembered_cards: number; retention: number | null; retention_samples: number; reviews_today: number; reviews_week: number; reviews_total: number; total_cards: number; learning_cards: number; due_cards: number; deck_count: number; active_days_28: number; skills: SkillProgressOverview[]; heatmap: Record<string, number>; unlocks: string[] }
 export interface Mission { id: string; mission_key: string; skill: string; target: number; progress: number; completed_at: string | null; rerolled: boolean }
 export interface Journey { week_start: string; timezone: string; boss_available: boolean; lanes: { skill: string; checkpoints: { date: string; active: boolean }[] }[] }
 export interface GameMeaning { token: string; meaning: string; hint_level: number }

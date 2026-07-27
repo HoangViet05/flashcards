@@ -48,6 +48,8 @@ class ProgressOverview(BaseModel):
     server_time: datetime
     effective_date: str
     streak: int
+    total_xp: int
+    level: int
     study_minutes_today: int
     study_minutes_week: int
     remembered_cards: int

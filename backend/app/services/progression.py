@@ -1,4 +1,3 @@
-from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import func
@@ -88,7 +87,13 @@ def ensure_skill_rows(db: Session, user_id: str) -> list[SkillProgress]:
 
 
 def overview_data(db: Session, user_id: str) -> dict:
-    now = utcnow(); since = now - timedelta(days=30)
+    now = utcnow()
+    today = now.date()
+    # The chart is a calendar view, so its data window must be calendar based
+    # too.  A rolling 30 x 24-hour query used to omit the first days and left
+    # the UI with only the dates that happened to have events.
+    window_start = today - timedelta(days=27)
+    since = datetime.combine(window_start, datetime.min.time(), tzinfo=timezone.utc)
     rows = ensure_skill_rows(db, user_id)
     event_rows = db.query(LearningEvent.skill, func.count(LearningEvent.id), func.avg(LearningEvent.metric_value)).filter(
         LearningEvent.user_id == user_id, LearningEvent.occurred_at >= since
@@ -100,19 +105,37 @@ def overview_data(db: Session, user_id: str) -> dict:
         mastery = None if count < 3 else max(0, min(100, round(float(average if average is not None else 70))))
         skills.append({"skill": row.skill, "xp": row.xp, "level": level_for_xp(row.xp), "mastery": mastery, "building_signal": mastery is None})
     week_start = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
-    duration_today = db.query(func.coalesce(func.sum(LearningEvent.duration_seconds), 0)).filter(LearningEvent.user_id == user_id, LearningEvent.occurred_at >= now.replace(hour=0, minute=0, second=0, microsecond=0)).scalar() or 0
+    day_start = datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc)
+    duration_today = db.query(func.coalesce(func.sum(LearningEvent.duration_seconds), 0)).filter(LearningEvent.user_id == user_id, LearningEvent.occurred_at >= day_start).scalar() or 0
     duration_week = db.query(func.coalesce(func.sum(LearningEvent.duration_seconds), 0)).filter(LearningEvent.user_id == user_id, LearningEvent.occurred_at >= week_start).scalar() or 0
     remembered = db.query(func.count(Review.id)).join(Card).join(Deck).filter(Deck.user_id == user_id, Review.repetitions >= 3).scalar() or 0
     logs = db.query(ReviewLog).filter(ReviewLog.user_id == user_id, ReviewLog.reviewed_at >= since).all()
     retention = None if len(logs) < 3 else round(100 * sum(log.quality >= 3 for log in logs) / len(logs))
-    heatmap = defaultdict(int)
+    total_cards = db.query(func.count(Card.id)).join(Deck).filter(Deck.user_id == user_id).scalar() or 0
+    learning_cards = db.query(func.count(Review.id)).join(Card).join(Deck).filter(Deck.user_id == user_id, Review.repetitions.between(1, 2)).scalar() or 0
+    due_cards = db.query(func.count(Review.id)).join(Card).join(Deck).filter(Deck.user_id == user_id, Review.repetitions > 0, Review.due_date <= today).scalar() or 0
+    deck_count = db.query(func.count(Deck.id)).filter(Deck.user_id == user_id).scalar() or 0
+    reviews_today = db.query(func.count(ReviewLog.id)).filter(ReviewLog.user_id == user_id, ReviewLog.reviewed_at >= day_start).scalar() or 0
+    reviews_week = db.query(func.count(ReviewLog.id)).filter(ReviewLog.user_id == user_id, ReviewLog.reviewed_at >= week_start).scalar() or 0
+    reviews_total = db.query(func.count(ReviewLog.id)).filter(ReviewLog.user_id == user_id).scalar() or 0
+
+    # Always return one cell per calendar day.  A zero means no focused-time
+    # was recorded; it is intentionally distinct from a score or retention.
+    heatmap = {str(window_start + timedelta(days=offset)): 0 for offset in range(28)}
     for event_day, seconds in db.query(func.date(LearningEvent.occurred_at), func.sum(LearningEvent.duration_seconds)).filter(LearningEvent.user_id == user_id, LearningEvent.occurred_at >= since).group_by(func.date(LearningEvent.occurred_at)).all():
-        heatmap[str(event_day)] = int(seconds or 0)
-    active_days = sorted(heatmap)
-    streak = 0; cursor = now.date().isoformat()
-    while cursor in heatmap:
+        day = str(event_day)
+        if day in heatmap:
+            heatmap[day] = int(seconds or 0)
+
+    event_days = {str(day) for (day,) in db.query(func.date(LearningEvent.occurred_at)).filter(LearningEvent.user_id == user_id, LearningEvent.occurred_at >= since).distinct().all()}
+    review_days = {str(day) for (day,) in db.query(func.date(ReviewLog.reviewed_at)).filter(ReviewLog.user_id == user_id, ReviewLog.reviewed_at >= since).distinct().all()}
+    active_days = event_days | review_days
+    streak = 0; cursor = today.isoformat()
+    while cursor in active_days:
         streak += 1
         cursor = (date.fromisoformat(cursor) - timedelta(days=1)).isoformat()
     return {"server_time": now, "effective_date": now.date().isoformat(), "streak": streak, "study_minutes_today": int(duration_today) // 60,
-            "study_minutes_week": int(duration_week) // 60, "remembered_cards": int(remembered), "retention": retention,
-            "skills": skills, "heatmap": dict(heatmap), "unlocks": [item.unlock_key for item in db.query(UserUnlock).filter(UserUnlock.user_id == user_id).all()]}
+            "study_minutes_week": int(duration_week) // 60, "remembered_cards": int(remembered), "retention": retention, "retention_samples": len(logs),
+            "reviews_today": int(reviews_today), "reviews_week": int(reviews_week), "reviews_total": int(reviews_total),
+            "total_cards": int(total_cards), "learning_cards": int(learning_cards), "due_cards": int(due_cards), "deck_count": int(deck_count), "active_days_28": len(active_days),
+            "skills": skills, "heatmap": heatmap, "unlocks": [item.unlock_key for item in db.query(UserUnlock).filter(UserUnlock.user_id == user_id).all()]}

@@ -52,6 +52,15 @@ class ProgressOverview(BaseModel):
     study_minutes_week: int
     remembered_cards: int
     retention: int | None
+    retention_samples: int
+    reviews_today: int
+    reviews_week: int
+    reviews_total: int
+    total_cards: int
+    learning_cards: int
+    due_cards: int
+    deck_count: int
+    active_days_28: int
     skills: list[SkillOverview]
     heatmap: dict[str, int]
     unlocks: list[str]

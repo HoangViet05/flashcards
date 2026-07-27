@@ -12,6 +12,7 @@ import SpeakStep from '../components/daily/steps/SpeakStep'
 import SplitStep from '../components/daily/steps/SplitStep'
 import WeakStep from '../components/daily/steps/WeakStep'
 import { useDailySession } from '../hooks/useDailySession'
+import { useActivityTimer } from '../hooks/useActivityTimer'
 import AiOrb from '../components/orb/AiOrb'
 import SessionTrajectory from '../components/study/SessionTrajectory'
 import StudyStage from '../components/study/StudyStage'
@@ -21,9 +22,13 @@ import '../components/core/CoreExperiences.css'
 export default function DailyPage() {
   const { setHeader } = useOrbitalShell()
   const [params] = useSearchParams()
-  const daily = useDailySession(params.get('mode') === 'quick' ? 'quick' : 'full')
+  const mode = params.get('mode') === 'quick' ? 'quick' : 'full'
+  const daily = useDailySession(mode)
   const [combo, setCombo] = useState(0)
   useEffect(() => { setHeader({ eyebrow: 'FULL SESSION', title: 'Signal calibration', streak: null }) }, [setHeader])
+  // A flashcard session is focused study just like reading and shadowing.
+  // Recording it here keeps its time, heatmap and streak in the same model.
+  useActivityTimer({ event_type: 'duration', skill: 'vocabulary', source_type: mode, source_id: daily.session?.id }, !daily.loading && Boolean(daily.session) && daily.phase !== 'empty' && daily.phase !== 'done')
 
   if (daily.loading) {
     return (

@@ -44,6 +44,13 @@ class SkillOverview(BaseModel):
     building_signal: bool
 
 
+class CalendarDay(BaseModel):
+    date: str
+    seconds: int
+    reviews: int
+    active: bool
+
+
 class ProgressOverview(BaseModel):
     server_time: datetime
     effective_date: str

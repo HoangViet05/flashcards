@@ -118,6 +118,37 @@ def ensure_skill_rows(db: Session, user_id: str) -> list[SkillProgress]:
     return [current[skill] for skill in SKILLS]
 
 
+def calendar_data(db: Session, user_id: str, days: int) -> list[dict]:
+    """`active` must use the same definition the streak uses (learning events
+    union review logs). If the two drift the dashboard contradicts itself."""
+    tz = user_timezone(db, user_id)
+    today = today_local(tz)
+    window_start = today - timedelta(days=days - 1)
+    since, _ = local_day_bounds(window_start, tz)
+
+    buckets = {(window_start + timedelta(days=offset)).isoformat(): {"seconds": 0, "reviews": 0} for offset in range(days)}
+
+    for moment, seconds in db.query(LearningEvent.occurred_at, LearningEvent.duration_seconds).filter(
+        LearningEvent.user_id == user_id, LearningEvent.occurred_at >= since
+    ).all():
+        bucket = buckets.get(local_date(moment, tz).isoformat())
+        if bucket is not None:
+            bucket["seconds"] += int(seconds or 0)
+
+    for (moment,) in db.query(ReviewLog.reviewed_at).filter(
+        ReviewLog.user_id == user_id, ReviewLog.reviewed_at >= since
+    ).all():
+        bucket = buckets.get(local_date(moment, tz).isoformat())
+        if bucket is not None:
+            bucket["reviews"] += 1
+
+    return [
+        {"date": day, "seconds": value["seconds"], "reviews": value["reviews"],
+         "active": value["seconds"] > 0 or value["reviews"] > 0}
+        for day, value in sorted(buckets.items())
+    ]
+
+
 def overview_data(db: Session, user_id: str) -> dict:
     tz = user_timezone(db, user_id)
     now = utcnow()

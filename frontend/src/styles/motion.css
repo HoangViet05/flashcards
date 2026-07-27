@@ -2,6 +2,17 @@
 
 .ambient-background i:first-child { animation: orbital-drift var(--dur-ambient) ease-in-out infinite alternate; }
 
+@keyframes skeleton-breathe { 50% { opacity: .35; } }
+
+.skeleton { display: grid; gap: .625rem; }
+.skeleton > i {
+  display: block; height: 1rem; border-radius: .5rem;
+  background: var(--color-surface-2);
+  animation: skeleton-breathe 1.6s var(--ease-inout) infinite;
+}
+.skeleton > i:nth-child(even) { width: 72%; }
+.loading-region__cold { margin-top: .75rem; color: var(--text-muted); font-size: .875rem; }
+
 @keyframes enter-rise {
   from { opacity: 0; transform: translateY(var(--dist-enter)); }
   to   { opacity: 1; transform: none; }

@@ -50,12 +50,19 @@ export const TtsPlayer = forwardRef<PlayerHandle, { text: string; rate: number }
     else window.localStorage.removeItem(VOICE_STORAGE_KEY)
   }
 
-  return <label className="flex items-center justify-center gap-2 text-xs font-bold text-slate-400">
-    <span aria-hidden="true">🗣</span>
-    <span>Giọng đọc</span>
-    <select value={voiceURI} onChange={event => selectVoice(event.target.value)} className="max-w-52 rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-xs text-slate-200 outline-none focus:border-cyan-300/50">
-      <option value="">Tự động (tiếng Anh)</option>
-      {availableVoices.map(voice => <option key={voice.voiceURI} value={voice.voiceURI}>{voice.name} ({voice.lang})</option>)}
-    </select>
-  </label>
+  const selectVoiceFromMenu = (nextVoiceURI: string, button: HTMLButtonElement) => {
+    selectVoice(nextVoiceURI)
+    button.closest('details')?.removeAttribute('open')
+  }
+
+  return <div className="voice-picker">
+    <span className="voice-picker__label" aria-hidden="true">Voice</span>
+    <details className="voice-picker__menu">
+      <summary aria-label="Choose reading voice"><span className="voice-picker__speaker" aria-hidden="true">◖◗</span><span className="voice-picker__current"><b>{selectedVoice?.name ?? 'Automatic English'}</b><small>{selectedVoice?.lang ?? 'Use the default English voice'}</small></span><span className="voice-picker__chevron" aria-hidden="true">⌄</span></summary>
+      <div className="voice-picker__options" role="listbox" aria-label="Available reading voices">
+        <button type="button" className={!voiceURI ? 'is-selected' : ''} onClick={event => selectVoiceFromMenu('', event.currentTarget)}><b>Automatic English</b><small>Use your system default</small></button>
+        {availableVoices.map(voice => <button type="button" key={voice.voiceURI} className={voice.voiceURI === voiceURI ? 'is-selected' : ''} onClick={event => selectVoiceFromMenu(voice.voiceURI, event.currentTarget)}><b>{voice.name}</b><small>{voice.lang}</small></button>)}
+      </div>
+    </details>
+  </div>
 })
